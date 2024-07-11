@@ -47,6 +47,8 @@ class Home extends React.Component {
       networkError: undefined,
       // available games
       availableGames: [],
+      _provider: undefined,
+      _mastermind: undefined
     };
 
     this.state = this.initialState;
@@ -77,6 +79,7 @@ class Home extends React.Component {
 
     // If the available games or the user's balance hasn't loaded yet, we show
     // a loading component.
+    console.log(this.availableGames)
     if (!this.state.availableGames || !this.state.balance) {
       return <Loading />;
     }
@@ -140,11 +143,11 @@ class Home extends React.Component {
             <ul>
               {this.state.availableGames.map((game) => (
                 <li key={game.gameId}>
-                  
-                  Stake: {parseInt(game.gameStake._hex.slice(2), 16)/1000000000000000000} {this.state.currency}, Creator: {game.creator}
+                  {console.log(game)}
+                  Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}, Creator: {game.creator}
                   <button 
                     className="btn btn-secondary ml-2" 
-                    onClick={() => this.joinGame(game.gameId, parseInt(game.gameStake._hex.slice(2), 16)/1000000000000000000)}>
+                    onClick={() => this.joinGame(game.gameId, Number(game.gameStake/BigInt(1000000000000000000)))}>
                     Join Game
                   </button>
                 </li>
@@ -203,11 +206,11 @@ class Home extends React.Component {
   }
 
   // This method initializes the dapp
-  _initialize(userAddress) {
+     _initialize(userAddress) {
     // We first store the user's address in the component's state
-    this.setState({selectedAddress: userAddress}, () => { 
+    this.setState({selectedAddress: userAddress}, async () => { 
       // Then, we initialize ethers, fetch the user balance, and start polling for the available games
-      this._initializeEthers();
+      await this._initializeEthers();
       this._updateBalance();
 
       //ToDo: controlla che l'utente sotto userAddress non sia già in un game; se lo è redirect a pagina di game
@@ -219,20 +222,25 @@ class Home extends React.Component {
 
   async _initializeEthers() {
     // We first initialize ethers by creating a provider using window.ethereum
-    this._provider = new ethers.providers.Web3Provider(window.ethereum);
+    this._provider = new ethers.BrowserProvider(window.ethereum);
+    console.log(this._provider)
+
+    const signer = await this._provider.getSigner();
+    console.log(signer.address)
 
     // Then, we initialize the contract using that provider and the token's artifact.
     this._mastermind = new ethers.Contract(
       contractAddress.Mastermind,
       MastermindArtifact.abi,
-      this._provider.getSigner(0)
+      signer
     );
+    console.log(this._mastermind)
   }
 
   async _updateBalance(){
     try {
       const balance = await this._provider.getBalance(this.state.selectedAddress)
-      const balanceEther = ethers.utils.formatEther(balance);
+      const balanceEther = ethers.formatEther(balance);
 
       this.setState({ balance: balanceEther });
     } catch (error) {
@@ -270,7 +278,16 @@ class Home extends React.Component {
 
   async _updateAvailableGames() {
     const availableGames = await this._mastermind.getJoinableGames(this.state.selectedAddress)
-    this.setState({ availableGames });
+    const result = availableGames.map(arr =>{
+        return {
+            gameId: arr[0],
+            creator: arr[1],
+            joiner: arr[2],
+            gameStake: arr[3]
+        }
+    })
+    console.log(result);
+    this.setState({ availableGames: result });
   }
 
   // This method just clears part of the state.
@@ -289,7 +306,7 @@ class Home extends React.Component {
     try{
       const opt = {
         from: this.state.selectedAddress,
-        value: ethers.utils.parseEther(stake),
+        value: ethers.parseEther(stake),
         gasLimit: 1000000
       }
       if (challengeAddress === null){
@@ -343,7 +360,7 @@ class Home extends React.Component {
     try{
       req = await this._mastermind.joinGame(gameId, {
         from: this.state.selectedAddress,
-        value: ethers.utils.parseEther(stake.toString()),
+        value: ethers.parseEther(stake.toString()),
         gasLimit: 1000000
       })
       this.setState({ reqBeingSent: req.hash });
