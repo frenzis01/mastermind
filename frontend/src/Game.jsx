@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { ethers } from "ethers";
 
 import { BoardBreaker } from './components/boards/BoardBreaker';
-//import { BoardMaker } from './components/boards/BoardMaker';
+import { BoardMaker } from './components/boards/BoardMaker';
 import { Loading } from './components/misc/Loading';
 import { withRouter } from './components/WithRouter';
 //import ColorChooseModal from './components/modals/ColorChooseModal';
@@ -58,6 +58,11 @@ class Game extends React.Component {
       signer
     );
     const gameDetails = (await mastermind.getGameDetails(this.state.gameId)).toObject();
+    // Perform useful conversions
+    gameDetails.creator = gameDetails.creator.toLowerCase();
+    gameDetails.joiner = gameDetails.joiner.toLowerCase();
+    gameDetails.currentTurn = parseInt(gameDetails.currentTurn);
+    gameDetails.guessesLength = parseInt(gameDetails.guessesLength);
     console.log(gameDetails);
     this.setState({ _gameDetails: gameDetails });
     this.setState({ _provider: provider});
@@ -83,15 +88,16 @@ class Game extends React.Component {
 
   isCurrentMaker() {
     const game = this.state._gameDetails;
-      if (this.state.selectedAddress == game.creator) {
-          if ((game.currentTurn % 2 == 1 && game.creatorIsMakerSeed) ||
-              (game.currentTurn % 2 == 0 && !game.creatorIsMakerSeed)) {
+      if (this.state.selectedAddress === game.creator) {
+          if ((game.currentTurn % 2 === 1 && game.creatorIsMakerSeed) ||
+              (game.currentTurn % 2 === 0 && !game.creatorIsMakerSeed) ||
+              (game.currentTurn === 0 && game.creatorIsMakerSeed)) {
               return true;
           }
       }
-      if (this.state.selectedAddress == game.joiner) {
-          if ((game.currentTurn % 2 == 0 && game.creatorIsMakerSeed) ||
-              (game.currentTurn % 2 == 1 && !game.creatorIsMakerSeed)) {
+      if (this.state.selectedAddress === game.joiner) {
+          if ((game.currentTurn % 2 === 0 && game.creatorIsMakerSeed) ||
+              (game.currentTurn % 2 === 1 && !game.creatorIsMakerSeed)) {
               return true;
           }
       }
@@ -124,13 +130,15 @@ class Game extends React.Component {
         <div className="col-12">
           <h3>Game ID: {this.state.gameId} / Current Turn: {parseInt(this.state._gameDetails.currentTurn)} </h3>
           Selected Address: {this.state.selectedAddress}
+          <br />
+          You are the {this.isCurrentMaker() ? "Maker" : "Breaker"}
           {/* resto delle informazioni */}
         </div>
       </div>
 
       
       {!this.isCurrentMaker() && (<BoardBreaker />)}
-      {/* {this.isCurrentMaker() && (<BoardMaker />)} */}
+      {this.isCurrentMaker() && (<BoardMaker />)}
       
       {/* this.state.submitCodeHashModalOpen && <ColorChooseModal submitHandler={this.submitCodeHash} /> */}
       </div>
