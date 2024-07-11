@@ -64,8 +64,18 @@ class Home extends React.Component {
     _mastermind.on("GameJoined", this.handleGameJoined);
   }
 
-  handleGameCreated(eventData) {
-    console.log("GameCreated received:", eventData);
+  handleGameCreated(gameId, creator, numColors, codeLength, numTurns, maxGuesses, gameStake) {
+    console.log("GameCreated received:");
+    const eventData = {
+      gameId: gameId,
+      creator: creator,
+      numColors: numColors,
+      codeLength: codeLength,
+      numTurns: numTurns,
+      maxGuesses: maxGuesses,
+      gameStake: gameStake
+    }
+    console.log(eventData);
     // Handle event A
   }
 
