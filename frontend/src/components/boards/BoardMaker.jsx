@@ -1,6 +1,7 @@
 // BoardMaker.js
 import { useState } from 'react';
 import ProvideFeedbackModal from '../modals/ProvideFeedbackModal'; // Import the ProvideFeedbackModal component
+import ColorChooseModal from '../modals/ColorChooseModal';
 import "../../css/styles.css"
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray') };
@@ -8,11 +9,15 @@ const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray')
 export function BoardMaker() {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [prevFeedback, setPrevFeedback] = useState(false);
+  const [isFeedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [isColorChooseModalOpen, setColorChooseModalOpen] = useState(false);
+  const [isSecretCodeChosen, setSecretCodeChosen] = useState(false);
 
-  const openModal = () => setModalOpen(true);
-  const closeModal = () => setModalOpen(false);
+  const openFeedbackModal = () => setFeedbackModalOpen(true);
+  const closeFeedbackModal = () => setFeedbackModalOpen(false);
+  
+  const openColorChooseModal = () => setColorChooseModalOpen(true);
+  const closeColorChooseModal = () => setColorChooseModalOpen(false);
 
   const waitForNewGuess = () => setPrevFeedback(false);
 
@@ -20,12 +25,12 @@ export function BoardMaker() {
     const newRows = [...rows];
     const feedbackColors = [
       ...Array(feedback.cc).fill('black'),
-      ...Array(feedback.nc).fill('white'),
+      ...Array(feedback.nc).fill('#d3d3d3'), // Very light gray
       ...Array(6 - feedback.cc - feedback.nc).fill('gray'),
     ];
     newRows[currentRow].feedback = feedbackColors;
     setRows(newRows);
-    closeModal();
+    closeFeedbackModal();
     if (currentRow < 9) {
       setCurrentRow(currentRow + 1);
     } else {
@@ -33,17 +38,40 @@ export function BoardMaker() {
     }
   };
 
+  const handleGuess = (colors) => {
+    const newRows = [...rows];
+    newRows[currentRow].guess = colors;
+    setRows(newRows);
+  };
+
+  const handleSecretCodeChosen = (colors) => {
+   //  onSecretCodeChosen(colors);
+    setSecretCodeChosen(true);
+    closeColorChooseModal();
+  };
+
   return (
     <div className="App">
-      <button
-        className='submit-button'
-        onClick={() => {
-          openModal();
-          waitForNewGuess();
-        }}
-      >
-        Provide Feedback
-      </button>
+      {!isSecretCodeChosen && (
+        <button
+          className='submit-secret-button'
+          onClick={openColorChooseModal}
+          style={{ marginBottom: '20px' }}
+        >
+          Choose Secret Code
+        </button>
+      )}
+      {isSecretCodeChosen && (
+        <button
+          className='submit-button'
+          onClick={() => {
+            openFeedbackModal();
+            waitForNewGuess();
+          }}
+        >
+          Provide Feedback
+        </button>
+      )}
       {rows.map((row, index) => (
         <div
           className="board-row"
@@ -57,13 +85,20 @@ export function BoardMaker() {
           </div>
           <div className="guess-grid">
             {row.guess.map((color, i) => (
-              <div className="large-circle" key={i} style={{ backgroundColor: color || 'white' }} />
+              <div
+                className={`large-circle ${color ? 'filled' : ''}`}
+                key={i}
+                style={{ backgroundColor: color || '#d3d3d3' }}
+              />
             ))}
           </div>
         </div>
       ))}
-      {isModalOpen && (prevFeedback || currentRow === 0) && (
-        <ProvideFeedbackModal submitFeedback={handleProvideFeedback} closeModal={closeModal} />
+      {isFeedbackModalOpen && (
+        <ProvideFeedbackModal submitFeedback={handleProvideFeedback} closeModal={closeFeedbackModal} />
+      )}
+      {isColorChooseModalOpen && (
+        <ColorChooseModal submitCode={handleSecretCodeChosen} closeModal={closeColorChooseModal} />
       )}
     </div>
   );

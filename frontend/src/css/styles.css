@@ -76,6 +76,17 @@
    border-radius: 8px;
    cursor: pointer;
  }
+
+ .submit-secret-button {
+   margin-top: 20px;
+   padding: 15px 20px;
+   font-size: 18px;
+   background-color: #f200ff;
+   color: white;
+   border: none;
+   border-radius: 25px;
+   cursor: pointer;
+ }
  
  .input-container {
    margin: 10px 0;
