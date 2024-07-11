@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 // Ethers used to interact with the Ethereum network and our contract
 import { ethers } from "ethers";
@@ -8,6 +8,9 @@ import { BoardBreaker } from './components/boards/BoardBreaker';
 import { Loading } from './components/misc/Loading';
 import { withRouter } from './components/WithRouter';
 //import ColorChooseModal from './components/modals/ColorChooseModal';
+
+import MastermindArtifact from "./contracts/Mastermind.json";
+import contractAddress from "./contracts/contract-address.json"
 
 //const crypto = require('crypto');
 
@@ -20,6 +23,7 @@ class Game extends React.Component {
     const { id: gameId } = this.props.router.params;
     const { selectedAddress } = this.props.router.location.state || {};
 
+
     this.state = {
       gameId: gameId,
       selectedAddress: selectedAddress,
@@ -27,9 +31,38 @@ class Game extends React.Component {
       submitCodeHashModalOpen: true, // TODO true at the beginning?
       //info sul game
       joiner: true, // TODO replace with actual value
+      _mastermind: undefined,
+      _provider: undefined,
+      _gameDetails: undefined,
     };
+
   } 
 
+  // getGameDetails() {
+  //   const gameDetails = this.state._mastermind.getGameDetails(this.state.gameId);
+  //   console.log(gameDetails);
+  // }
+
+
+  async _initializeEthers() {
+    // We first initialize ethers by creating a provider using window.ethereum
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+
+    // console.log("Signer");
+    // console.log(signer);
+    // Then, we initialize the contract using that provider and the token's artifact.
+    const mastermind = new ethers.Contract(
+      contractAddress.Mastermind,
+      MastermindArtifact.abi,
+      signer
+    );
+    const gameDetails = (await mastermind.getGameDetails(this.state.gameId)).toObject();
+    console.log(gameDetails);
+    this.setState({ _gameDetails: gameDetails });
+    this.setState({ _provider: provider});
+    this.setState({ _mastermind: mastermind });
+  }
     //init dove chiamiamo fetchInfo
 
     /*
@@ -48,30 +81,56 @@ class Game extends React.Component {
         })
     }, this.state); //ToDo: capire a cosa collegare useEffect*/
 
+  isCurrentMaker() {
+    const game = this.state._gameDetails;
+      if (this.state.selectedAddress == game.creator) {
+          if ((game.currentTurn % 2 == 1 && game.creatorIsMakerSeed) ||
+              (game.currentTurn % 2 == 0 && !game.creatorIsMakerSeed)) {
+              return true;
+          }
+      }
+      if (this.state.selectedAddress == game.joiner) {
+          if ((game.currentTurn % 2 == 0 && game.creatorIsMakerSeed) ||
+              (game.currentTurn % 2 == 1 && !game.creatorIsMakerSeed)) {
+              return true;
+          }
+      }
+      return false;
+  }
+
   render() {
+    if (this.state._mastermind === undefined) {
+      // console.log(this.state._mastermind)
+      this._initializeEthers();
+      return <Loading />;
+    }
     //controlla se sia presente selectedAddress e gameId: se non lo sono, redirect a Dapp.js
+    if (!this.state.selectedAddress || !this.state.gameId) {
+      // TODO check if this is the correct way to redirect
+      // redirect to Home
+      return (this.props.router.navigate('/'));
+    }
+    
 
     //se non c'è il joiner
     //render di Loading con messaggio "aspettiamo il joiner"
     //ci mettiamo in ascolto di GameJoined event (https://stackoverflow.com/questions/58150023/how-do-we-listen-to-solidity-smart-contract-events-on-react-js)
 
     //stampare a schermo informazioni sull'attuale game in corso
+    
     return (
       <div className="container p-4">
       <div className="row">
         <div className="col-12">
-          <h1>Game ID: {this.state.gameId}</h1>
-          <h2>Selected Address: {this.state.selectedAddress}</h2>
+          <h3>Game ID: {this.state.gameId} / Current Turn: {parseInt(this.state._gameDetails.currentTurn)} </h3>
+          Selected Address: {this.state.selectedAddress}
           {/* resto delle informazioni */}
         </div>
       </div>
 
-      <div className="row">
-        <div className="col-12">
-          <h3> Board </h3>
-          {(<BoardBreaker />)}
-        </div>
-      </div>
+      
+      {!this.isCurrentMaker() && (<BoardBreaker />)}
+      {/* {this.isCurrentMaker() && (<BoardMaker />)} */}
       
       {/* this.state.submitCodeHashModalOpen && <ColorChooseModal submitHandler={this.submitCodeHash} /> */}
       </div>
