@@ -9,43 +9,41 @@ export function BoardMaker() {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isModalOpen, setModalOpen] = useState(false);
-  const [prevFeedback, setPrevGuess] = useState(false);
+  const [prevFeedback, setPrevFeedback] = useState(false);
 
-  
   const openModal = () => setModalOpen(true);
-   const closeModal = () => {
-       setModalOpen(false);}
+  const closeModal = () => setModalOpen(false);
 
-  const waitForNewGuess = () => setPrevGuess(false);
+  const waitForNewGuess = () => setPrevFeedback(false);
 
-  console.log("Deploying board");
-  
   const handleProvideFeedback = (feedback) => {
-     const newRows = [...rows];
-     newRows[currentRow].feedback = feedback;
-     setRows(newRows);
-     closeModal();
-     // Move to the next row or handle end game logic
-     if (currentRow < 9) {
-        setCurrentRow(currentRow + 1);
-      } else {
-         console.log('Game Over');
-         // TODO implement end game logic
-      }
-   };
-   
-   const handleGuess = (colors) => {
-     const newRows = [...rows];
-     newRows[currentRow].guess = colors;
-     setRows(newRows);
-    setPrevGuess(true);
+    const newRows = [...rows];
+    const feedbackColors = [
+      ...Array(feedback.cc).fill('black'),
+      ...Array(feedback.nc).fill('white'),
+      ...Array(6 - feedback.cc - feedback.nc).fill('gray'),
+    ];
+    newRows[currentRow].feedback = feedbackColors;
+    setRows(newRows);
+    closeModal();
+    if (currentRow < 9) {
+      setCurrentRow(currentRow + 1);
+    } else {
+      console.log('Game Over');
+    }
   };
 
   return (
     <div className="App">
       <button
-         className='submit-button' 
-         onClick={() => {openModal(); waitForNewGuess();}}>Provide Feedback</button>
+        className='submit-button'
+        onClick={() => {
+          openModal();
+          waitForNewGuess();
+        }}
+      >
+        Provide Feedback
+      </button>
       {rows.map((row, index) => (
         <div
           className="board-row"
@@ -64,8 +62,9 @@ export function BoardMaker() {
           </div>
         </div>
       ))}
-      {/* TODO check MakeGuess modal opening logic */}
-      {isModalOpen && (prevFeedback || currentRow == 0) && <ProvideFeedbackModal submitCode={handleProvideFeedback} />}
+      {isModalOpen && (prevFeedback || currentRow === 0) && (
+        <ProvideFeedbackModal submitFeedback={handleProvideFeedback} closeModal={closeModal} />
+      )}
     </div>
   );
 }
