@@ -18,7 +18,8 @@
    left: 0;
    width: 100vw;
    height: 100vh;
-   background: rgba(0, 0, 0, 0.5);
+   /* background: rgba(0, 0, 0, 0.5); */
+   background: rgba(144, 144, 144, 0.5);
    display: flex;
    justify-content: center;
    align-items: center;
@@ -78,7 +79,7 @@
  }
  
  /* BreakerBoard styles */
- .row {
+ .board-row {
    display: flex;
    align-items: center;
    justify-content: center;

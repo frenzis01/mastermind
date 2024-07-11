@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Modal, Button, Form} from 'react-bootstrap';
 
+// eslint-disable-next-line react/prop-types
 export function CreateGameModal({ closeModal, createGame }) {
   const [stake, setStake] = useState('');
   const [isChallenge, setIsChallenge] = useState(false);

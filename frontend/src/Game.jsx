@@ -3,7 +3,7 @@ import React from 'react';
 // Ethers used to interact with the Ethereum network and our contract
 import { ethers } from "ethers";
 
-//import { BoardBreaker } from './components/boards/BoardBreaker';
+import { BoardBreaker } from './components/boards/BoardBreaker';
 //import { BoardMaker } from './components/boards/BoardMaker';
 import { Loading } from './components/misc/Loading';
 import { withRouter } from './components/WithRouter';
@@ -26,6 +26,7 @@ class Game extends React.Component {
       turn: undefined,
       submitCodeHashModalOpen: true, // TODO true at the beginning?
       //info sul game
+      joiner: true, // TODO replace with actual value
     };
   } 
 
@@ -65,18 +66,25 @@ class Game extends React.Component {
         </div>
       </div>
 
+      <div className="row">
+        <div className="col-12">
+          <h3> Board </h3>
+          {(<BoardBreaker />)}
+        </div>
+      </div>
+      
       {/* this.state.submitCodeHashModalOpen && <ColorChooseModal submitHandler={this.submitCodeHash} /> */}
       </div>
-    );
 
-    //se sono maker
-    //render di BoardMaker -> component per giocare come maker
+      //se sono maker
+      //render di BoardMaker -> component per giocare come maker
 
-    //se sono breaker
-    //render di BoardBreaker -> component per giocare come breaker
+      //se sono breaker
+      //render di BoardBreaker -> component per giocare come breaker
 
-    //pulsantino per accusa di AFK
-  }
+      //pulsantino per accusa di AFK
+      );
+}
 
   /*
     async fetchInfo(gameId){
