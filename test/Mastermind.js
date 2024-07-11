@@ -233,7 +233,6 @@ function computeHash(intArray, seed) {
    // Concatenate the seed and the serialized array
    const combined = ethers.concat([seed, serializedArray]);
     
-   console.log("JS hash: " + ethers.keccak256(combined));
    // Compute the hash
    return ethers.keccak256(combined);
 }
