@@ -79,7 +79,6 @@ class Home extends React.Component {
 
     // If the available games or the user's balance hasn't loaded yet, we show
     // a loading component.
-    console.log(this.availableGames)
     if (!this.state.availableGames || !this.state.balance) {
       return <Loading />;
     }
@@ -143,7 +142,6 @@ class Home extends React.Component {
             <ul>
               {this.state.availableGames.map((game) => (
                 <li key={game.gameId}>
-                  {console.log(game)}
                   Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}, Creator: {game.creator}
                   <button 
                     className="btn btn-secondary ml-2" 
@@ -223,10 +221,7 @@ class Home extends React.Component {
   async _initializeEthers() {
     // We first initialize ethers by creating a provider using window.ethereum
     this._provider = new ethers.BrowserProvider(window.ethereum);
-    console.log(this._provider)
-
     const signer = await this._provider.getSigner();
-    console.log(signer.address)
 
     // Then, we initialize the contract using that provider and the token's artifact.
     this._mastermind = new ethers.Contract(
@@ -234,7 +229,6 @@ class Home extends React.Component {
       MastermindArtifact.abi,
       signer
     );
-    console.log(this._mastermind)
   }
 
   async _updateBalance(){
@@ -286,7 +280,6 @@ class Home extends React.Component {
             gameStake: arr[3]
         }
     })
-    console.log(result);
     this.setState({ availableGames: result });
   }
 
@@ -330,7 +323,7 @@ class Home extends React.Component {
 
       this.setState({ showModal: false });
       await this._updateBalance();
-      //this.redirectToGame(parseInt(receipt.events[0].args.gameId._hex.slice(2), 16), this.state.selectedAddress)
+      this.redirectToGame(Number(receipt.logs[0].args[0]), this.state.selectedAddress)
     } catch (error) {
       // We check the error code to see if this error was produced because the
       // user rejected a tx. If that's the case, we do nothing.
@@ -356,9 +349,9 @@ class Home extends React.Component {
     // We only save one such error, so before sending a second request, we clear it.
     this._dismissTransactionError();
     let req = undefined;
-
+    
     try{
-      req = await this._mastermind.joinGame(gameId, {
+      req = await this._mastermind.joinGame(Number(gameId).toString(), {
         from: this.state.selectedAddress,
         value: ethers.parseEther(stake.toString()),
         gasLimit: 1000000
@@ -375,7 +368,8 @@ class Home extends React.Component {
       }
   
       await this._updateBalance();
-      //this.redirectToGame(gameId, this.state.selectedAddress)
+      console.log(gameId)
+      this.redirectToGame(gameId, this.state.selectedAddress)
     } catch (error) {
       // We check the error code to see if this error was produced because the
       // user rejected a tx. If that's the case, we do nothing.
