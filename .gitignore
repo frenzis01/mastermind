@@ -1,0 +1,11 @@
+node_modules
+.idea
+
+#Hardhat files
+cache
+artifacts
+
+test/Token.js
+test/Token*
+
+coverage*
