@@ -17,15 +17,12 @@ const colors = [
 
 const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
 
-export function ColorChooseModal({ submitCode }) {
+export function ColorChooseModal({ submitCode, onToggleModal }) {
   const [isModalOpen, setModalOpen] = useState(true);
   const [selectedColors, setSelectedColors] = useState(
     Array(6).fill().map(getRandomColor)
   );
   const [activeCircle, setActiveCircle] = useState(0);
-
-  const closeModal = () => {
-     setModalOpen(false);}
 
   const handleColorChange = (color) => {
     const newColors = [...selectedColors];
@@ -41,7 +38,7 @@ export function ColorChooseModal({ submitCode }) {
   return (
     <>
       {isModalOpen && (
-        <div className="modal-backdrop" onClick={closeModal}>
+        <div className="modal-backdrop" onClick={onToggleModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="color-row">
               {selectedColors.map((color, index) => (
@@ -65,7 +62,7 @@ export function ColorChooseModal({ submitCode }) {
             </div>
             <button
               className="submit-button"
-              onClick={() => {closeModal(); submitCode(selectedColors)}}
+              onClick={() => {onToggleModal(); submitCode(selectedColors)}}
             >
               Submit Code
             </button>

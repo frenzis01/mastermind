@@ -8,14 +8,10 @@ const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray')
 export function BoardBreaker() {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
-  const [isModalOpen, setModalOpen] = useState(false);
+  const [isColorChooseModalOpen, setColorChooseModalOpen] = useState(false);
   const [prevFeedback, setPrevFeedback] = useState(false);
 
-  
-  const openModal = () => setModalOpen(true);
-   const closeModal = () => {
-       setModalOpen(false);}
-
+  const toggleColorChooseModal = () => setColorChooseModalOpen(!isColorChooseModalOpen);
   const waitForNewFeedback = () => setPrevFeedback(false);
 
   console.log("Deploying board");
@@ -24,7 +20,7 @@ export function BoardBreaker() {
     const newRows = [...rows];
     newRows[currentRow].guess = colors;
     setRows(newRows);
-    closeModal();
+    toggleColorChooseModal();
     // Move to the next row or handle end game logic
     if (currentRow < 9) {
       setCurrentRow(currentRow + 1);
@@ -45,7 +41,7 @@ export function BoardBreaker() {
     <div className="App">
       <button
          className='submit-button' 
-         onClick={() => {openModal(); waitForNewFeedback();}}>Make a Guess</button>
+         onClick={() => {toggleColorChooseModal(); waitForNewFeedback();}}>Make a Guess</button>
       {rows.map((row, index) => (
         <div
           className="board-row"
@@ -65,7 +61,7 @@ export function BoardBreaker() {
         </div>
       ))}
       {/* TODO check MakeGuess modal opening logic */}
-      {isModalOpen && (prevFeedback || currentRow == 0) && <ColorChooseModal submitCode={handleSubmitCode} />}
+      {isColorChooseModalOpen && (prevFeedback || currentRow == 0) && <ColorChooseModal submitCode={handleSubmitCode} onToggleModal={toggleColorChooseModal}/>}
     </div>
   );
 }

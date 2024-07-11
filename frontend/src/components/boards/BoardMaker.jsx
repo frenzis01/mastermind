@@ -14,11 +14,9 @@ export function BoardMaker() {
   const [isSecretCodeChosen, setSecretCodeChosen] = useState(false);
   const [prevGuess, setPrevGuess] = useState(false);
 
-  const openFeedbackModal = () => setFeedbackModalOpen(true);
-  const closeFeedbackModal = () => setFeedbackModalOpen(false);
+  const toggleFeedbackModal = () => setFeedbackModalOpen(!isFeedbackModalOpen);
   
-  const openColorChooseModal = () => setColorChooseModalOpen(true);
-  const closeColorChooseModal = () => setColorChooseModalOpen(false);
+  const toggleColorChooseModal = () => setColorChooseModalOpen(!isColorChooseModalOpen);
 
   const waitForNewGuess = () => setPrevGuess(false);
 
@@ -26,12 +24,12 @@ export function BoardMaker() {
     const newRows = [...rows];
     const feedbackColors = [
       ...Array(feedback.cc).fill('black'),
-      ...Array(feedback.nc).fill('#d3d3d3'), // Very light gray
+      ...Array(feedback.nc).fill('white'), // Very light gray
       ...Array(6 - feedback.cc - feedback.nc).fill('gray'),
     ];
     newRows[currentRow].feedback = feedbackColors;
     setRows(newRows);
-    closeFeedbackModal();
+    toggleFeedbackModal();
     if (currentRow < 9) {
       setCurrentRow(currentRow + 1);
     } else {
@@ -43,13 +41,14 @@ export function BoardMaker() {
     const newRows = [...rows];
     newRows[currentRow].guess = colors;
     setRows(newRows);
+    setPrevGuess(true);
   };
 
   const handleSecretCodeChosen = (colors) => {
    // TODO: Implement this function
    //  onSecretCodeChosen(colors);
     setSecretCodeChosen(true);
-    closeColorChooseModal();
+    toggleColorChooseModal();
   };
 
   return (
@@ -57,7 +56,7 @@ export function BoardMaker() {
       {!isSecretCodeChosen && (
         <button
           className='submit-secret-button'
-          onClick={() => {console.log('isModalOpen' + isColorChooseModalOpen); openColorChooseModal()}}
+          onClick={() => {console.log('isModalOpen' + isColorChooseModalOpen); toggleColorChooseModal()}}
           style={{ marginBottom: '20px' }}
         >
           Choose Secret Code
@@ -67,7 +66,7 @@ export function BoardMaker() {
         <button
           className='submit-button'
           onClick={() => {
-            openFeedbackModal();
+            toggleFeedbackModal();
             waitForNewGuess();
           }}
         >
@@ -93,10 +92,10 @@ export function BoardMaker() {
         </div>
       ))}
       {isFeedbackModalOpen && prevGuess && (
-        <ProvideFeedbackModal submitFeedback={handleProvideFeedback} closeModal={closeFeedbackModal} />
+        <ProvideFeedbackModal submitFeedback={handleProvideFeedback} onToggleModal={toggleFeedbackModal} />
       )}
       {isColorChooseModalOpen && !isSecretCodeChosen  && (
-        <ColorChooseModal submitCode={handleSecretCodeChosen} closeModal={closeColorChooseModal} />
+        <ColorChooseModal submitCode={handleSecretCodeChosen} onToggleModal={toggleColorChooseModal} />
       )}
     </div>
   );

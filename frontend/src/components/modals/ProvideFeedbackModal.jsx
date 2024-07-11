@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import "../../css/styles.css"
 
-const ProvideFeedbackModal = ({ closeModal, submitFeedback }) => {
+export function ProvideFeedbackModal({ onToggleModal, submitFeedback }) {
   const [cc, setCc] = useState(0);
   const [nc, setNc] = useState(0);
   const [error, setError] = useState('');
@@ -30,12 +30,12 @@ const ProvideFeedbackModal = ({ closeModal, submitFeedback }) => {
   const handleSubmit = () => {
     if (cc + nc <= 6) {
       submitFeedback({ cc, nc });
-      closeModal();
+      onToggleModal();
     }
   };
 
   return (
-    <div className="modal-backdrop" onClick={closeModal}>
+    <div className="modal-backdrop" onClick={onToggleModal}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <h2>Provide Feedback</h2>
         <div className="input-container">
@@ -69,6 +69,6 @@ const ProvideFeedbackModal = ({ closeModal, submitFeedback }) => {
       </div>
     </div>
   );
-};
+}
 
 export default ProvideFeedbackModal;
