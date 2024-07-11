@@ -36,6 +36,11 @@ class Game extends React.Component {
       _gameDetails: undefined,
     };
 
+    this._initializeEthers = this._initializeEthers.bind(this);
+    this.handleGuess = this.handleGuess.bind(this);
+    this.handleFeedback = this.handleFeedback.bind(this);
+    this.handleDispute = this.handleDispute.bind(this);
+
   } 
 
   // getGameDetails() {
@@ -64,9 +69,43 @@ class Game extends React.Component {
     gameDetails.currentTurn = parseInt(gameDetails.currentTurn);
     gameDetails.guessesLength = parseInt(gameDetails.guessesLength);
     console.log(gameDetails);
-    this.setState({ _gameDetails: gameDetails });
-    this.setState({ _provider: provider});
-    this.setState({ _mastermind: mastermind });
+    // this.setState({ _gameDetails: gameDetails });
+    // this.setState({ _provider: provider});
+    // this.setState({ _mastermind: mastermind });
+    this.setState({ _gameDetails: gameDetails, _provider: provider, _mastermind: mastermind }, () => {
+      this.setupEventListeners();
+    });
+  }
+
+  setupEventListeners() {
+    const { _mastermind } = this.state;
+    _mastermind.on("Guess", this.handleGuess);
+    _mastermind.on("Feedback", this.handleFeedback);
+    _mastermind.on("Dispute", this.handleDispute);
+  }
+
+  handleGuess(eventData) {
+    console.log("Event A received:", eventData);
+    // Handle event A
+  }
+
+  handleFeedback(eventData) {
+    console.log("Event B received:", eventData);
+    // Handle event B
+  }
+
+  handleDispute(eventData) {
+    console.log("Event C received:", eventData);
+    // Handle event C
+  }
+
+  componentWillUnmount() {
+    const { _mastermind } = this.state;
+    if (_mastermind) {
+      _mastermind.off("Guess", this.handleGuess);
+      _mastermind.off("Feedback", this.handleFeedback);
+      _mastermind.off("Dispute", this.handleDispute);
+    }
   }
     //init dove chiamiamo fetchInfo
 
@@ -84,7 +123,9 @@ class Game extends React.Component {
         contract && contract.on("TurnEnded", eve => {
             //update info relative al turno
         })
-    }, this.state); //ToDo: capire a cosa collegare useEffect*/
+    }, this.state); 
+    //ToDo: capire a cosa collegare useEffect. 
+    //TODO useEffect forse non si può usare nelle classi!! */
 
   isCurrentMaker() {
     const game = this.state._gameDetails;
