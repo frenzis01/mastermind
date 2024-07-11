@@ -5,9 +5,7 @@ import "../../css/styles.css"
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray') };
 
-// export function CreateGameModal({ closeModal, createGame }) {
 export function BoardBreaker() {
-// const BoardBreaker = () => {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isModalOpen, setModalOpen] = useState(false);
@@ -15,7 +13,6 @@ export function BoardBreaker() {
 
   
   const openModal = () => setModalOpen(true);
-   //   const closeModal = () => setModalOpen(false);
    const closeModal = () => {
        setModalOpen(false);}
 
