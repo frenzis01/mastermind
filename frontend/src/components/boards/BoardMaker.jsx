@@ -1,6 +1,6 @@
 // BoardMaker.js
 import { useState } from 'react';
-import ProvideFeedbackModal from '../modals/ProvideFeedbackModal'; // Import the ProvideFeedbackModal component
+import ProvideFeedbackModal from '../modals/ProvideFeedbackModal';
 import ColorChooseModal from '../modals/ColorChooseModal';
 import "../../css/styles.css"
 
@@ -12,6 +12,7 @@ export function BoardMaker() {
   const [isFeedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [isColorChooseModalOpen, setColorChooseModalOpen] = useState(false);
   const [isSecretCodeChosen, setSecretCodeChosen] = useState(false);
+  const [prevGuess, setPrevGuess] = useState(false);
 
   const openFeedbackModal = () => setFeedbackModalOpen(true);
   const closeFeedbackModal = () => setFeedbackModalOpen(false);
@@ -19,7 +20,7 @@ export function BoardMaker() {
   const openColorChooseModal = () => setColorChooseModalOpen(true);
   const closeColorChooseModal = () => setColorChooseModalOpen(false);
 
-  const waitForNewGuess = () => setPrevFeedback(false);
+  const waitForNewGuess = () => setPrevGuess(false);
 
   const handleProvideFeedback = (feedback) => {
     const newRows = [...rows];
@@ -45,6 +46,7 @@ export function BoardMaker() {
   };
 
   const handleSecretCodeChosen = (colors) => {
+   // TODO: Implement this function
    //  onSecretCodeChosen(colors);
     setSecretCodeChosen(true);
     closeColorChooseModal();
@@ -55,7 +57,7 @@ export function BoardMaker() {
       {!isSecretCodeChosen && (
         <button
           className='submit-secret-button'
-          onClick={openColorChooseModal}
+          onClick={() => {console.log('isModalOpen' + isColorChooseModalOpen); openColorChooseModal()}}
           style={{ marginBottom: '20px' }}
         >
           Choose Secret Code
@@ -85,19 +87,15 @@ export function BoardMaker() {
           </div>
           <div className="guess-grid">
             {row.guess.map((color, i) => (
-              <div
-                className={`large-circle ${color ? 'filled' : ''}`}
-                key={i}
-                style={{ backgroundColor: color || '#d3d3d3' }}
-              />
+              <div className="large-circle" key={i} style={{ backgroundColor: color || 'white' }} />
             ))}
           </div>
         </div>
       ))}
-      {isFeedbackModalOpen && (
+      {isFeedbackModalOpen && prevGuess && (
         <ProvideFeedbackModal submitFeedback={handleProvideFeedback} closeModal={closeFeedbackModal} />
       )}
-      {isColorChooseModalOpen && (
+      {isColorChooseModalOpen && !isSecretCodeChosen  && (
         <ColorChooseModal submitCode={handleSecretCodeChosen} closeModal={closeColorChooseModal} />
       )}
     </div>
