@@ -1,11 +1,12 @@
 // BoardBreaker.js
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import ColorChooseModal from '../modals/ColorChooseModal'; // Import the ColorChooseModal component
 import "../../css/styles.css"
+import { colors, colorToInt, intToColor } from '../../assets/colors';
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray') };
 
-export function BoardBreaker() {
+export function BoardBreaker({ makeGuess, startTurn, codeHash, joined }) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isColorChooseModalOpen, setColorChooseModalOpen] = useState(false);
@@ -14,13 +15,21 @@ export function BoardBreaker() {
   const toggleColorChooseModal = () => setColorChooseModalOpen(!isColorChooseModalOpen);
   const waitForNewFeedback = () => setPrevFeedback(false);
 
-  console.log("Deploying board");
-  
-  const handleSubmitCode = (colors) => {
+  // console.log("Deploying board");
+  // startTurn();
+  useEffect(() => {
+    if (joined){
+      startTurn();
+    }
+  }, [joined]);
+
+  const handleSubmitGuess = async (colors) => {
+    console.log('Submitting guess: ', colors);
     const newRows = [...rows];
     newRows[currentRow].guess = colors;
     setRows(newRows);
     toggleColorChooseModal();
+    makeGuess(colors.map(colorToInt), currentRow);
     // Move to the next row or handle end game logic
     if (currentRow < 9) {
       setCurrentRow(currentRow + 1);
@@ -61,7 +70,7 @@ export function BoardBreaker() {
         </div>
       ))}
       {/* TODO check MakeGuess modal opening logic */}
-      {isColorChooseModalOpen && (prevFeedback || currentRow == 0) && <ColorChooseModal submitCode={handleSubmitCode} onToggleModal={toggleColorChooseModal}/>}
+      {isColorChooseModalOpen && codeHash && (prevFeedback || currentRow == 0) && <ColorChooseModal submitCode={handleSubmitGuess} onToggleModal={toggleColorChooseModal}/>}
     </div>
   );
 }

@@ -14,3 +14,7 @@ export const colors = [
 export const colorToInt = (color) => {
    return colors.indexOf(color);
 }
+
+export const intToColor = (int) => {
+   return colors[int];
+}

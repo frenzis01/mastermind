@@ -1,13 +1,13 @@
 // BoardMaker.js
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ProvideFeedbackModal from '../modals/ProvideFeedbackModal';
 import ColorChooseModal from '../modals/ColorChooseModal';
 import "../../css/styles.css"
-import {colors, colorToInt} from "../../assets/colors";
+import {colors, colorToInt, intToColor} from "../../assets/colors";
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray') };
 
-export function BoardMaker({ hashSecretCode, generateSeed, submitSecretHash}) {
+export function BoardMaker({ hashSecretCode, generateSeed, submitSecretHash, newGuess, turnStarted}) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isFeedbackModalOpen, setFeedbackModalOpen] = useState(false);
@@ -37,6 +37,17 @@ export function BoardMaker({ hashSecretCode, generateSeed, submitSecretHash}) {
       console.log('Game Over');
     }
   };
+
+  // Use useEffect to listen for changes in `onGuess` prop
+  useEffect(() => {
+    if (newGuess) {
+      const guessColors = newGuess.map(intToColor)
+      handleGuess(guessColors); // Invoke handleGuess with the received guess
+    }
+    if (turnStarted) {
+      toggleColorChooseModal();
+    }
+  }, [newGuess,turnStarted]);
 
   const handleGuess = (guessColors) => {
     const newRows = [...rows];

@@ -28,19 +28,32 @@ class Game extends React.Component {
       selectedAddress: selectedAddress,
       turn: undefined,
       submitCodeHashModalOpen: true, // TODO true at the beginning?
+      reqBeingSent: undefined,
+      transactionError: undefined,
+      networkError: undefined,
       //info sul game
-      joiner: true, // TODO replace with actual value
+      joiner: undefined, // TODO replace with actual value
       _mastermind: undefined,
       _provider: undefined,
       _gameDetails: undefined,
+      _lastGuess: undefined,
+      _codeHash: false,
+      _joined: false,
+      _turnStarted: false
     };
 
     this._initializeEthers = this._initializeEthers.bind(this);
     this.handleGuess = this.handleGuess.bind(this);
     this.handleFeedback = this.handleFeedback.bind(this);
     this.handleDispute = this.handleDispute.bind(this);
+    this.handleHashPublished = this.handleHashPublished.bind(this);
+    this.handleTurnStarted = this.handleTurnStarted.bind(this);
+    this.handleGameJoined = this.handleGameJoined.bind(this);
     this.computeHash = this.computeHash.bind(this);
     this.submitCodeHash = this.submitCodeHash.bind(this);
+    this.makeGuess = this.makeGuess.bind(this);
+    this.startTurn = this.startTurn.bind(this);
+
   } 
 
   // getGameDetails() {
@@ -75,6 +88,11 @@ class Game extends React.Component {
     this.setState({ _gameDetails: gameDetails, _provider: provider, _mastermind: mastermind }, () => {
       this.setupEventListeners();
     });
+
+    // TODO okay here?
+    if (this.state.joiner != "0x0000000000000000000000000000000000000000") {
+      this.setState({ _joined: true });
+    }
   }
 
   setupEventListeners() {
@@ -82,11 +100,15 @@ class Game extends React.Component {
     _mastermind.on("Guess", this.handleGuess);
     _mastermind.on("Feedback", this.handleFeedback);
     _mastermind.on("Dispute", this.handleDispute);
+    _mastermind.on("HashPublished", this.handleHashPublished);
+    _mastermind.on("TurnStarted", this.startTurn);
+    _mastermind.on("GameJoined", this.handleGameJoined);
   }
 
-  handleGuess(eventData) {
-    console.log("Event A received:", eventData);
+  handleGuess(gameId, guess) {
+    console.log("Guess received:", guess.map(Number));
     // Handle event A
+    this.setState({ _lastGuess: guess });
   }
 
   handleFeedback(eventData) {
@@ -99,12 +121,29 @@ class Game extends React.Component {
     // Handle event C
   }
 
+  handleHashPublished(eventData) {
+    console.log("Hash published");
+    this.setState({ _codeHash: true })
+  }
+
+  handleTurnStarted(gamedId, maker) {
+      this.setState({ _turnStarted: true });
+  }
+
+  handleGameJoined(gameId, joiner, creator) {
+    console.log("GameJoined received:");
+    this.setState({ _joined: true , joiner: joiner});
+  }
+
   componentWillUnmount() {
     const { _mastermind } = this.state;
     if (_mastermind) {
       _mastermind.off("Guess", this.handleGuess);
       _mastermind.off("Feedback", this.handleFeedback);
       _mastermind.off("Dispute", this.handleDispute);
+      _mastermind.on("HashPublished", this.handleHashPublished);
+      _mastermind.on("TurnStarted", this.startTurn);
+      _mastermind.on("GameJoined", this.handleGameJoined); 
     }
   }
     //init dove chiamiamo fetchInfo
@@ -129,22 +168,23 @@ class Game extends React.Component {
 
   isCurrentMaker() {
     const game = this.state._gameDetails;
-    // console.log(this.state.selectedAddress === game.creator);
-    // console.log(game.currentTurn % 2 == 1 && game.creatorIsMakerSeed);
-    // console.log(game.currentTurn);
-    // console.log(game.creatorIsMakerSeed);
+    if (game.currentTurn === 0) {
+      if (this.state.selectedAddress === game.creator) {
+        return game.creatorIsMakerSeed;
+      } else {
+        return !game.creatorIsMakerSeed;
+      }
+    }  
       if (this.state.selectedAddress === game.creator) {
           if ((game.currentTurn % 2 === 1 && game.creatorIsMakerSeed) ||
-              (game.currentTurn % 2 === 0 && !game.creatorIsMakerSeed) ||
-              (game.currentTurn === 0 && game.creatorIsMakerSeed)) {
+              (game.currentTurn % 2 === 0 && !game.creatorIsMakerSeed)) {
                 console.log("First if");
               return true;
           }
       }
       if (this.state.selectedAddress === game.joiner) {
-          if ((game.currentTurn != 0 && game.currentTurn % 2 === 0 && game.creatorIsMakerSeed) ||
-              (game.currentTurn % 2 === 1 && !game.creatorIsMakerSeed) ||
-              (game.currentTurn === 0 && !game.creatorIsMakerSeed)) {
+          if ((game.currentTurn % 2 === 0 && game.creatorIsMakerSeed) ||
+              (game.currentTurn % 2 === 1 && !game.creatorIsMakerSeed)) {
                 console.log("Second if");
                 return true;
           }
@@ -190,13 +230,20 @@ class Game extends React.Component {
       se sono breaker
       render di BoardBreaker -> component per giocare come breaker */}
 
-      {!this.isCurrentMaker() && (<BoardBreaker />)}
+      {!this.isCurrentMaker() && 
+        (<BoardBreaker 
+        makeGuess={this.makeGuess}
+        startTurn={this.startTurn}
+        codeHash={this.state._codeHash}
+        joined={this.state._joined}/>)}
       
       {this.isCurrentMaker() &&
         (<BoardMaker 
         hashSecretCode={this.computeHash}
         generateSeed={this.generateRandomString}
-        submitSecretHash={ this.submitCodeHash }/>)}
+        submitSecretHash={ this.submitCodeHash }
+        newGuess = {this.state._lastGuess}
+        turnStarted = {this.state._turnStarted} />)}
       </div>
 
       //se sono maker
@@ -233,19 +280,115 @@ class Game extends React.Component {
   }
 
   async submitCodeHash(codeHash) {
-    const maker = await this.state._mastermind.getCurrentMaker(this.state.gameId);
-    console.log("Maker: " + maker);
-    console.log("Local address: " + this.state.selectedAddress);
-    console.log("Game ID: " + this.state.gameId);
-    const totalGames = await this.state._mastermind.getNGames();
-    await this.state._mastermind.submitCodeHash(this.state.gameId, codeHash);
-  }
-  /*
-    async fetchInfo(gameId){
 
-        setState(...)
+    this._dismissTransactionError();
+    let req = undefined;
+    
+    try{
+      req = await this.state._mastermind.submitCodeHash(this.state.gameId, codeHash);
+      this.setState({ reqBeingSent: req.hash });
+      console.log(req);
+      const receipt = await req.wait();
+      console.log(receipt);
+      // The receipt, contains a status flag, which is 0 to indicate an error.
+      if (receipt.status === 0) {
+        throw new Error("Transaction failed");
+      }
+      
+      console.log(codeHash);
+      this.setState({_codeHash : true});
+      // await this._updateBalance();
+      // this.redirectToGame(gameId, this.state.selectedAddress)
+
+    } catch (error) {
+      // We check the error code to see if this error was produced because the
+      // user rejected a tx. If that's the case, we do nothing.
+      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
+        return;
+      }
+
+      // Other errors are logged and stored in the Dapp's state. This is used to
+      // show them to the user, and for debugging.
+      console.error(error);
+      this.setState({ transactionError: error });
+    } finally {
+      // If we leave the try/catch, we aren't sending a request anymore, so we clear
+      // this part of the state.
+      this.setState({ reqBeingSent: undefined });
     }
-  */
+  }
+
+  async makeGuess(guess) {
+    const gameDetails = await this.state._mastermind.getGameDetails(this.state.gameId);
+    console.log("Game id " + this.state.gameId);
+    console.log("Current turn: " + gameDetails.toObject().currentTurn);
+    console.log("CodeHash: " + gameDetails.toObject().codeHash);
+
+    // await this.state._mastermind.makeGuess(this.state.gameId, guess);
+
+    this._dismissTransactionError();
+    let req = undefined;
+    
+    try{
+      req = await this.state._mastermind.makeGuess(this.state.gameId,guess);
+      this.setState({ reqBeingSent: req.hash });
+      console.log(req);
+      const receipt = await req.wait();
+      console.log(receipt);
+      // The receipt, contains a status flag, which is 0 to indicate an error.
+      if (receipt.status === 0) {
+        throw new Error("Transaction failed");
+      }
+
+      this.setState({_lastGuess : guess});
+
+    } catch (error) {
+      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
+        return;
+      }
+      console.error(error);
+      this.setState({ transactionError: error });
+    } finally {
+      this.setState({ reqBeingSent: undefined });
+    }
+  }
+
+  async startTurn() {
+    // return new Promise((resolve) => {
+    //   this.state._mastermind.startTurn(this.state.gameId);
+    // });
+    this._dismissTransactionError();
+    let req = undefined;
+    
+    try{
+      req = await this.state._mastermind.startTurn(this.state.gameId);
+      this.setState({ reqBeingSent: req.hash });
+      console.log(req);
+      const receipt = await req.wait();
+      console.log(receipt);
+      // The receipt, contains a status flag, which is 0 to indicate an error.
+      if (receipt.status === 0) {
+        throw new Error("Transaction failed");
+      }
+
+      this.setState(prevState => ({
+        _gameDetails: {
+          ...prevState._gameDetails,
+          currentTurn: prevState._gameDetails.currentTurn + 1
+        }
+      }));
+
+    } catch (error) {
+      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
+        return;
+      }
+      console.error(error);
+      this.setState({ transactionError: error });
+    } finally {
+      this.setState({ reqBeingSent: undefined });
+    }
+  
+  }
 
   /*
   board maker avrà riferimento a "GenerateCodeModal", per submittare 
@@ -254,26 +397,11 @@ class Game extends React.Component {
   // _generateRandomSalt() {
   //   return crypto.randomBytes(32); // 32 bytes * 2 hex chars per byte = 64 hex chars
   // }
-  // _computeHash(intArray, seed) {
-  //   // Serialize the array as it would be in Solidity
-  //   const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-  //   const types = new Array(intArray.length).fill('uint256');
-  //   const serializedArray = abiCoder.encode(types, intArray);
 
-  //   // Concatenate the seed and the serialized array
-  //   const combined = ethers.concat([seed, serializedArray]);
-
-  //   console.log("JS hash: " + ethers.keccak256(combined));
-  //   // Compute the hash
-  //   return ethers.keccak256(combined);
-  // }
   // // Logic to join a game
-
-
-  // async makeGuess(gameId, guess) {
-  //   await this._mastermind.makeGuess(gameId, guess);
-  // }
-
+  _dismissTransactionError() {
+    this.setState({ transactionError: undefined });
+  }
 }
 
 export default withRouter(Game);

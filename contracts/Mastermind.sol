@@ -86,10 +86,9 @@ contract Mastermind {
         uint256 gameStake
     );
     event GameJoined(uint256 gameId, address joiner, address creator);
-    event Guess(uint256 gameId, address player, uint256[] guess);
+    event Guess(uint256 gameId, uint256[] guess);
     event Feedback(
         uint256 gameId,
-        address player,
         uint256 numCorrectPositions,
         uint256 numCorrectColors
     );
@@ -263,6 +262,7 @@ contract Mastermind {
         uint256 _gameId,
         bytes32 _hash
     ) external checkGameValidity(_gameId) {
+        console.log("-----------------CODE HASH 0");
         Game storage game = games[_gameId];
         require(
             game.codeHash == 0x0,
@@ -274,7 +274,9 @@ contract Mastermind {
             "Only the current CodeMaker can submit the code hash"
         );
 
+        console.log("-----------------CODE HASH 1");
         game.codeHash = _hash;
+        console.log(bytes32ToString(_hash));
 
         emit HashPublished(_gameId, codeMaker, _hash);
     }
@@ -386,7 +388,7 @@ contract Mastermind {
         );
         game.guesses[game.currentTurn].push(guess);
         game.accusedAFK[msg.sender] = 0; // Reset the AFK accusation if present
-        emit Guess(_gameId, msg.sender, guess); // Dummy event, replace with actual logic
+        emit Guess(_gameId, guess); // Dummy event, replace with actual logic
     }
 
     function provideFeedback(
@@ -409,7 +411,7 @@ contract Mastermind {
         }
         game.feedbacks[game.currentTurn].push([numCorrectPositions, numCorrectColors]);
         game.accusedAFK[msg.sender] = 0; // Reset the AFK accusation if present
-        emit Feedback(_gameId, msg.sender, numCorrectPositions, numCorrectColors);
+        emit Feedback(_gameId, numCorrectPositions, numCorrectColors);
         if (game.guesses[game.currentTurn].length == game.maxGuesses) {
             endTurn(_gameId, false);
         }
@@ -685,18 +687,22 @@ contract Mastermind {
         uint256 _gameId
     ) internal view returns (bool) {
         Game storage game = games[_gameId];
-
+        if (game.currentTurn == 0) {
+            if (_player == game.creator) {
+                return game.creatorIsMakerSeed;
+            } else {
+                return !game.creatorIsMakerSeed;
+            }
+        }  
         if (_player == game.creator) {
             if ((game.currentTurn % 2 == 1 && game.creatorIsMakerSeed) ||
-                (game.currentTurn % 2 == 0 && !game.creatorIsMakerSeed) ||
-                game.currentTurn == 0 && game.creatorIsMakerSeed) {
+                (game.currentTurn % 2 == 0 && !game.creatorIsMakerSeed)) {
                 return true;
             }
         }
         if (_player == game.joiner) {
             if ((game.currentTurn % 2 == 0 && game.creatorIsMakerSeed) ||
-                (game.currentTurn % 2 == 1 && !game.creatorIsMakerSeed) ||
-                game.currentTurn == 0 && !game.creatorIsMakerSeed) {
+                (game.currentTurn % 2 == 1 && !game.creatorIsMakerSeed)) {
                 return true;
             }
         }
