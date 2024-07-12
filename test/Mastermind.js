@@ -220,7 +220,10 @@ function hashArrayOfIntegers(intArray) {
 
 // Function A: Generate a random 64-character long string
 function generateRandomString() {
-   return crypto.randomBytes(32); // 32 bytes * 2 hex chars per byte = 64 hex chars
+   const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return array;
+   // return crypto.randomBytes(32); // 32 bytes * 2 hex chars per byte = 64 hex chars
 }
 
 // Function B: Hash the string prepended to the serialized array
