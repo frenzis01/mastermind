@@ -454,8 +454,9 @@ class Home extends React.Component {
   }
 
   // This method checks if the selected network is Localhost:8545
-  _checkNetwork() {
-    if (window.ethereum.networkVersion !== HARDHAT_NETWORK_ID) {
+  async _checkNetwork() {
+    const net_version = await window.ethereum.request({method: 'net_version'});
+    if (net_version !== HARDHAT_NETWORK_ID) {
       this._switchChain();
     }
   }
