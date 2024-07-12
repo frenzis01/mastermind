@@ -7,7 +7,5 @@ import Dapp from './Dapp.jsx'
 import "bootstrap/dist/css/bootstrap.css";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <Dapp />
-  </React.StrictMode>,
+  <Dapp />
 )

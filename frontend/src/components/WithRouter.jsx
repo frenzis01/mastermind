@@ -6,8 +6,6 @@ export function withRouter(Component) {
     const navigate = useNavigate();
     const params = useParams();
     const location = useLocation();
-    console.log("withRouter params:", params); // Debugging line
-    console.log("withRouter location:", location); // Debugging line
     return <Component {...props} router={{ navigate, params, location }} />;
   }
 }

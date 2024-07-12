@@ -40,7 +40,6 @@ class Game extends React.Component {
     this.handleGuess = this.handleGuess.bind(this);
     this.handleFeedback = this.handleFeedback.bind(this);
     this.handleDispute = this.handleDispute.bind(this);
-
   } 
 
   // getGameDetails() {
@@ -177,7 +176,13 @@ class Game extends React.Component {
         </div>
       </div>
 
-      
+      {/* 
+      se sono maker
+      render di BoardMaker -> component per giocare come maker
+
+      se sono breaker
+      render di BoardBreaker -> component per giocare come breaker */}
+
       {!this.isCurrentMaker() && (<BoardBreaker />)}
       {this.isCurrentMaker() && (<BoardMaker />)}
       

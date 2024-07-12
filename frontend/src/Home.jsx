@@ -58,41 +58,9 @@ class Home extends React.Component {
     this.handleGameCreated = this.handleGameCreated.bind(this);
     this.handleGameJoined = this.handleGameJoined.bind(this);
   }
-  setupEventListeners() {
-    const { _mastermind } = this.state;
-    _mastermind.on("GameCreated", this.handleGameCreated);
-    _mastermind.on("GameJoined", this.handleGameJoined);
-  }
-
-  handleGameCreated(gameId, creator, numColors, codeLength, numTurns, maxGuesses, gameStake) {
-    console.log("GameCreated received:");
-    const eventData = {
-      gameId: gameId,
-      creator: creator,
-      numColors: numColors,
-      codeLength: codeLength,
-      numTurns: numTurns,
-      maxGuesses: maxGuesses,
-      gameStake: gameStake
-    }
-    console.log(eventData);
-    // Handle event A
-  }
-
-  handleGameJoined(eventData) {
-    console.log("GameJoined received:", eventData);
-    // Handle event B
-  }
 
   componentWillUnmount() {
-    const { _mastermind } = this.state;
-    if (_mastermind) {
-      _mastermind.off("GameCreated", this.handleGameCreated);
-      _mastermind.off("GameJoined", this.handleGameJoined);
-    }
-
-    // Needed to stop polling when the component is unmounted
-    this._stopPollingData();
+    this.removeEventListeners();
   }
 
   render() {
@@ -225,7 +193,7 @@ class Home extends React.Component {
 
     // We reinitialize it whenever the user changes their account.
     window.ethereum.on("accountsChanged", ([newAddress]) => {
-      this._stopPollingData();
+      this.removeEventListeners();
       // `accountsChanged` event can be triggered with an undefined newAddress.
       // This happens when the user removes the Dapp from the "Connected
       // list of sites allowed access to your addresses" (Metamask > Settings > Connections)
@@ -239,18 +207,17 @@ class Home extends React.Component {
   }
 
   // This method initializes the dapp
-     _initialize(userAddress) {
+  _initialize(userAddress) {
     // We first store the user's address in the component's state
     this.setState({selectedAddress: userAddress}, async () => { 
-      // Then, we initialize ethers, fetch the user balance, and start polling for the available games
-      await this._initializeEthers();
-      this.setupEventListeners();
-      await this._updateBalance();
-
       //ToDo: controlla che l'utente sotto userAddress non sia già in un game; se lo è redirect a pagina di game
 
-      //this._getTokenData();
-      this._startPollingData();
+      // Then, we initialize ethers, fetch the user balance, get the available games, and start listening for new / joined games
+      await this._initializeEthers();
+      await this._updateBalance();
+
+      this._updateAvailableGames();
+      this.setupEventListeners();
     });
   }
 
@@ -284,34 +251,6 @@ class Home extends React.Component {
     }
   }
 
-  // The next two methods are needed to start and stop polling data. While
-  // the data being polled here is specific to this example, you can use this
-  // pattern to read any data from your contracts.
-  //
-  // Note that if you don't need it to update in near real time, you probably
-  // don't need to poll it. If that's the case, you can just fetch it when you
-  // initialize the app, as we do with the token data.
-  _startPollingData() {
-    this._pollDataInterval = setInterval(() => this._updateAvailableGames(), 10000);
-
-    // We run it once immediately so we don't have to wait for it
-    this._updateAvailableGames();
-  }
-
-  _stopPollingData() {
-    clearInterval(this._pollDataInterval);
-    this._pollDataInterval = undefined;
-  }
-
-  // The next two methods just read from the contract and store the results
-  // in the component state.
-  /*async _getTokenData() {
-    const name = await this._token.name();
-    const symbol = await this._token.symbol();
-
-    this.setState({ tokenData: { name, symbol } });
-  }*/
-
   async _updateAvailableGames() {
     const availableGames = await this.state._mastermind.getJoinableGames(this.state.selectedAddress)
     const result = availableGames.map(arr =>{
@@ -322,7 +261,60 @@ class Home extends React.Component {
             gameStake: arr[3]
         }
     })
+    console.log(result)
     this.setState({ availableGames: result });
+  }
+
+  // The next two methods are needed to start and stop polling data. 
+  // Events are used to update the availableGames array
+
+  setupEventListeners() {
+    const { _mastermind } = this.state;
+    _mastermind.on("GameCreated", this.handleGameCreated);
+    _mastermind.on("GameJoined", this.handleGameJoined);
+  }
+
+  removeEventListeners() {
+    const { _mastermind } = this.state;
+    _mastermind.off("GameCreated", this.handleGameCreated);
+    _mastermind.off("GameJoined", this.handleGameJoined);
+  }
+
+  // GameCreated handler
+  handleGameCreated(gameId, creator, numColors, codeLength, numTurns, maxGuesses, gameStake) {
+    console.log("GameCreated received:");
+    const eventData = {
+      gameId: gameId,
+      creator: creator,
+      numColors: numColors,
+      codeLength: codeLength,
+      numTurns: numTurns,
+      maxGuesses: maxGuesses,
+      gameStake: gameStake
+    }
+    
+    // Update of availableGames
+    this.setState((prevState) => ({
+      availableGames: [...prevState.availableGames, {
+        gameId: eventData.gameId,
+        creator: eventData.creator,
+        joiner: eventData.joiner,
+        gameStake: eventData.gameStake
+    }]
+    }));
+  }
+
+  // GameJoined handler
+  handleGameJoined(gameId, joiner, creator) {
+    console.log("GameJoined received:");
+    const eventData = {
+      gameId: gameId,
+      joiner: joiner,
+      creator: creator
+    }
+    this.setState((prevState) => ({
+      availableGames: prevState.availableGames.filter(game => game.gameId !== eventData.gameId)
+    }));
   }
 
   // This method just clears part of the state.
