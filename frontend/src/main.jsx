@@ -7,5 +7,5 @@ import Dapp from './Dapp.jsx'
 import "bootstrap/dist/css/bootstrap.css";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <Dapp />
+    <Dapp />
 )

@@ -128,17 +128,24 @@ class Game extends React.Component {
 
   isCurrentMaker() {
     const game = this.state._gameDetails;
+    // console.log(this.state.selectedAddress === game.creator);
+    // console.log(game.currentTurn % 2 == 1 && game.creatorIsMakerSeed);
+    // console.log(game.currentTurn);
+    // console.log(game.creatorIsMakerSeed);
       if (this.state.selectedAddress === game.creator) {
           if ((game.currentTurn % 2 === 1 && game.creatorIsMakerSeed) ||
               (game.currentTurn % 2 === 0 && !game.creatorIsMakerSeed) ||
               (game.currentTurn === 0 && game.creatorIsMakerSeed)) {
+                console.log("First if");
               return true;
           }
       }
       if (this.state.selectedAddress === game.joiner) {
-          if ((game.currentTurn % 2 === 0 && game.creatorIsMakerSeed) ||
-              (game.currentTurn % 2 === 1 && !game.creatorIsMakerSeed)) {
-              return true;
+          if ((game.currentTurn != 0 && game.currentTurn % 2 === 0 && game.creatorIsMakerSeed) ||
+              (game.currentTurn % 2 === 1 && !game.creatorIsMakerSeed) ||
+              (game.currentTurn === 0 && !game.creatorIsMakerSeed)) {
+                console.log("Second if");
+                return true;
           }
       }
       return false;
@@ -163,7 +170,6 @@ class Game extends React.Component {
     //ci mettiamo in ascolto di GameJoined event (https://stackoverflow.com/questions/58150023/how-do-we-listen-to-solidity-smart-contract-events-on-react-js)
 
     //stampare a schermo informazioni sull'attuale game in corso
-    
     return (
       <div className="container p-4">
       <div className="row">

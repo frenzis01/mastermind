@@ -1,5 +1,5 @@
 // ProvideFeedbackModal.js
-import React, { useState } from 'react';
+import { useState } from 'react';
 import "../../css/styles.css"
 
 export function ProvideFeedbackModal({ onToggleModal, submitFeedback }) {
