@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { randomBytes } from 'crypto';
 // Ethers used to interact with the Ethereum network and our contract
 import { ethers } from "ethers";
 
@@ -213,7 +212,10 @@ class Game extends React.Component {
   // Function A: Generate a random 64-character long string
   generateRandomString() {
     // console.log("Generating random string");
-    return randomBytes(32); // 32 bytes * 2 hex chars per byte = 64 hex chars
+    const array = new Uint8Array(32);
+    window.crypto.getRandomValues(array);
+    return array;
+    // return window.crypto.getRandomValues(32); // 32 bytes * 2 hex chars per byte = 64 hex chars
   }
 
   // Function B: Hash the string prepended to the serialized array
@@ -231,6 +233,11 @@ class Game extends React.Component {
   }
 
   async submitCodeHash(codeHash) {
+    const maker = await this.state._mastermind.getCurrentMaker(this.state.gameId);
+    console.log("Maker: " + maker);
+    console.log("Local address: " + this.state.selectedAddress);
+    console.log("Game ID: " + this.state.gameId);
+    const totalGames = await this.state._mastermind.getNGames();
     await this.state._mastermind.submitCodeHash(this.state.gameId, codeHash);
   }
   /*
