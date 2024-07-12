@@ -3,10 +3,11 @@ import { useState } from 'react';
 import ProvideFeedbackModal from '../modals/ProvideFeedbackModal';
 import ColorChooseModal from '../modals/ColorChooseModal';
 import "../../css/styles.css"
+import {colors, colorToInt} from "../../assets/colors";
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray') };
 
-export function BoardMaker({ hashSecretCode, onSecretCodeChosen}) {
+export function BoardMaker({ hashSecretCode, generateSeed, submitSecretHash}) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isFeedbackModalOpen, setFeedbackModalOpen] = useState(false);
@@ -37,16 +38,19 @@ export function BoardMaker({ hashSecretCode, onSecretCodeChosen}) {
     }
   };
 
-  const handleGuess = (colors) => {
+  const handleGuess = (guessColors) => {
     const newRows = [...rows];
-    newRows[currentRow].guess = colors;
+    newRows[currentRow].guess = guessColors;
     setRows(newRows);
     setPrevGuess(true);
   };
 
-  const handleSecretCodeChosen = (colors) => {
+  const handleSecretCodeChosen = (codeColors) => {
    // TODO: Implement this function
-   //  onSecretCodeChosen(colors);
+   console.log('Secret Code Chosen: ', codeColors);
+   codeColors = codeColors.map(colorToInt);
+   const hash = hashSecretCode(codeColors,generateSeed());
+    submitSecretHash(hash);
     setSecretCodeChosen(true);
     toggleColorChooseModal();
   };

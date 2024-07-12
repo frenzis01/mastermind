@@ -1,19 +1,7 @@
 // ColorChooseModal.js
 import { useState } from "react";
 import "../../css/styles.css"
-
-const colors = [
-  "#FFB347", // Persimmon
-  "#FF6961", // Light Red
-  "#77DD77", // Pastel Green
-  "#AEC6CF", // Pastel Blue
-  "#F49AC2", // Pastel Purple
-  "#D4AF65", // Gold (Metallic)
-  "#836953", // Coffee
-  "#779ECB", // Dark Pastel Blue
-  "#966FD6", // Light Purple
-  "#03C03C", // Dark Pastel Green
-];
+import {colors, colorToInt} from "../../assets/colors";
 
 const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
 

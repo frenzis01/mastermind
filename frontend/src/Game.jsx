@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import { randomBytes } from 'crypto';
 // Ethers used to interact with the Ethereum network and our contract
 import { ethers } from "ethers";
 
@@ -40,6 +40,8 @@ class Game extends React.Component {
     this.handleGuess = this.handleGuess.bind(this);
     this.handleFeedback = this.handleFeedback.bind(this);
     this.handleDispute = this.handleDispute.bind(this);
+    this.computeHash = this.computeHash.bind(this);
+    this.submitCodeHash = this.submitCodeHash.bind(this);
   } 
 
   // getGameDetails() {
@@ -190,9 +192,12 @@ class Game extends React.Component {
       render di BoardBreaker -> component per giocare come breaker */}
 
       {!this.isCurrentMaker() && (<BoardBreaker />)}
-      {this.isCurrentMaker() && (<BoardMaker />)}
       
-      {/* this.state.submitCodeHashModalOpen && <ColorChooseModal submitHandler={this.submitCodeHash} /> */}
+      {this.isCurrentMaker() &&
+        (<BoardMaker 
+        hashSecretCode={this.computeHash}
+        generateSeed={this.generateRandomString}
+        submitSecretHash={ this.submitCodeHash }/>)}
       </div>
 
       //se sono maker
@@ -205,6 +210,29 @@ class Game extends React.Component {
       );
 }
 
+  // Function A: Generate a random 64-character long string
+  generateRandomString() {
+    // console.log("Generating random string");
+    return randomBytes(32); // 32 bytes * 2 hex chars per byte = 64 hex chars
+  }
+
+  // Function B: Hash the string prepended to the serialized array
+  computeHash(intArray, seed) {
+    // Serialize the array as it would be in Solidity
+    const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+    const types = new Array(intArray.length).fill('uint256');
+    const serializedArray = abiCoder.encode(types, intArray);
+
+    // Concatenate the seed and the serialized array
+    const combined = ethers.concat([seed, serializedArray]);
+
+    // Compute the hash
+    return ethers.keccak256(combined);
+  }
+
+  async submitCodeHash(codeHash) {
+    await this.state._mastermind.submitCodeHash(this.state.gameId, codeHash);
+  }
   /*
     async fetchInfo(gameId){
 
@@ -233,14 +261,7 @@ class Game extends React.Component {
   //   return ethers.keccak256(combined);
   // }
   // // Logic to join a game
-  // async submitCodeHash(gameId, codeSecret) {
 
-  //   let req = undefined;
-
-  //   const codeHash = this.computeHash(codeSecret, this.generateRandomSalt());
-
-  //   await this._mastermind.submitCodeHash(gameId, codeHash);
-  // }
 
   // async makeGuess(gameId, guess) {
   //   await this._mastermind.makeGuess(gameId, guess);
