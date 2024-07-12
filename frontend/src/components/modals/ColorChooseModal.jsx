@@ -1,5 +1,5 @@
 // ColorChooseModal.js
-import React, { useState } from "react";
+import { useState } from "react";
 import "../../css/styles.css"
 
 const colors = [
