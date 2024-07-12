@@ -688,13 +688,15 @@ contract Mastermind {
 
         if (_player == game.creator) {
             if ((game.currentTurn % 2 == 1 && game.creatorIsMakerSeed) ||
-                (game.currentTurn % 2 == 0 && !game.creatorIsMakerSeed)) {
+                (game.currentTurn % 2 == 0 && !game.creatorIsMakerSeed) ||
+                game.currentTurn == 0 && game.creatorIsMakerSeed) {
                 return true;
             }
         }
         if (_player == game.joiner) {
             if ((game.currentTurn % 2 == 0 && game.creatorIsMakerSeed) ||
-                (game.currentTurn % 2 == 1 && !game.creatorIsMakerSeed)) {
+                (game.currentTurn % 2 == 1 && !game.creatorIsMakerSeed) ||
+                game.currentTurn == 0 && !game.creatorIsMakerSeed) {
                 return true;
             }
         }
