@@ -19,6 +19,8 @@ import { TransactionErrorMessage } from "./components/misc/TransactionErrorMessa
 import { WaitingForTransactionMessage } from "./components/misc/WaitingForTransactionMessage";
 import { withRouter } from './components/WithRouter';
 
+import "./css/styles.css"
+
 // This is the default id used by the Hardhat Network
 const HARDHAT_NETWORK_ID = '31337';
 
@@ -67,7 +69,14 @@ class Home extends React.Component {
     // Ethereum wallets inject the window.ethereum object. If it hasn't been
     // injected, we instruct the user to install a wallet.
     if (window.ethereum === undefined) {
-      return <NoWalletDetected />;
+      return (
+        <div className="content container p-4">
+          <h1 class="title">
+              Mastermind
+          </h1>
+        <NoWalletDetected />
+        </div>
+      );
     }
 
     // Ask the user to connect their wallet.
@@ -76,11 +85,16 @@ class Home extends React.Component {
     // clicks a button. This callback just calls the _connectWallet method.
     if (!this.state.selectedAddress) {
       return (
-        <ConnectWallet
-          connectWallet={() => this._connectWallet()}
-          networkError={this.state.networkError}
-          dismiss={() => this._dismissNetworkError()}
-        />
+        <div className="content container p-4">
+          <h1 class="title">
+              Mastermind
+          </h1>
+          <ConnectWallet
+            connectWallet={() => this._connectWallet()}
+            networkError={this.state.networkError}
+            dismiss={() => this._dismissNetworkError()}
+          />
+        </div>
       );
     }
 
@@ -92,12 +106,11 @@ class Home extends React.Component {
 
     // If everything is loaded, we render the application.
     return (
-      <div className="container p-4">
+      <div className="content container p-4">
         <div className="row">
           <div className="col-12">
-            <h1>
+            <h1 class="title">
               Mastermind
-              {/*{this.state.tokenData.name} ({this.state.tokenData.symbol})*/}
             </h1>
             <p>
               Welcome <b>{this.state.selectedAddress}</b>, you have{" "}
@@ -112,7 +125,7 @@ class Home extends React.Component {
         <div className="row">
           <div className="col-12">
             <button 
-              className="btn btn-primary" 
+              className="btn-faded" 
               onClick={() => this.setState({ showModal: true })}>
               Create Game
             </button>
@@ -145,13 +158,13 @@ class Home extends React.Component {
 
         <div className="row">
           <div className="col-12">
-            <h2>Available Games</h2>
+            <h2 className="under-title">Available Games</h2>
             <ul>
               {this.state.availableGames.map((game) => (
                 <li key={game.gameId}>
                   Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}, Creator: {game.creator}
                   <button 
-                    className="btn btn-secondary ml-2" 
+                    className="btn-faded btn ml-2" 
                     onClick={() => this.joinGame(game.gameId, Number(game.gameStake/BigInt(1000000000000000000)))}>
                     Join Game
                   </button>

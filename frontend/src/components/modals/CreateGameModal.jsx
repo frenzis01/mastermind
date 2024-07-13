@@ -46,7 +46,7 @@ export function CreateGameModal({ closeModal, createGame }) {
               />
             </Form.Group>
           )}
-          <Button variant="primary" type="submit">
+          <Button className="btn-faded" type="submit">
             Create Game
           </Button>
         </Form>
