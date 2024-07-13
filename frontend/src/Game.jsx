@@ -87,12 +87,13 @@ class Game extends React.Component {
     // this.setState({ _mastermind: mastermind });
     this.setState({ _gameDetails: gameDetails, _provider: provider, _mastermind: mastermind }, () => {
       this.setupEventListeners();
+
+      if (this.state._gameDetails.joiner !== "0x0000000000000000000000000000000000000000") {
+        console.log("is Joined!")
+        this.setState({ _joined: true });
+      }
     });
 
-    // TODO okay here?
-    if (this.state.joiner != "0x0000000000000000000000000000000000000000") {
-      this.setState({ _joined: true });
-    }
   }
 
   setupEventListeners() {

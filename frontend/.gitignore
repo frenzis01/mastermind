@@ -1,3 +1,6 @@
+# Contracts folder ignored
+src/contracts
+
 # Logs
 logs
 *.log

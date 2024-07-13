@@ -253,6 +253,7 @@ class Home extends React.Component {
 
   async _updateAvailableGames() {
     const availableGames = await this.state._mastermind.getJoinableGames(this.state.selectedAddress)
+    
     const result = availableGames.map(arr =>{
         return {
             gameId: arr[0],
@@ -261,7 +262,7 @@ class Home extends React.Component {
             gameStake: arr[3]
         }
     })
-    console.log(result)
+    
     this.setState({ availableGames: result });
   }
 
@@ -283,25 +284,21 @@ class Home extends React.Component {
   // GameCreated handler
   handleGameCreated(gameId, creator, numColors, codeLength, numTurns, maxGuesses, gameStake) {
     console.log("GameCreated received:");
-    const eventData = {
-      gameId: gameId,
-      creator: creator,
-      numColors: numColors,
-      codeLength: codeLength,
-      numTurns: numTurns,
-      maxGuesses: maxGuesses,
-      gameStake: gameStake
-    }
-    
-    // Update of availableGames
-    this.setState((prevState) => ({
-      availableGames: [...prevState.availableGames, {
-        gameId: eventData.gameId,
-        creator: eventData.creator,
-        joiner: eventData.joiner,
-        gameStake: eventData.gameStake
-    }]
-    }));
+
+    this.setState((prevState) => {
+      const gameExists = prevState.availableGames.some(game => game.gameId === gameId);
+
+      if(!gameExists){
+        return {availableGames: [...prevState.availableGames, {
+          gameId: gameId,
+          creator: creator,
+          joiner: "0x0000000000000000000000000000000000000000",
+          gameStake: gameStake
+          }]
+        }
+      }
+      return prevState;
+    });
   }
 
   // GameJoined handler
