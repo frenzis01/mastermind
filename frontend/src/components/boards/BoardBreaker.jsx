@@ -6,7 +6,7 @@ import { colors, colorToInt, intToColor, feedbackColors } from '../../assets/col
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray') };
 
-export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedback }) {
+export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedback, guesses, feedbacks }) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isColorChooseModalOpen, setColorChooseModalOpen] = useState(false);
@@ -15,6 +15,8 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
   const toggleColorChooseModal = () => setColorChooseModalOpen(!isColorChooseModalOpen);
   const waitForNewFeedback = () => setPrevFeedback(false);
 
+
+
   // console.log("Deploying board");
   // startTurn();
   useEffect(() => {
@@ -22,28 +24,42 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
       console.log("New Feedback!")
       handleFeedback(currentRow, newFeedback);
     }
-    if (joined && currentRow === 0 && !newFeedback){
+    if (joined && currentRow === 0 && !newFeedback && guesses){
       console.log("is Joined!")
       startTurn();
     }
+
+    // TODO test
+    if (guesses) {
+      for (let i = 0; i < guesses.length; i++) {
+        handleSubmitGuess(false)(guesses[i]);
+        handleFeedback(i, feedbacks[i]);
+      }
+    }
+
   }, [joined,newFeedback]);
 
-  const handleSubmitGuess = async (colors) => {
-    console.log('Submitting guess: ', colors);
-    const newRows = [...rows];
-    newRows[currentRow].guess = colors;
-    setRows(newRows);
-    toggleColorChooseModal();
-    makeGuess(colors.map(colorToInt), currentRow);
-    // Move to the next row or handle end game logic
-    if (currentRow < 9) {
-      waitForNewFeedback();
-      // setCurrentRow(currentRow + 1);
-    } else {
-      console.log('Game Over');
-      // TODO implement end game logic
+  const handleSubmitGuess = (init) => {
+    return (colors) => {
+      console.log('Submitting guess: ', colors);
+      const newRows = [...rows];
+      newRows[currentRow].guess = colors;
+      setRows(newRows);
+      if (init) {
+        toggleColorChooseModal();
+        makeGuess(colors.map(colorToInt), currentRow);
+      }
+      // Move to the next row or handle end game logic
+      if (currentRow < 9) {
+        waitForNewFeedback();
+        // setCurrentRow(currentRow + 1);
+      } else {
+        console.log('Game Over');
+        // TODO implement end game logic
+      }
     }
   };
+
 
   const handleFeedback = (rowIndex, feedback) => {
     feedback.cc = Number(feedback.cc);
@@ -84,7 +100,7 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
         </div>
       ))}
       {/* TODO check MakeGuess modal opening logic */}
-      {isColorChooseModalOpen && codeHash && (prevFeedback || currentRow == 0) && <ColorChooseModal submitCode={handleSubmitGuess} onToggleModal={toggleColorChooseModal}/>}
+      {isColorChooseModalOpen && codeHash && (prevFeedback || currentRow == 0) && <ColorChooseModal submitCode={handleSubmitGuess(false)} onToggleModal={toggleColorChooseModal}/>}
     </div>
   );
 }
