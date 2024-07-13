@@ -77,7 +77,7 @@ class Home extends React.Component {
     if (window.ethereum === undefined) {
       return (
         <div className="content container p-4">
-          <h1 class="title">
+          <h1 className="title">
               Mastermind
           </h1>
         <NoWalletDetected />
@@ -92,7 +92,7 @@ class Home extends React.Component {
     if (!this.state.selectedAddress) {
       return (
         <div className="content container p-4">
-          <h1 class="title">
+          <h1 className="title">
               Mastermind
           </h1>
           <ConnectWallet
@@ -115,7 +115,7 @@ class Home extends React.Component {
       <div className="content container p-4">
         <div className="row">
           <div className="col-12">
-            <h1 class="title">
+            <h1 className="title">
               Mastermind
             </h1>
             <p>
