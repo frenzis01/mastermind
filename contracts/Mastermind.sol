@@ -183,6 +183,11 @@ contract Mastermind {
         Game storage game = games[_gameId];
         return game.guesses[game.currentTurn];
     }
+    
+    function getFeedback(uint256 _gameId) external view returns (uint256[][] memory) {
+        Game storage game = games[_gameId];
+        return game.feedbacks[game.currentTurn];
+    }
 
     struct GameInfo {
         uint256 gameId;
