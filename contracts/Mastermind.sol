@@ -69,7 +69,7 @@ contract Mastermind {
 
     // Mapping to store game instances
     mapping(uint256 => Game) public games;
-    uint256[] public activeGames;
+    GameInfo[] public activeGames;
     GameInfo[] public joinableGames;
 
     // Counter for total number of games
@@ -157,8 +157,31 @@ contract Mastermind {
         return totalGames;
     }
 
-    function getActiveGames() external view returns (uint256[] memory) {
+    function getAllActiveGames() external view returns (GameInfo[] memory) {
         return activeGames;
+    }
+
+    function getActiveGames(address player) external view returns (GameInfo[] memory) {
+
+        uint256[] memory resultIndexes = new uint256[](activeGames.length);
+        uint count = 0;
+        for (uint256 i = 0; i < activeGames.length; i++) {
+            if (activeGames[i].joiner == player || activeGames[i].creator == player) {
+                resultIndexes[count] = i;
+                count++;
+            }
+        }
+        GameInfo[] memory result = new GameInfo[](count);
+        for(uint256 i = 0; i < count; i++){
+            result[i] = activeGames[resultIndexes[i]];
+        }
+        
+        return result;
+    }
+
+    function getGuesses(uint256 _gameId) external view returns (uint256[][] memory) {
+        Game storage game = games[_gameId];
+        return game.guesses[game.currentTurn];
     }
 
     struct GameInfo {
@@ -262,7 +285,6 @@ contract Mastermind {
         uint256 _gameId,
         bytes32 _hash
     ) external checkGameValidity(_gameId) {
-        console.log("-----------------CODE HASH 0");
         Game storage game = games[_gameId];
         require(
             game.codeHash == 0x0,
@@ -274,9 +296,7 @@ contract Mastermind {
             "Only the current CodeMaker can submit the code hash"
         );
 
-        console.log("-----------------CODE HASH 1");
         game.codeHash = _hash;
-        console.log(bytes32ToString(_hash));
 
         emit HashPublished(_gameId, codeMaker, _hash);
     }
@@ -318,7 +338,7 @@ contract Mastermind {
         // selectedGame.maker = selectedGame.creatorIsMakerSeed ? selectedGame.joiner : selectedGame.creator;
         // selectedGame.breaker = selectedGame.creatorIsMakerSeed ? selectedGame.creator : selectedGame.joiner;
 
-        activeGames.push(_gameId);
+        activeGames.push(getInfoFromGame(selectedGame));
         makeGameNotJoinable(_gameId);
 
         // Emit event to log game join
@@ -754,7 +774,7 @@ contract Mastermind {
         // Reverse lookup of games not yet ended
         for (uint256 index = activeGames.length ; index > 0; index--) {
             uint256 i = index -1;
-            Game storage game = games[activeGames[i]];
+            Game storage game = games[activeGames[i].gameId];
             // Check if the turn has ended
             if 
                 (
@@ -768,11 +788,11 @@ contract Mastermind {
                     // Check if maximum turns have been reached
                     if (game.currentTurn >= game.numTurns || game.guessed) {
                         // Safe to end the game, breaker cannot dispute anymore
-                        endGame(activeGames[i],game.creator,game.joiner,game.points[game.creator],game.points[game.joiner]);
+                        endGame(activeGames[i].gameId,game.creator,game.joiner,game.points[game.creator],game.points[game.joiner]);
                     }
                     else {
                         // Start a new turn
-                        startTurn(activeGames[i]);
+                        startTurn(activeGames[i].gameId);
                     }
                 }
         }
@@ -782,7 +802,7 @@ contract Mastermind {
         bool found = false;
         uint256 i = 0;
         for (i; i < activeGames.length; i++) {
-            if (activeGames[i] == gameId){
+            if (activeGames[i].gameId == gameId){
                 found = true;
                 break;
             }

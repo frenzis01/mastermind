@@ -37,7 +37,8 @@ describe('Mastermind', function () {
    it(' - should clean unfinished games', async function () {
       await mastermind.connect(addr1).createGame({ value: ethers.parseEther("1") });
 
-      activeGames = await mastermind.getActiveGames()
+      activeGames = await mastermind.getAllActiveGames()
+      console.log(activeGames);
       expect(activeGames.length).to.equal(0);
 
    });
