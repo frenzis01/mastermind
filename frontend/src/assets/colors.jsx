@@ -11,6 +11,12 @@ export const colors = [
    "#169e74", // Dark Pastel Green
  ];
 
+export const feedbackColors = {
+   cc: "#000000", // Black
+   nc: "#FFFFFF", // White
+   xx: "#808080", // Gray
+}
+
 export const colorToInt = (color) => {
    return colors.indexOf(color);
 }

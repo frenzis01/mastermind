@@ -168,7 +168,7 @@ class Home extends React.Component {
             <ul>
               {this.state.availableGames.map((game) => (
                 <li key={game.gameId}>
-                  Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}, Creator: {game.creator}
+                  ID: {Number(game.gameId)}, Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}, Creator: {game.creator}
                   <button 
                     className="btn-faded btn ml-2" 
                     onClick={() => this.joinGame(game.gameId, Number(game.gameStake/BigInt(1000000000000000000)))}>

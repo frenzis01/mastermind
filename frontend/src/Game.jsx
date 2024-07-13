@@ -37,6 +37,7 @@ class Game extends React.Component {
       _provider: undefined,
       _gameDetails: undefined,
       _lastGuess: undefined,
+      _lastFeedback: undefined,
       _codeHash: false,
       _joined: false,
       _turnStarted: false,
@@ -57,6 +58,7 @@ class Game extends React.Component {
     this.submitCodeHash = this.submitCodeHash.bind(this);
     this.makeGuess = this.makeGuess.bind(this);
     this.startTurn = this.startTurn.bind(this);
+    this.provideFeedback = this.provideFeedback.bind(this);
 
 
   } 
@@ -171,9 +173,10 @@ class Game extends React.Component {
     this.setState({ _lastGuess: guess });
   }
 
-  handleFeedback(eventData) {
-    console.log("Event B received:", eventData);
+  handleFeedback(gameId,cc,nc) {
+    console.log("Feedback received:");
     // Handle event B
+    this.setState({ _lastFeedback: {"cc": cc, "nc": nc} });
   }
 
   handleDispute(eventData) {
@@ -295,7 +298,8 @@ class Game extends React.Component {
         makeGuess={this.makeGuess}
         startTurn={this.startTurn}
         codeHash={this.state._codeHash}
-        joined={this.state._joined}/>)}
+        joined={this.state._joined}
+        newFeedback={this.state._lastFeedback}/>)}
       
       {this.isCurrentMaker() &&
         (<BoardMaker 
@@ -303,7 +307,8 @@ class Game extends React.Component {
         generateSeed={this.generateRandomString}
         submitSecretHash={ this.submitCodeHash }
         newGuess = {this.state._lastGuess}
-        turnStarted = {this.state._turnStarted} />)}
+        turnStarted = {this.state._turnStarted}
+        provideFeedback={this.provideFeedback} />)}
       </div>
 
       //se sono maker
@@ -380,9 +385,9 @@ class Game extends React.Component {
 
   async makeGuess(guess) {
     const gameDetails = await this.state._mastermind.getGameDetails(this.state.gameId);
-    console.log("Game id " + this.state.gameId);
-    console.log("Current turn: " + gameDetails.toObject().currentTurn);
-    console.log("CodeHash: " + gameDetails.toObject().codeHash);
+    // console.log("Game id " + this.state.gameId);
+    // console.log("Current turn: " + gameDetails.toObject().currentTurn);
+    // console.log("CodeHash: " + gameDetails.toObject().codeHash);
 
     // await this.state._mastermind.makeGuess(this.state.gameId, guess);
 
@@ -401,6 +406,41 @@ class Game extends React.Component {
       }
 
       this.setState({_lastGuess : guess});
+
+    } catch (error) {
+      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
+        return;
+      }
+      console.error(error);
+      this.setState({ transactionError: error });
+    } finally {
+      this.setState({ reqBeingSent: undefined });
+    }
+  }
+
+  async provideFeedback(cc,nc) {
+    // const gameDetails = await this.state._mastermind.getGameDetails(this.state.gameId);
+    // console.log("Game id " + this.state.gameId);
+    // console.log("Current turn: " + gameDetails.toObject().currentTurn);
+    // console.log("CodeHash: " + gameDetails.toObject().codeHash);
+
+    // await this.state._mastermind.makeGuess(this.state.gameId, guess);
+
+    this._dismissTransactionError();
+    let req = undefined;
+    
+    try{
+      req = await this.state._mastermind.provideFeedback(this.state.gameId,cc,nc);
+      this.setState({ reqBeingSent: req.hash });
+      // console.log(req);
+      const receipt = await req.wait();
+      // console.log(receipt);
+      // The receipt, contains a status flag, which is 0 to indicate an error.
+      if (receipt.status === 0) {
+        throw new Error("Transaction failed");
+      }
+
+      this.setState({_lastFeedback : {"cc": cc, "nc": nc}});
 
     } catch (error) {
       if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {

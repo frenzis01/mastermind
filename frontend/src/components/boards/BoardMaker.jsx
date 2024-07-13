@@ -3,11 +3,11 @@ import { useState, useEffect } from 'react';
 import ProvideFeedbackModal from '../modals/ProvideFeedbackModal';
 import ColorChooseModal from '../modals/ColorChooseModal';
 import "../../css/styles.css"
-import {colors, colorToInt, intToColor} from "../../assets/colors";
+import {colors, colorToInt, intToColor, feedbackColors} from "../../assets/colors";
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray') };
 
-export function BoardMaker({ hashSecretCode, generateSeed, submitSecretHash, newGuess, turnStarted}) {
+export function BoardMaker({ hashSecretCode, generateSeed, submitSecretHash, newGuess, turnStarted, provideFeedback}) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isFeedbackModalOpen, setFeedbackModalOpen] = useState(false);
@@ -23,15 +23,21 @@ export function BoardMaker({ hashSecretCode, generateSeed, submitSecretHash, new
 
   const handleProvideFeedback = (feedback) => {
     const newRows = [...rows];
-    const feedbackColors = [
-      ...Array(feedback.cc).fill('black'),
-      ...Array(feedback.nc).fill('white'), // Very light gray
-      ...Array(6 - feedback.cc - feedback.nc).fill('gray'),
+    const feedbackCircles = [
+      ...Array(feedback.cc).fill(feedbackColors.cc),
+      ...Array(feedback.nc).fill(feedbackColors.nc), // Very light gray
+      ...Array(6 - feedback.cc - feedback.nc).fill(feedbackColors.xx),
     ];
-    newRows[currentRow].feedback = feedbackColors;
+    newRows[currentRow].feedback = feedbackCircles;
     setRows(newRows);
     toggleFeedbackModal();
+    waitForNewGuess();
+    
+    // Call the contract
+    provideFeedback(feedback.cc, feedback.nc);
+    
     if (currentRow < 9) {
+      // TODO implement endgame
       setCurrentRow(currentRow + 1);
     } else {
       console.log('Game Over');
@@ -82,7 +88,6 @@ export function BoardMaker({ hashSecretCode, generateSeed, submitSecretHash, new
           className='submit-button'
           onClick={() => {
             toggleFeedbackModal();
-            waitForNewGuess();
           }}
         >
           Provide Feedback
