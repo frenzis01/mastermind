@@ -39,8 +39,12 @@ class Game extends React.Component {
       _lastGuess: undefined,
       _codeHash: false,
       _joined: false,
-      _turnStarted: false
+      _turnStarted: false,
+      _catchedEvents: new Set()
     };
+
+    this.localCatchedEvents = new Set();
+    this.wrap = this.wrap.bind();
 
     this._initializeEthers = this._initializeEthers.bind(this);
     this.handleGuess = this.handleGuess.bind(this);
@@ -54,17 +58,37 @@ class Game extends React.Component {
     this.makeGuess = this.makeGuess.bind(this);
     this.startTurn = this.startTurn.bind(this);
 
+
   } 
 
   componentDidMount(){
     this._initializeEthers();
   }
 
-  // getGameDetails() {
-  //   const gameDetails = this.state._mastermind.getGameDetails(this.state.gameId);
-  //   console.log(gameDetails);
-  // }
+  wrap = (handler) => {
+    return (...args) => {
+      const event = args[args.length - 1];  // The event object is always the last argument
+      console.log(event)
 
+      const transactionHash = event.log.transactionHash;
+      console.log(transactionHash)
+      console.log("Catched Set");
+      console.log(this.state._catchedEvents);
+      if (this.localCatchedEvents.has(transactionHash) || this.state._catchedEvents.has(transactionHash)) {
+        console.log('Event already catched, discarding:', event);
+      } else {
+        this.localCatchedEvents.add(transactionHash); // Add to local set
+        this.setState((prevState) => ({
+          _catchedEvents: new Set(prevState._catchedEvents).add(transactionHash)
+        }), () => {
+          handler(...args); // Pass all arguments including the event object to the handler
+        });
+      }
+      console.log("Catched Set After");
+      console.log(this.state._catchedEvents);
+      console.log(this.localCatchedEvents);
+      };
+  };
 
   async _initializeEthers() {
     // We first initialize ethers by creating a provider using window.ethereum
@@ -120,15 +144,15 @@ class Game extends React.Component {
 
   setupBreakerEventListeners() {
     const { _mastermind } = this.state;
-    _mastermind.on("Feedback", this.handleFeedback);
-    _mastermind.on("HashPublished", this.handleHashPublished);
+    _mastermind.on("Feedback", this.wrap(this.handleFeedback));
+    _mastermind.on("HashPublished", this.wrap(this.handleHashPublished));
   }
 
   setupMakerEventListeners() {
     const { _mastermind } = this.state;
-    _mastermind.on("Guess", this.handleGuess);
-    _mastermind.on("Dispute", this.handleDispute);
-    _mastermind.on("TurnStarted", this.handleTurnStarted);
+    _mastermind.on("Guess", this.wrap(this.handleGuess));
+    _mastermind.on("Dispute", this.wrap(this.handleDispute));
+    _mastermind.on("TurnStarted", this.wrap(this.handleTurnStarted));
   }
 
   // setupEventListeners() {
@@ -175,12 +199,12 @@ class Game extends React.Component {
   componentWillUnmount() {
     const { _mastermind } = this.state;
     if (_mastermind) {
-      _mastermind.off("Guess", this.handleGuess);
-      _mastermind.off("Feedback", this.handleFeedback);
-      _mastermind.off("Dispute", this.handleDispute);
-      _mastermind.on("HashPublished", this.handleHashPublished);
-      _mastermind.on("TurnStarted", this.startTurn);
-      _mastermind.on("GameJoined", this.handleGameJoined); 
+      _mastermind.off("Guess", this.wrap(this.handleGuess));
+      _mastermind.off("Feedback", this.wrap(this.handleFeedback));
+      _mastermind.off("Dispute", this.wrap(this.handleDispute));
+      _mastermind.on("HashPublished", this.wrap(this.handleHashPublished));
+      _mastermind.on("TurnStarted", this.wrap(this.startTurn));
+      _mastermind.on("GameJoined", this.wrap(this.handleGameJoined)); 
     }
   }
     //init dove chiamiamo fetchInfo

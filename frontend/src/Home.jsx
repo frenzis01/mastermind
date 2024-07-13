@@ -48,13 +48,19 @@ class Home extends React.Component {
       // available games
       availableGames: [],
       _provider: undefined,
-      _mastermind: undefined
+      _mastermind: undefined,
+      // Metamask creates replicas of events for some reason
+      // We will store here the hash of the transaction of received events,
+      // To discard duplicates
+      _catchedEvents: new Set()  
     };
+    this.localCatchedEvents = new Set(); // Local set to handle immediate duplicates
 
     this.state = this.initialState;
     this.createGame = this.createGame.bind(this)
     //this.redirectToGame = this.redirectToGame.bind(this);
-
+    
+    this.wrap = this.wrap.bind(this);
     this.handleGameCreated = this.handleGameCreated.bind(this);
     this.handleGameJoined = this.handleGameJoined.bind(this);
   }
@@ -271,15 +277,40 @@ class Home extends React.Component {
 
   setupEventListeners() {
     const { _mastermind } = this.state;
-    _mastermind.on("GameCreated", this.handleGameCreated);
-    _mastermind.on("GameJoined", this.handleGameJoined);
+    _mastermind.on("GameCreated", this.wrap(this.handleGameCreated));
+    _mastermind.on("GameJoined", this.wrap(this.handleGameJoined));
   }
 
   removeEventListeners() {
     const { _mastermind } = this.state;
-    _mastermind.off("GameCreated", this.handleGameCreated);
-    _mastermind.off("GameJoined", this.handleGameJoined);
+    _mastermind.off("GameCreated", this.wrap(this.handleGameCreated));
+    _mastermind.off("GameJoined", this.wrap(this.handleGameJoined));
   }
+
+  wrap = (handler) => {
+    return (...args) => {
+      const event = args[args.length - 1];  // The event object is always the last argument
+      console.log(event)
+
+      const transactionHash = event.log.transactionHash;
+      console.log(transactionHash)
+      console.log("Catched Set");
+      console.log(this.state._catchedEvents);
+      if (this.localCatchedEvents.has(transactionHash) || this.state._catchedEvents.has(transactionHash)) {
+        console.log('Event already catched, discarding:', event);
+      } else {
+        this.localCatchedEvents.add(transactionHash); // Add to local set
+        this.setState((prevState) => ({
+          _catchedEvents: new Set(prevState._catchedEvents).add(transactionHash)
+        }), () => {
+          handler(...args); // Pass all arguments including the event object to the handler
+        });
+      }
+      console.log("Catched Set After");
+      console.log(this.state._catchedEvents);
+      console.log(this.localCatchedEvents);
+      };
+  };
 
   // GameCreated handler
   handleGameCreated(gameId, creator, numColors, codeLength, numTurns, maxGuesses, gameStake) {
