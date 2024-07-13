@@ -56,6 +56,10 @@ class Game extends React.Component {
 
   } 
 
+  componentDidMount(){
+    this._initializeEthers();
+  }
+
   // getGameDetails() {
   //   const gameDetails = this.state._mastermind.getGameDetails(this.state.gameId);
   //   console.log(gameDetails);
@@ -75,6 +79,14 @@ class Game extends React.Component {
       MastermindArtifact.abi,
       signer
     );
+
+    provider.on("block", async (n) => {
+      console.log(n)
+      const block = await provider.getBlock(n);
+  
+      console.log(block.number.toString());
+  });
+
     const gameDetails = (await mastermind.getGameDetails(this.state.gameId)).toObject();
     // Perform useful conversions
     gameDetails.creator = gameDetails.creator.toLowerCase();
@@ -86,7 +98,17 @@ class Game extends React.Component {
     // this.setState({ _provider: provider});
     // this.setState({ _mastermind: mastermind });
     this.setState({ _gameDetails: gameDetails, _provider: provider, _mastermind: mastermind }, () => {
-      this.setupEventListeners();
+      if (this.state._gameDetails.joiner === "0x0000000000000000000000000000000000000000") {
+        console.log("listening to GameJoined...")
+        mastermind.on("GameJoined", this.handleGameJoined);
+      }
+
+      if(this.isCurrentMaker()){
+        this.setupMakerEventListeners();
+      }
+      else{
+        this.setupBreakerEventListeners();
+      }
 
       if (this.state._gameDetails.joiner !== "0x0000000000000000000000000000000000000000") {
         console.log("is Joined!")
@@ -96,15 +118,28 @@ class Game extends React.Component {
 
   }
 
-  setupEventListeners() {
+  setupBreakerEventListeners() {
+    const { _mastermind } = this.state;
+    _mastermind.on("Feedback", this.handleFeedback);
+    _mastermind.on("HashPublished", this.handleHashPublished);
+  }
+
+  setupMakerEventListeners() {
     const { _mastermind } = this.state;
     _mastermind.on("Guess", this.handleGuess);
-    _mastermind.on("Feedback", this.handleFeedback);
     _mastermind.on("Dispute", this.handleDispute);
-    _mastermind.on("HashPublished", this.handleHashPublished);
-    _mastermind.on("TurnStarted", this.startTurn);
-    _mastermind.on("GameJoined", this.handleGameJoined);
+    _mastermind.on("TurnStarted", this.handleTurnStarted);
   }
+
+  // setupEventListeners() {
+  //   const { _mastermind } = this.state;
+  //   _mastermind.on("Guess", this.handleGuess);
+  //   _mastermind.on("Feedback", this.handleFeedback);
+  //   _mastermind.on("Dispute", this.handleDispute);
+  //   _mastermind.on("HashPublished", this.handleHashPublished);
+  //   _mastermind.on("TurnStarted", this.handleTurnStarted);
+  //   _mastermind.on("GameJoined", this.handleGameJoined);
+  // }
 
   handleGuess(gameId, guess) {
     console.log("Guess received:", guess.map(Number));
@@ -128,6 +163,7 @@ class Game extends React.Component {
   }
 
   handleTurnStarted(gamedId, maker) {
+      console.log("StartTurn received:");
       this.setState({ _turnStarted: true });
   }
 
@@ -196,7 +232,6 @@ class Game extends React.Component {
   render() {
     if (this.state._mastermind === undefined) {
       // console.log(this.state._mastermind)
-      this._initializeEthers();
       return <Loading />;
     }
     //controlla se sia presente selectedAddress e gameId: se non lo sono, redirect a Dapp.js

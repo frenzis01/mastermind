@@ -19,6 +19,7 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined }) {
   // startTurn();
   useEffect(() => {
     if (joined){
+      console.log("is Joined!")
       startTurn();
     }
   }, [joined]);
