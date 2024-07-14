@@ -50,7 +50,7 @@ class Game extends React.Component {
       // These codes will persist in case of page reload or change page/game
       _codeSecretMemo: JSON.parse(localStorage.getItem('_codeSecretMemo_' + gameId)) || undefined,
       // parse as Uint8Array // TODO
-      _codeSeedMemo: JSON.parse(localStorage.getItem('_codeSeedMemo_' + gameId)) || undefined,
+      _codeSeedMemo: this.jsonStringToUint8Array(localStorage.getItem('_codeSeedMemo_' + gameId)) || undefined,
       _catchedEvents: new Set()
     };
 
@@ -152,7 +152,17 @@ class Game extends React.Component {
     }
 
     console.log(gameDetails);
-    this.setState({ _gameDetails: gameDetails, _provider: provider, _mastermind: mastermind, _turnStarted: gameDetails.startTime != 0}, () => {
+    this.setState({ 
+        _gameDetails: gameDetails,
+        _provider: provider,
+        _mastermind: mastermind,
+        _turnStarted: gameDetails.startTime != 0,
+        _turnEnded: gameDetails.endTime != 0,
+        _codeHash: gameDetails.codeHash,
+        // TODO check if map inside setState is okay
+        // length > 1 is important! The very first codeSecret is init to [0] !
+        _codeSecret: gameDetails.codeSecret.length > 1
+  }, () => {
       if (this.state._gameDetails.joiner === "0x0000000000000000000000000000000000000000") {
         mastermind.on("GameJoined", this.handleGameJoined);
       }
@@ -243,7 +253,7 @@ class Game extends React.Component {
     this.setState({ _joined: true , joiner: joiner});
   }
 
-  setCodeSecretMemo = (newCode) => {
+  setCodeSecretMemo (newCode) {
     this.setState({ _codeSecretMemo: newCode }, () => {
       console.log("Code secret memo updated:", JSON.stringify(newCode));
       localStorage.setItem('_codeSecretMemo_' + this.state.gameId, JSON.stringify(newCode));
@@ -251,10 +261,10 @@ class Game extends React.Component {
     });
   }
   
-  setCodeSeedMemo = (newSeed) => {
+  setCodeSeedMemo (newSeed) {
     // TODO ensure that this is later parsed as Uint8Array
     this.setState({ _codeSeedMemo: newSeed }, () => {
-      console.log("Code seed memo updated:", JSON.stringify(newSeed));
+      console.log("Code seed memo updated:", newSeed);
       localStorage.setItem('_codeSeedMemo_' + this.state.gameId, JSON.stringify(newSeed));
       console.log(localStorage.getItem('_codeSeedMemo_' + this.state.gameId));
     });
@@ -361,9 +371,11 @@ class Game extends React.Component {
 
         {this.isCurrentMaker() &&
           (<BoardMaker
+          // TODO add seed and display it to allow player to annotate it
             maxGuesses={Number(this.state._gameDetails.maxGuesses)}
             hashSecretCode={this.computeHash}
             generateSeed={this.generateRandomString}
+            codeHash={this.state._codeHash}
             submitSecretHash={this.submitCodeHash}
             newGuess={this.state._lastGuess}
             resetNewGuess={this.resetLastGuess}
@@ -375,7 +387,10 @@ class Game extends React.Component {
             codeSecretPublished={this.state._codeSecret}
             publishCodeSecret={this.publishCodeSecret}
             codeSecretMemo={this.state._codeSecretMemo}
-            setCodeSecretMemo={this.setCodeSecretMemo} />)}
+            codeSeedMemo={this.state._codeSeedMemo}
+            setCodeSecretMemo={this.setCodeSecretMemo}
+            setCodeSeedMemo={this.setCodeSeedMemo}
+          />)}
       </div>
 
       //se sono maker
@@ -412,16 +427,35 @@ class Game extends React.Component {
     return ethers.keccak256(combined);
   }
 
+  jsonStringToUint8Array(jsonString) {
+    if (!jsonString) {
+      return undefined;
+    }
+    // Parse the JSON string to an object
+    const obj = JSON.parse(jsonString);
+    
+    // Create an array of length 32 filled with zeros
+    const array = new Array(32).fill(0);
+    
+    // Populate the array with values from the object
+    for (const [key, value] of Object.entries(obj)) {
+      array[parseInt(key, 10)] = value;
+    }
+    
+    // Convert the array to Uint8Array
+    return new Uint8Array(array);
+  }
+
 
   // -------------------------- CONTRACT INTERACTIONS --------------------------
 
-  async publishCodeSecret(codeSecret) {
+  async publishCodeSecret(codeSecret, codeSeed) {
 
     this._dismissTransactionError();
     let req = undefined;
     
     try{
-      req = await this.state._mastermind.publishCodeSecret(this.state.gameId, codeSecret);
+      req = await this.state._mastermind.publishCodeSecret(this.state.gameId, codeSecret, codeSeed);
       this.setState({ reqBeingSent: req.hash });
       const receipt = await req.wait();
       // The receipt, contains a status flag, which is 0 to indicate an error.

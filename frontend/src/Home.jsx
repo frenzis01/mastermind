@@ -377,11 +377,11 @@ class Home extends React.Component {
       creator: creator
     }
     if(creator === this.state.selectedAddress){
-      // // Add to available games
+      // // Add to started games
       // this.setState((prevState) => ({
-      //   availableGames: [...prevState.availableGames, eventData]
+      //   startedGames: [...prevState.startedGames, eventData]
       // }));
-      this._updateAvailableGames();
+      this._updateStartedGames();
     }
     this.setState((prevState) => ({
       availableGames: prevState.availableGames.filter(game => game.gameId !== eventData.gameId)

@@ -864,7 +864,8 @@ contract Mastermind {
         bool creatorIsMakerSeed,
         bytes32 codeHash,
         uint256 guessesLength,
-        uint256 feedbacksLength
+        uint256 feedbacksLength,
+        uint256[] memory codeSecret
     ) {
         Game storage game = games[_gameId];
         return (
@@ -889,7 +890,8 @@ contract Mastermind {
             game.creatorIsMakerSeed,
             game.codeHash,
             game.guesses.length == 0 ? 0 : game.guesses[game.currentTurn].length,
-            game.feedbacks.length == 0 ? 0 : game.feedbacks[game.currentTurn].length
+            game.feedbacks.length == 0 ? 0 : game.feedbacks[game.currentTurn].length,
+            game.codeSecret
         );
     }
 

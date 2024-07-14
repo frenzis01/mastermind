@@ -97,12 +97,12 @@ export function BoardBreaker({
 
   return (
     <div className="App">
-      <button
+      {!codeSecretPublished && <button
          className='btn-faded' 
          onClick={() => {toggleColorChooseModal(); }}>Make a Guess</button>
-      
+      }
       {codeSecretPublished && 
-        <button className='btn-dispute' onClick={handleDispute}>Dispute</button>
+        <button className='dispute-button' onClick={handleDispute}>The maker cheated! Dispute!</button>
       }
       {rows.map((row, index) => (
         <div

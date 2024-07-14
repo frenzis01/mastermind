@@ -10,7 +10,7 @@ export function ColorChooseModal({ submitCode, onToggleModal, initColors}) {
   const [isModalOpen, setModalOpen] = useState(true);
   const [selectedColors, setSelectedColors] = useState(
     Array(6).fill().map((v,index) => {
-      if (initColors) { console.log(index); return intToColor(initColors[index]); }
+      if (initColors) { return intToColor(initColors[index]); }
       else { return getRandomColor() }
     })
   );

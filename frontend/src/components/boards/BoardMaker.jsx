@@ -13,6 +13,7 @@ export function BoardMaker({
     maxGuesses,
     hashSecretCode,
     generateSeed,
+    codeHash,
     submitSecretHash,
     newGuess,
     resetNewGuess,
@@ -24,7 +25,9 @@ export function BoardMaker({
     codeSecretPublished,
     publishCodeSecret,
     codeSecretMemo,
-    setCodeSecretMemo}) {
+    codeSeedMemo,
+    setCodeSecretMemo,
+    setCodeSeedMemo}) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isFeedbackModalOpen, setFeedbackModalOpen] = useState(false);
@@ -78,10 +81,12 @@ export function BoardMaker({
   const handleSecretCodeChosen = (codeColors) => {
    console.log('Secret Code Chosen: ', codeColors);
    codeColors = codeColors.map(colorToInt);
-   const hash = hashSecretCode(codeColors,generateSeed());
+   const seed = generateSeed()
+   const hash = hashSecretCode(codeColors,seed);
     submitSecretHash(hash);
     setSecretCodeChosen(true);
     setCodeSecretMemo(codeColors);
+    setCodeSeedMemo(seed);
     toggleColorChooseModal();
   };
 
@@ -114,15 +119,17 @@ export function BoardMaker({
   };
 
   const handlePublishCodeSecret = (codeColors) => {
+    // TODO add modal to enter seed
     console.log('Publishing Secret Code: ', codeColors);
     toggleColorChooseModal();
-    publishCodeSecret(codeColors.map(colorToInt));
+    console.log('My seed is:', codeSeedMemo);
+    publishCodeSecret(codeColors.map(colorToInt), codeSeedMemo);
 
   }
 
   return (
     <div className="App">
-      {!isSecretCodeChosen && (
+      {!codeHash && (
         <button
           className='submit-secret-button'
           onClick={() => {console.log('isModalOpen' + isColorChooseModalOpen); toggleColorChooseModal()}}
@@ -131,7 +138,7 @@ export function BoardMaker({
           Choose Secret Code
         </button>
       )}
-      {isSecretCodeChosen && !turnEnded && (
+      {codeHash && !turnEnded && (
         <button
           className='btn-faded'
           onClick={() => {
@@ -141,7 +148,7 @@ export function BoardMaker({
           Provide Feedback
         </button>
       )}
-      {turnEnded && !codeSecretPublished && (
+      {turnEnded && !codeSecretPublished && codeHash && (
         <button
           className='btn-faded'
           onClick={() => {
