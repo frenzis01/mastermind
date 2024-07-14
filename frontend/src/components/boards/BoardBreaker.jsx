@@ -30,7 +30,7 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
       console.log("New Feedback!")
       handleFeedback(currentRow, newFeedback);
     }
-    if (joined && currentRow === 0 && !newFeedback && guesses.length === 0){ //forse TODO: includere caso in cui utente joina il game, ma non submitta guess prima di uscire
+    if (joined && currentRow === 0 && !codeHash && !newFeedback && guesses.length === 0){ //forse TODO: includere caso in cui utente joina il game, ma non submitta guess prima di uscire
       console.log("is Joined!")
       startTurn();
     }
