@@ -33,6 +33,8 @@ class Game extends React.Component {
       networkError: undefined,
       //info sul game
       joiner: undefined, // TODO replace with actual value
+      guesses: [],
+      feedbacks: [],
       _mastermind: undefined,
       _provider: undefined,
       _gameDetails: undefined,
@@ -73,9 +75,9 @@ class Game extends React.Component {
       console.log(event)
 
       const transactionHash = event.log.transactionHash;
-      console.log(transactionHash)
-      console.log("Catched Set");
-      console.log(this.state._catchedEvents);
+      // console.log(transactionHash)
+      // console.log("Catched Set");
+      // console.log(this.state._catchedEvents);
       if (this.localCatchedEvents.has(transactionHash) || this.state._catchedEvents.has(transactionHash)) {
         console.log('Event already catched, discarding:', event);
       } else {
@@ -86,9 +88,9 @@ class Game extends React.Component {
           handler(...args); // Pass all arguments including the event object to the handler
         });
       }
-      console.log("Catched Set After");
-      console.log(this.state._catchedEvents);
-      console.log(this.localCatchedEvents);
+      // console.log("Catched Set After");
+      // console.log(this.state._catchedEvents);
+      // console.log(this.localCatchedEvents);
       };
   };
 
@@ -106,26 +108,58 @@ class Game extends React.Component {
       signer
     );
 
-    provider.on("block", async (n) => {
-      console.log(n)
-      const block = await provider.getBlock(n);
+    // provider.on("block", async (n) => {
+    //   console.log(n)
+    //   const block = await provider.getBlock(n);
   
-      console.log(block.number.toString());
-  });
+    //   console.log(block.number.toString());
+    // });
 
     const gameDetails = (await mastermind.getGameDetails(this.state.gameId)).toObject();
     // Perform useful conversions
     gameDetails.creator = gameDetails.creator.toLowerCase();
     gameDetails.joiner = gameDetails.joiner.toLowerCase();
     gameDetails.currentTurn = parseInt(gameDetails.currentTurn);
+
+    const parseProxy = (g) => {
+      let guessObject = [];
+        for (let key in g) {
+          if (g.hasOwnProperty(key)) {
+            guessObject.push(g[key]);
+          }
+        }
+        return guessObject;
+    } 
+
     gameDetails.guessesLength = parseInt(gameDetails.guessesLength);
+    if(gameDetails.guessesLength !== 0){
+      const reqGuesses = await mastermind.getGuesses(this.state.gameId);
+      const rawGuesses = reqGuesses.map(parseProxy);
+      const guesses = rawGuesses.map(a => a.map(Number))
+
+      console.log(guesses)
+      this.setState({ guesses: guesses});
+    }
+
+    gameDetails.feedbacksLength = parseInt(gameDetails.feedbacksLength);
+    if(gameDetails.feedbacksLength !== 0){
+      const reqFeedbacks = await mastermind.getFeedback(this.state.gameId);
+      const rawFeedbacks = reqFeedbacks.map(parseProxy);
+
+      const feedbacks = rawFeedbacks.map(f => {
+        return { cc: Number(f[0]), nc: Number(f[1]) };
+      });
+
+      console.log(feedbacks)
+      this.setState({ feedbacks: feedbacks });
+    }
+
     console.log(gameDetails);
     // this.setState({ _gameDetails: gameDetails });
     // this.setState({ _provider: provider});
     // this.setState({ _mastermind: mastermind });
     this.setState({ _gameDetails: gameDetails, _provider: provider, _mastermind: mastermind }, () => {
       if (this.state._gameDetails.joiner === "0x0000000000000000000000000000000000000000") {
-        console.log("listening to GameJoined...")
         mastermind.on("GameJoined", this.handleGameJoined);
       }
 
@@ -157,16 +191,6 @@ class Game extends React.Component {
     _mastermind.on("TurnStarted", this.wrap(this.handleTurnStarted));
   }
 
-  // setupEventListeners() {
-  //   const { _mastermind } = this.state;
-  //   _mastermind.on("Guess", this.handleGuess);
-  //   _mastermind.on("Feedback", this.handleFeedback);
-  //   _mastermind.on("Dispute", this.handleDispute);
-  //   _mastermind.on("HashPublished", this.handleHashPublished);
-  //   _mastermind.on("TurnStarted", this.handleTurnStarted);
-  //   _mastermind.on("GameJoined", this.handleGameJoined);
-  // }
-
   handleGuess(gameId, guess) {
     console.log("Guess received:", guess.map(Number));
     // Handle event A
@@ -192,6 +216,13 @@ class Game extends React.Component {
   handleTurnStarted(gamedId, maker) {
       console.log("StartTurn received:");
       this.setState({ _turnStarted: true });
+
+      this.setState(prevState => ({ //
+        _gameDetails: {
+          ...prevState._gameDetails,
+          currentTurn: prevState._gameDetails.currentTurn + 1
+        }
+      }));
   }
 
   handleGameJoined(gameId, joiner, creator) {
@@ -199,7 +230,7 @@ class Game extends React.Component {
     this.setState({ _joined: true , joiner: joiner});
   }
 
-  componentWillUnmount() {
+  componentWillUnmount() { //TODO: diversificare unmount in caso si tratti di maker o breaker
     const { _mastermind } = this.state;
     if (_mastermind) {
       _mastermind.off("Guess", this.wrap(this.handleGuess));
@@ -210,25 +241,6 @@ class Game extends React.Component {
       _mastermind.on("GameJoined", this.wrap(this.handleGameJoined)); 
     }
   }
-    //init dove chiamiamo fetchInfo
-
-    /*
-    useEffect(() => {
-      // initializing provider and dai contract instance
-      const provider = new ethers.providers.JsonRpcProvider();
-      const contract = new ethers.Contract(
-        contractAddress,
-        abiCode,
-        provider
-      );
-
-        // caching the emitted event
-        contract && contract.on("TurnEnded", eve => {
-            //update info relative al turno
-        })
-    }, this.state); 
-    //ToDo: capire a cosa collegare useEffect. 
-    //TODO useEffect forse non si può usare nelle classi!! */
 
   isCurrentMaker() {
     const game = this.state._gameDetails;
@@ -242,14 +254,14 @@ class Game extends React.Component {
       if (this.state.selectedAddress === game.creator) {
           if ((game.currentTurn % 2 === 1 && game.creatorIsMakerSeed) ||
               (game.currentTurn % 2 === 0 && !game.creatorIsMakerSeed)) {
-                console.log("First if");
+                // console.log("First if");
               return true;
           }
       }
       if (this.state.selectedAddress === game.joiner) {
           if ((game.currentTurn % 2 === 0 && game.creatorIsMakerSeed) ||
               (game.currentTurn % 2 === 1 && !game.creatorIsMakerSeed)) {
-                console.log("Second if");
+                // console.log("Second if");
                 return true;
           }
       }
@@ -299,7 +311,9 @@ class Game extends React.Component {
         startTurn={this.startTurn}
         codeHash={this.state._codeHash}
         joined={this.state._joined}
-        newFeedback={this.state._lastFeedback}/>)}
+        newFeedback={this.state._lastFeedback}
+        guesses={this.state.guesses}
+        feedbacks={this.state.feedbacks}/>)}
       
       {this.isCurrentMaker() &&
         (<BoardMaker 
@@ -308,7 +322,9 @@ class Game extends React.Component {
         submitSecretHash={ this.submitCodeHash }
         newGuess = {this.state._lastGuess}
         turnStarted = {this.state._turnStarted}
-        provideFeedback={this.provideFeedback} />)}
+        provideFeedback={this.provideFeedback} 
+        guesses={this.state.guesses}
+        feedbacks={this.state.feedbacks}/>)}
       </div>
 
       //se sono maker
@@ -384,12 +400,6 @@ class Game extends React.Component {
   }
 
   async makeGuess(guess) {
-    const gameDetails = await this.state._mastermind.getGameDetails(this.state.gameId);
-    // console.log("Game id " + this.state.gameId);
-    // console.log("Current turn: " + gameDetails.toObject().currentTurn);
-    // console.log("CodeHash: " + gameDetails.toObject().codeHash);
-
-    // await this.state._mastermind.makeGuess(this.state.gameId, guess);
 
     this._dismissTransactionError();
     let req = undefined;

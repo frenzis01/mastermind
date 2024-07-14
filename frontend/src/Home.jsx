@@ -29,9 +29,9 @@ const ERROR_CODE_TX_REJECTED_BY_USER = 4001;
 
 // This component is in charge of doing these things:
 //   1. It connects to the user's wallet
-//   2. Initializes ethers and the Token contract
+//   2. Initializes ethers and the Mastermind contract
 //   3. Polls the user balance to keep it updated.
-//   4. Allows you to create or join a game
+//   4. Allows you to create, join or resume a game
 //   5. Renders the whole application
 //
 class Home extends React.Component {
@@ -49,6 +49,7 @@ class Home extends React.Component {
       networkError: undefined,
       // available games
       availableGames: [],
+      startedGames: [],
       _provider: undefined,
       _mastermind: undefined,
       // Metamask creates replicas of events for some reason
@@ -164,6 +165,24 @@ class Home extends React.Component {
 
         <div className="row">
           <div className="col-12">
+            <h2 className="under-title">Started Games</h2>
+            <ul>
+              {this.state.startedGames.map((game) => (
+                <li key={game.gameId}>
+                  ID: {Number(game.gameId)}, Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}, Creator: {game.creator}
+                  <button 
+                    className="btn-faded btn ml-2" 
+                    onClick={() => this.resumeGame(game.gameId)}>
+                    Resume Game
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="row">
+          <div className="col-12">
             <h2 className="under-title">Available Games</h2>
             <ul>
               {this.state.availableGames.map((game) => (
@@ -235,6 +254,7 @@ class Home extends React.Component {
       await this._initializeEthers();
       await this._updateBalance();
 
+      this._updateStartedGames();
       this._updateAvailableGames();
       this.setupEventListeners();
     });
@@ -285,6 +305,22 @@ class Home extends React.Component {
     this.setState({ availableGames: result });
   }
 
+  async _updateStartedGames() {
+    const startedGames = await this.state._mastermind.getActiveGames(this.state.selectedAddress)
+    
+    const result = startedGames.map(arr =>{
+        return {
+            gameId: arr[0],
+            creator: arr[1],
+            joiner: arr[2],
+            gameStake: arr[3]
+        }
+    })
+    console.log(result)
+    
+    this.setState({ startedGames: result });
+  }
+
   // The next two methods are needed to start and stop polling data. 
   // Events are used to update the availableGames array
 
@@ -306,9 +342,9 @@ class Home extends React.Component {
       console.log(event)
 
       const transactionHash = event.log.transactionHash;
-      console.log(transactionHash)
-      console.log("Catched Set");
-      console.log(this.state._catchedEvents);
+      // console.log(transactionHash)
+      // console.log("Catched Set");
+      // console.log(this.state._catchedEvents);
       if (this.localCatchedEvents.has(transactionHash) || this.state._catchedEvents.has(transactionHash)) {
         console.log('Event already catched, discarding:', event);
       } else {
@@ -319,9 +355,9 @@ class Home extends React.Component {
           handler(...args); // Pass all arguments including the event object to the handler
         });
       }
-      console.log("Catched Set After");
-      console.log(this.state._catchedEvents);
-      console.log(this.localCatchedEvents);
+      // console.log("Catched Set After");
+      // console.log(this.state._catchedEvents);
+      // console.log(this.localCatchedEvents);
       };
   };
 
@@ -461,6 +497,10 @@ class Home extends React.Component {
       // this part of the state.
       this.setState({ reqBeingSent: undefined });
     }
+  }
+
+  resumeGame(gameId){
+    this.redirectToGame(gameId, this.state.selectedAddress)
   }
 
   redirectToGame(gameId, selectedAddress) { //ToDo: understand better which fields have to be passed

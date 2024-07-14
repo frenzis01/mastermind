@@ -15,8 +15,6 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
   const toggleColorChooseModal = () => setColorChooseModalOpen(!isColorChooseModalOpen);
   const waitForNewFeedback = () => setPrevFeedback(false);
 
-
-
   // console.log("Deploying board");
   // startTurn();
   useEffect(() => {
@@ -24,20 +22,25 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
       console.log("New Feedback!")
       handleFeedback(currentRow, newFeedback);
     }
-    if (joined && currentRow === 0 && !newFeedback && guesses){
+    if (joined && currentRow === 0 && !newFeedback && !guesses){ //forse TODO: includere caso in cui utente joina il game, ma non submitta guess prima di uscire
       console.log("is Joined!")
       startTurn();
     }
 
     // TODO test
     if (guesses) {
+      console.log("feeds: " + feedbacks)
+      console.log(guesses)
       for (let i = 0; i < guesses.length; i++) {
-        handleSubmitGuess(false)(guesses[i]);
-        handleFeedback(i, feedbacks[i]);
+        console.log("riga: " + currentRow)
+        handleSubmitGuess(true)(guesses[i].map(intToColor));
+        if(i < feedbacks.length){
+          handleFeedback(i, feedbacks[i]);
+        }
       }
     }
 
-  }, [joined,newFeedback]);
+  }, [joined, newFeedback]);
 
   const handleSubmitGuess = (init) => {
     return (colors) => {
@@ -45,7 +48,8 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
       const newRows = [...rows];
       newRows[currentRow].guess = colors;
       setRows(newRows);
-      if (init) {
+      console.log(init)
+      if (!init) {
         toggleColorChooseModal();
         makeGuess(colors.map(colorToInt), currentRow);
       }
@@ -60,7 +64,6 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
     }
   };
 
-
   const handleFeedback = (rowIndex, feedback) => {
     feedback.cc = Number(feedback.cc);
     feedback.nc = Number(feedback.nc);
@@ -74,6 +77,7 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
     setRows(newRows);
     setPrevFeedback(true);
     setCurrentRow(currentRow + 1);
+    console.log(currentRow)
   };
 
   return (
