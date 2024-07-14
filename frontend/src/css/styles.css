@@ -27,10 +27,14 @@
   
   .content {
     background: transparent;
-    width: 70vw;
-    padding: 3em;
+    width: 40vw;
+    padding: 2em;
   }
   
+  .text-centered{
+    text-align: center;
+  }
+
   .title {
     margin: 0 0 .5em;
     text-transform: uppercase;
@@ -76,7 +80,93 @@
     font-size: 1.5em;
     color: white;
   }
-  
+
+  .create-game-button {
+    margin-bottom: 20px;
+  }
+
+  .box {
+    position: relative;
+    align-items: center;
+    min-width: 250px;
+    max-width: 630px;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    z-index: 10;
+    padding: 20px;
+    backdrop-filter: blur(25px);
+  }
+
+  .box h3{
+    color: #fff;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .box .list{
+    display: flex;
+    text-align: left;
+    position: relative;
+    padding: 10px 0;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    margin: 10px 0;
+    cursor: pointer;
+    transition: 0.5s;
+    overflow: hidden;
+    height: 8em; /* Adjust height dynamically based on content */
+  }
+
+  .box .list:hover{
+    background: #fff;
+    box-shadow: -15px 30px 50px rgba(0, 0, 0, 0.5);
+    /* transform: scale(1.15) translateX(30px) translateY(-15px); */
+    transform: scale(1.13) translateX(-14px);
+    z-index: 1000;
+  }
+
+  .box .list .content{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: #fff;
+  }
+
+  .box .list .content .hidden-button{
+    position: absolute;
+    right: -150px;
+    transition: 0.5s;
+  }
+
+  .box .list:hover .content .hidden-button{
+    position: absolute;
+    right: 20px;
+  }
+
+  .box .list .content h4{
+    line-height: 1.2em;
+    font-weight: 600;
+    transition: 0.5s;
+  }
+
+  .box .list .content p{
+    font-size: 0.85em; /* Increase font size for more readability */
+    line-height: 1.5; /* Adjust line height */
+    transition: 0.5s;
+  }
+
+  .box .list:hover .content p,
+  .box .list:hover .content h4{
+    background: linear-gradient(90deg, #ee6352, purple, #ee6352);
+    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+   
   /* Container styles */
   .container {
     padding: 10%;
@@ -85,12 +175,6 @@
   h2 {
     color: white;
     font-size: 1.5em;
-  }
-  
-  /* Paragraph styles */
-  p {
-    font-size: 1.2em;
-    margin: 10px 0;
   }
   
   /* List styles */
@@ -113,7 +197,8 @@
   
   /* Additional styles for smaller text under heading */
   h1 + p {
-    font-size: 1.5em;
+    font-size: 1.2em;
+    margin: 10px 0;
     color: white;
   }
   

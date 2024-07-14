@@ -113,86 +113,80 @@ class Home extends React.Component {
 
     // If everything is loaded, we render the application.
     return (
-      <div className="content container p-4">
+      <div className="content container-fluid p-4">
         <div className="row">
-          <div className="col-12">
-            <h1 className="title">
-              Mastermind
-            </h1>
-            <p>
-              Welcome <b>{this.state.selectedAddress}</b>, you have{" "}
-              <b>
-                {this.state.balance.toString()} {this.state.currency}
-              </b>
-              .
-            </p>
+          <div className="col-lg-6 col-md-6 mb-4 mb-md-0">
+            <div className="text-centered">
+              <h1 className="title">
+                Mastermind
+              </h1>
+              <p>
+                Welcome <b>{this.state.selectedAddress}</b>, <br/> you have{" "}
+                <b>
+                  {this.state.balance.toString()} {this.state.currency}
+                </b>.
+              </p>
+              <button 
+                className="btn-faded create-game-button" 
+                onClick={() => this.setState({ showModal: true })}>
+                Create Game
+              </button>
+              {
+                //Sending a transaction isn't an immediate action. You have to wait
+                //for it to be mined.
+                //If we are waiting for one, we show a message here.
+              }
+              {this.state.reqBeingSent && (
+                <WaitingForTransactionMessage reqHash={this.state.reqBeingSent} />
+              )}
+
+              {
+                //Sending a transaction can fail in multiple ways. 
+                //If that happened, we show a message here.
+              }
+              {this.state.transactionError && (
+                <TransactionErrorMessage
+                  message={this._getRpcErrorMessage(this.state.transactionError)}
+                  dismiss={() => this._dismissTransactionError()}
+                />
+              )}
+            </div>
+            
+            <div className="box">
+              <h3>Started Games</h3>
+              <ul>
+                {this.state.startedGames.map((game) => (
+                  <li className="list" key={game.gameId}>
+                    <div className="content">
+                      <h4>Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}</h4>
+                      <p>Creator: {game.creator}</p>
+                      <button 
+                        className="btn-faded hidden-button ml-2" 
+                        onClick={() => this.resumeGame(game.gameId)}>
+                        Join Game
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
           </div>
         </div>
 
-        <div className="row">
-          <div className="col-12">
-            <button 
-              className="btn-faded" 
-              onClick={() => this.setState({ showModal: true })}>
-              Create Game
-            </button>
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col-12">
-            {
-              //Sending a transaction isn't an immediate action. You have to wait
-              //for it to be mined.
-              //If we are waiting for one, we show a message here.
-            }
-            {this.state.reqBeingSent && (
-              <WaitingForTransactionMessage reqHash={this.state.reqBeingSent} />
-            )}
-
-            {
-              //Sending a transaction can fail in multiple ways. 
-              //If that happened, we show a message here.
-            }
-            {this.state.transactionError && (
-              <TransactionErrorMessage
-                message={this._getRpcErrorMessage(this.state.transactionError)}
-                dismiss={() => this._dismissTransactionError()}
-              />
-            )}
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col-12">
-            <h2 className="under-title">Started Games</h2>
-            <ul>
-              {this.state.startedGames.map((game) => (
-                <li key={game.gameId}>
-                  ID: {Number(game.gameId)}, Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}, Creator: {game.creator}
-                  <button 
-                    className="btn-faded btn ml-2" 
-                    onClick={() => this.resumeGame(game.gameId)}>
-                    Resume Game
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col-12">
-            <h2 className="under-title">Available Games</h2>
+        <div className="col-lg-6 col-md-6">
+          <div className="box">
+            <h3>Available Games</h3>
             <ul>
               {this.state.availableGames.map((game) => (
-                <li key={game.gameId}>
-                  ID: {Number(game.gameId)}, Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}, Creator: {game.creator}
-                  <button 
-                    className="btn-faded btn ml-2" 
-                    onClick={() => this.joinGame(game.gameId, Number(game.gameStake/BigInt(1000000000000000000)))}>
-                    Join Game
-                  </button>
+                <li className="list" key={game.gameId}>
+                  <div className="content">
+                    <h4>Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}</h4>
+                    <p>Creator: {game.creator}</p>
+                    <button 
+                      className="btn-faded hidden-button ml-2" 
+                      onClick={() => this.joinGame(game.gameId, Number(game.gameStake/BigInt(1000000000000000000)))}>
+                      Join Game
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -209,6 +203,7 @@ class Home extends React.Component {
         <hr />
 
       </div>
+    </div>
     );
   }
 
