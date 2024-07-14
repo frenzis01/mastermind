@@ -10,6 +10,7 @@ import { withRouter } from './components/WithRouter';
 
 import MastermindArtifact from "./contracts/Mastermind.json";
 import contractAddress from "./contracts/contract-address.json"
+import { intToColor } from './assets/colors';
 
 //const crypto = require('crypto');
 
@@ -306,6 +307,17 @@ class Game extends React.Component {
     //stampare a schermo informazioni sull'attuale game in corso
     return (
       <div className="container p-4">
+      <div className="row">
+        <div className="secret-row">
+            {this.state._codeSecretMemo && 
+              this.state._codeSecretMemo.map((i,index) => (
+              <div className="large-color-circle" key={index} style={{ backgroundColor: intToColor(i) || 'white' }} />))}
+            {!this.state._codeSecretMemo && 
+               Array(6).fill(-1).map((i,index) => (
+                <div className="large-color-circle" key={index} style={{ backgroundColor: intToColor(i) || 'white' }} />))}
+        </div>
+      </div>
+
       <div className="row">
         <div className="col-12">
           <h3>Game ID: {this.state.gameId} / Current Turn: {parseInt(this.state._gameDetails.currentTurn)} </h3>
