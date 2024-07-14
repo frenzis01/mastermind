@@ -72,14 +72,10 @@ class Game extends React.Component {
   wrap = (handler) => {
     return (...args) => {
       const event = args[args.length - 1];  // The event object is always the last argument
-      console.log(event)
 
       const transactionHash = event.log.transactionHash;
-      // console.log(transactionHash)
-      // console.log("Catched Set");
-      // console.log(this.state._catchedEvents);
       if (this.localCatchedEvents.has(transactionHash) || this.state._catchedEvents.has(transactionHash)) {
-        console.log('Event already catched, discarding:', event);
+        console.log('Event already catched, discarding:', transactionHash);
       } else {
         this.localCatchedEvents.add(transactionHash); // Add to local set
         this.setState((prevState) => ({
@@ -88,9 +84,6 @@ class Game extends React.Component {
           handler(...args); // Pass all arguments including the event object to the handler
         });
       }
-      // console.log("Catched Set After");
-      // console.log(this.state._catchedEvents);
-      // console.log(this.localCatchedEvents);
       };
   };
 
@@ -99,22 +92,12 @@ class Game extends React.Component {
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
 
-    // console.log("Signer");
-    // console.log(signer);
     // Then, we initialize the contract using that provider and the token's artifact.
     const mastermind = new ethers.Contract(
       contractAddress.Mastermind,
       MastermindArtifact.abi,
       signer
     );
-
-    // provider.on("block", async (n) => {
-    //   console.log(n)
-    //   const block = await provider.getBlock(n);
-  
-    //   console.log(block.number.toString());
-    // });
-
     const gameDetails = (await mastermind.getGameDetails(this.state.gameId)).toObject();
     // Perform useful conversions
     gameDetails.creator = gameDetails.creator.toLowerCase();
@@ -254,14 +237,12 @@ class Game extends React.Component {
       if (this.state.selectedAddress === game.creator) {
           if ((game.currentTurn % 2 === 1 && game.creatorIsMakerSeed) ||
               (game.currentTurn % 2 === 0 && !game.creatorIsMakerSeed)) {
-                // console.log("First if");
               return true;
           }
       }
       if (this.state.selectedAddress === game.joiner) {
           if ((game.currentTurn % 2 === 0 && game.creatorIsMakerSeed) ||
               (game.currentTurn % 2 === 1 && !game.creatorIsMakerSeed)) {
-                // console.log("Second if");
                 return true;
           }
       }
@@ -270,7 +251,6 @@ class Game extends React.Component {
 
   render() {
     if (this.state._mastermind === undefined) {
-      // console.log(this.state._mastermind)
       return <Loading />;
     }
     //controlla se sia presente selectedAddress e gameId: se non lo sono, redirect a Dapp.js
@@ -339,7 +319,6 @@ class Game extends React.Component {
 
   // Function A: Generate a random 64-character long string
   generateRandomString() {
-    // console.log("Generating random string");
     const array = new Uint8Array(32);
     window.crypto.getRandomValues(array);
     return array;
@@ -368,15 +347,12 @@ class Game extends React.Component {
     try{
       req = await this.state._mastermind.submitCodeHash(this.state.gameId, codeHash);
       this.setState({ reqBeingSent: req.hash });
-      console.log(req);
       const receipt = await req.wait();
-      console.log(receipt);
       // The receipt, contains a status flag, which is 0 to indicate an error.
       if (receipt.status === 0) {
         throw new Error("Transaction failed");
       }
       
-      console.log(codeHash);
       this.setState({_codeHash : true});
       // await this._updateBalance();
       // this.redirectToGame(gameId, this.state.selectedAddress)
@@ -407,9 +383,7 @@ class Game extends React.Component {
     try{
       req = await this.state._mastermind.makeGuess(this.state.gameId,guess);
       this.setState({ reqBeingSent: req.hash });
-      console.log(req);
       const receipt = await req.wait();
-      console.log(receipt);
       // The receipt, contains a status flag, which is 0 to indicate an error.
       if (receipt.status === 0) {
         throw new Error("Transaction failed");
@@ -429,22 +403,13 @@ class Game extends React.Component {
   }
 
   async provideFeedback(cc,nc) {
-    // const gameDetails = await this.state._mastermind.getGameDetails(this.state.gameId);
-    // console.log("Game id " + this.state.gameId);
-    // console.log("Current turn: " + gameDetails.toObject().currentTurn);
-    // console.log("CodeHash: " + gameDetails.toObject().codeHash);
-
-    // await this.state._mastermind.makeGuess(this.state.gameId, guess);
-
     this._dismissTransactionError();
     let req = undefined;
     
     try{
       req = await this.state._mastermind.provideFeedback(this.state.gameId,cc,nc);
       this.setState({ reqBeingSent: req.hash });
-      // console.log(req);
       const receipt = await req.wait();
-      // console.log(receipt);
       // The receipt, contains a status flag, which is 0 to indicate an error.
       if (receipt.status === 0) {
         throw new Error("Transaction failed");
@@ -473,9 +438,7 @@ class Game extends React.Component {
     try{
       req = await this.state._mastermind.startTurn(this.state.gameId);
       this.setState({ reqBeingSent: req.hash });
-      console.log(req);
       const receipt = await req.wait();
-      console.log(receipt);
       // The receipt, contains a status flag, which is 0 to indicate an error.
       if (receipt.status === 0) {
         throw new Error("Transaction failed");

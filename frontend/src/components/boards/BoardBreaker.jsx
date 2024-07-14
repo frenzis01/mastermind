@@ -25,8 +25,6 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
 
   const prevFeedbackReceived = rows[currentRow].guess.every(color => color === null);
   
-  // console.log("Deploying board");
-  // startTurn();
   useEffect(() => {
     if (newFeedback && !prevFeedbackReceived) {
       console.log("New Feedback!")
@@ -36,16 +34,8 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
       console.log("is Joined!")
       startTurn();
     }
-    
-    console.log("Board initialized: " + boardInitialized);
-    console.log("currentRow " + currentRow);
-    console.log("currentRow colors: " + rows[currentRow].guess + " " + rows[currentRow].guess.every(color => color !== null));
-    console.log("guesses length" + guesses.length);
-    console.log("codeHash " + codeHash);
     // TODO test
     if (guesses && !boardInitialized) {
-      console.log("feeds: " + feedbacks)
-      console.log(guesses)
 
       handleSubmitGuess(true)(guesses[currentRow].map(intToColor));
       if(currentRow < feedbacks.length){
@@ -61,7 +51,6 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
       const newRows = [...rows];
       newRows[currentRow].guess = colors;
       setRows(newRows);
-      console.log(init)
       if (!init) {
         toggleColorChooseModal();
         makeGuess(colors.map(colorToInt), currentRow);
@@ -78,6 +67,7 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
   };
 
   const handleFeedback = (rowIndex, feedback) => {
+    console.log("Handling feedback: ", feedback);
     feedback.cc = Number(feedback.cc);
     feedback.nc = Number(feedback.nc);
     const newRows = [...rows];
@@ -90,7 +80,6 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
     setRows(newRows);
     setPrevFeedback(true);
     setCurrentRow(currentRow + 1);
-    console.log(currentRow)
   };
 
   return (

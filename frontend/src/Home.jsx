@@ -316,7 +316,6 @@ class Home extends React.Component {
             gameStake: arr[3]
         }
     })
-    console.log(result)
     
     this.setState({ startedGames: result });
   }
@@ -339,14 +338,10 @@ class Home extends React.Component {
   wrap = (handler) => {
     return (...args) => {
       const event = args[args.length - 1];  // The event object is always the last argument
-      console.log(event)
 
       const transactionHash = event.log.transactionHash;
-      // console.log(transactionHash)
-      // console.log("Catched Set");
-      // console.log(this.state._catchedEvents);
       if (this.localCatchedEvents.has(transactionHash) || this.state._catchedEvents.has(transactionHash)) {
-        console.log('Event already catched, discarding:', event);
+        console.log('Event already catched, discarding:', transactionHash);
       } else {
         this.localCatchedEvents.add(transactionHash); // Add to local set
         this.setState((prevState) => ({
@@ -355,9 +350,6 @@ class Home extends React.Component {
           handler(...args); // Pass all arguments including the event object to the handler
         });
       }
-      // console.log("Catched Set After");
-      // console.log(this.state._catchedEvents);
-      // console.log(this.localCatchedEvents);
       };
   };
 
@@ -479,7 +471,6 @@ class Home extends React.Component {
       }
   
       await this._updateBalance();
-      console.log(gameId)
       this.redirectToGame(gameId, this.state.selectedAddress)
     } catch (error) {
       // We check the error code to see if this error was produced because the
