@@ -1,6 +1,8 @@
 // ProvideFeedbackModal.js
 import { useState } from 'react';
 import "../../css/styles.css"
+import "../../css/boards.css"
+
 
 export function ProvideFeedbackModal({ onToggleModal, submitFeedback }) {
   const [cc, setCc] = useState(0);

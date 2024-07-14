@@ -1,6 +1,7 @@
 // ColorChooseModal.js
 import { useState } from "react";
-import "../../css/colorChooseModal.css"
+import "../../css/boards.css"
+import "../../css/styles.css"
 import {colors, colorToInt} from "../../assets/colors";
 
 const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];

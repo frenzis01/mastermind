@@ -2,6 +2,7 @@
 import { useState,useEffect } from 'react';
 import ColorChooseModal from '../modals/ColorChooseModal'; // Import the ColorChooseModal component
 import "../../css/styles.css"
+import "../../css/boards.css"
 import { colors, colorToInt, intToColor, feedbackColors } from '../../assets/colors';
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill(feedbackColors.xx) };
