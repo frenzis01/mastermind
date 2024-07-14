@@ -6,14 +6,12 @@ import { colors, colorToInt, intToColor, feedbackColors } from '../../assets/col
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill(feedbackColors.xx) };
 
-export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedback, guesses, feedbacks }) {
+export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedback, resetNewFeedback, guesses, feedbacks }) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isColorChooseModalOpen, setColorChooseModalOpen] = useState(false);
-  const [prevFeedback, setPrevFeedback] = useState(false);
 
   const toggleColorChooseModal = () => setColorChooseModalOpen(!isColorChooseModalOpen);
-  const waitForNewFeedback = () => setPrevFeedback(false);
 
   const boardInitialized = rows
     .map((row,index) => ({ ...row, index }))
@@ -35,7 +33,7 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
       startTurn();
     }
     // TODO test
-    if (guesses && !boardInitialized) {
+    if (guesses.length !== 0 && !boardInitialized) {
 
       handleSubmitGuess(true)(guesses[currentRow].map(intToColor));
       if(currentRow < feedbacks.length){
@@ -57,7 +55,7 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
       }
       // Move to the next row or handle end game logic
       if (currentRow < 9) {
-        waitForNewFeedback();
+        resetNewFeedback();
         // setCurrentRow(currentRow + 1);
       } else {
         console.log('Game Over');
@@ -78,7 +76,6 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
     ];
     newRows[rowIndex].feedback = feedbackCircles;
     setRows(newRows);
-    setPrevFeedback(true);
     setCurrentRow(currentRow + 1);
   };
 

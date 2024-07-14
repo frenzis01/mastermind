@@ -7,59 +7,82 @@ import {colors, colorToInt, intToColor, feedbackColors} from "../../assets/color
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray') };
 
-export function BoardMaker({ hashSecretCode, generateSeed, submitSecretHash, newGuess, turnStarted, provideFeedback}) {
+export function BoardMaker({ hashSecretCode, generateSeed, submitSecretHash, newGuess, resetNewGuess, turnStarted, provideFeedback, guesses, feedbacks}) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isFeedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [isColorChooseModalOpen, setColorChooseModalOpen] = useState(false);
   const [isSecretCodeChosen, setSecretCodeChosen] = useState(false);
-  const [prevGuess, setPrevGuess] = useState(false);
 
   const toggleFeedbackModal = () => setFeedbackModalOpen(!isFeedbackModalOpen);
   
   const toggleColorChooseModal = () => setColorChooseModalOpen(!isColorChooseModalOpen);
 
-  const waitForNewGuess = () => setPrevGuess(false);
+  const boardInitialized = rows
+    .map((row,index) => ({ ...row, index }))
+    .every((row) => 
+    (row.index > guesses.length - 1 || row.guess.every(color => color !== null))
+    // This cannot be checked
+    // && (row.index > feedbacks.length || row.feedback.every(color => color !== feedbackColors.xx))
+  );  
 
-  const handleProvideFeedback = (feedback) => {
-    const newRows = [...rows];
-    const feedbackCircles = [
-      ...Array(feedback.cc).fill(feedbackColors.cc),
-      ...Array(feedback.nc).fill(feedbackColors.nc), // Very light gray
-      ...Array(6 - feedback.cc - feedback.nc).fill(feedbackColors.xx),
-    ];
-    newRows[currentRow].feedback = feedbackCircles;
-    setRows(newRows);
-    toggleFeedbackModal();
-    waitForNewGuess();
-    
-    // Call the contract
-    provideFeedback(feedback.cc, feedback.nc);
-    
-    if (currentRow < 9) {
-      // TODO implement endgame
-      setCurrentRow(currentRow + 1);
-    } else {
-      console.log('Game Over');
+  const prevGuessReceived = rows[currentRow].guess.every(color => color !== null);
+
+
+  const handleProvideFeedback = (init) =>{
+    return (feedback) => {
+      console.log('Providing feedback: ', feedback);
+      // console.log(feedback)
+      const newRows = [...rows];
+      const feedbackCircles = [
+        ...Array(feedback.cc).fill(feedbackColors.cc),
+        ...Array(feedback.nc).fill(feedbackColors.nc), // Very light gray
+        ...Array(6 - feedback.cc - feedback.nc).fill(feedbackColors.xx),
+      ];
+      newRows[currentRow].feedback = feedbackCircles;
+      setRows(newRows);
+      if (!init) {
+        toggleFeedbackModal();
+        provideFeedback(feedback.cc, feedback.nc);
+      }
+      // Call the contract
+      
+      if (currentRow < 9) {
+        // TODO implement endgame
+        setCurrentRow(currentRow + 1);
+        resetNewGuess()
+      } else {
+        console.log('Game Over');
+      }
     }
   };
 
   // Use useEffect to listen for changes in `onGuess` prop
   useEffect(() => {
-    if (newGuess) {
+    console.log("Current row " + currentRow);
+    console.log("prevGuessReceived " + prevGuessReceived);
+    console.log("boardInitialized "+ boardInitialized);
+    if (guesses.length !== 0 && !boardInitialized) {
+      setSecretCodeChosen(true);
+      handleGuess(guesses[currentRow].map(intToColor));
+      if(currentRow < feedbacks.length){
+        handleProvideFeedback(true)(feedbacks[currentRow]);
+      }
+    }
+
+    if (newGuess && !prevGuessReceived) {
       const guessColors = newGuess.map(intToColor)
       handleGuess(guessColors); // Invoke handleGuess with the received guess
     }
-    if (turnStarted) {
+    if (turnStarted  && !boardInitialized && currentRow === 0 && guesses.length === 0) {
       toggleColorChooseModal();
     }
-  }, [newGuess,turnStarted]);
+  },[newGuess, turnStarted, currentRow, rows]);
 
   const handleGuess = (guessColors) => {
     const newRows = [...rows];
     newRows[currentRow].guess = guessColors;
     setRows(newRows);
-    setPrevGuess(true);
   };
 
   const handleSecretCodeChosen = (codeColors) => {
@@ -111,10 +134,10 @@ export function BoardMaker({ hashSecretCode, generateSeed, submitSecretHash, new
           </div>
         </div>
       ))}
-      {isFeedbackModalOpen && prevGuess && (
-        <ProvideFeedbackModal submitFeedback={handleProvideFeedback} onToggleModal={toggleFeedbackModal} />
+      {isFeedbackModalOpen && prevGuessReceived && (
+        <ProvideFeedbackModal submitFeedback={handleProvideFeedback(false)} onToggleModal={toggleFeedbackModal} />
       )}
-      {isColorChooseModalOpen && !isSecretCodeChosen  && (
+      {isColorChooseModalOpen && !isSecretCodeChosen && (
         <ColorChooseModal submitCode={handleSecretCodeChosen} onToggleModal={toggleColorChooseModal} />
       )}
     </div>

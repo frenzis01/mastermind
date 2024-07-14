@@ -61,8 +61,8 @@ class Game extends React.Component {
     this.makeGuess = this.makeGuess.bind(this);
     this.startTurn = this.startTurn.bind(this);
     this.provideFeedback = this.provideFeedback.bind(this);
-
-
+    this.resetLastGuess = this.resetLastGuess.bind(this);
+    this.resetLastFeedback = this.resetLastFeedback.bind(this);
   } 
 
   componentDidMount(){
@@ -174,12 +174,18 @@ class Game extends React.Component {
     _mastermind.on("TurnStarted", this.wrap(this.handleTurnStarted));
   }
 
+  resetLastGuess = () => {
+    this.setState({ _lastGuess: undefined });
+  }
   handleGuess(gameId, guess) {
     console.log("Guess received:", guess.map(Number));
     // Handle event A
     this.setState({ _lastGuess: guess });
   }
-
+  
+  resetLastFeedback = () => {
+    this.setState({ _lastFeedback: undefined });
+  }
   handleFeedback(gameId,cc,nc) {
     console.log("Feedback received:");
     // Handle event B
@@ -292,6 +298,7 @@ class Game extends React.Component {
         codeHash={this.state._codeHash}
         joined={this.state._joined}
         newFeedback={this.state._lastFeedback}
+        resetNewFeedback={this.resetLastFeedback}
         guesses={this.state.guesses}
         feedbacks={this.state.feedbacks}/>)}
       
@@ -301,6 +308,7 @@ class Game extends React.Component {
         generateSeed={this.generateRandomString}
         submitSecretHash={ this.submitCodeHash }
         newGuess = {this.state._lastGuess}
+        resetNewGuess={this.resetLastGuess}
         turnStarted = {this.state._turnStarted}
         provideFeedback={this.provideFeedback} 
         guesses={this.state.guesses}
