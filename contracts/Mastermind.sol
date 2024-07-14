@@ -203,7 +203,7 @@ contract Mastermind {
         uint256[] memory resultIndexes = new uint256[](joinableGames.length);
         uint count = 0;
         for (uint256 i = 0; i < joinableGames.length; i++) {
-            if (joinableGames[i].joiner == joiner || joinableGames[i].joiner == address(0)) {
+            if (joinableGames[i].joiner == joiner || (joinableGames[i].joiner == address(0) && joiner != joinableGames[i].creator)) {
                 resultIndexes[count] = i;
                 count++;
             }
