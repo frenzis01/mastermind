@@ -158,12 +158,12 @@ class Home extends React.Component {
                 {this.state.startedGames.map((game) => (
                   <li className="list" key={game.gameId}>
                     <div className="content">
-                      <h4>Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}</h4>
+                      <h4>#{Number(game.gameId)} - Stake {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}</h4>
                       <p>Creator: {game.creator}</p>
                       <button 
                         className="btn-faded hidden-button ml-2" 
                         onClick={() => this.resumeGame(game.gameId)}>
-                        Join Game
+                        Resume Game
                       </button>
                     </div>
                   </li>
@@ -179,7 +179,7 @@ class Home extends React.Component {
               {this.state.availableGames.map((game) => (
                 <li className="list" key={game.gameId}>
                   <div className="content">
-                    <h4>Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}</h4>
+                    <h4>#{Number(game.gameId)} - Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}</h4>
                     <p>Creator: {game.creator}</p>
                     <button 
                       className="btn-faded hidden-button ml-2" 
