@@ -6,7 +6,7 @@ import { colors, colorToInt, intToColor, feedbackColors } from '../../assets/col
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill(feedbackColors.xx) };
 
-export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedback, resetNewFeedback, guesses, feedbacks }) {
+export function BoardBreaker({ makeGuess, startTurn, turnStarted, codeHash, joined, newFeedback, resetNewFeedback, guesses, feedbacks }) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isColorChooseModalOpen, setColorChooseModalOpen] = useState(false);
@@ -28,7 +28,7 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
       console.log("New Feedback!")
       handleFeedback(currentRow, newFeedback);
     }
-    if (joined && currentRow === 0 && !codeHash && !newFeedback && guesses.length === 0){ //forse TODO: includere caso in cui utente joina il game, ma non submitta guess prima di uscire
+    if (joined && currentRow === 0 && !codeHash && !turnStarted && !newFeedback && guesses.length === 0){ //forse TODO: includere caso in cui utente joina il game, ma non submitta guess prima di uscire
       console.log("is Joined!")
       startTurn();
     }

@@ -43,6 +43,11 @@ class Game extends React.Component {
       _codeHash: false,
       _joined: false,
       _turnStarted: false,
+      _turnEnded: false,
+      _codeSecret: undefined,
+      // persistent (known by the player) codeSecret(s) to be displayed in BoardMaker
+      // These codes will persist in case of page reload or change page/game
+      _codeSecretMemo: JSON.parse(localStorage.getItem('_codeSecretMemo_' + gameId)) || undefined,
       _catchedEvents: new Set()
     };
 
@@ -56,6 +61,10 @@ class Game extends React.Component {
     this.handleHashPublished = this.handleHashPublished.bind(this);
     this.handleTurnStarted = this.handleTurnStarted.bind(this);
     this.handleGameJoined = this.handleGameJoined.bind(this);
+    this.handleTurnEnded = this.handleTurnEnded.bind(this);
+    this.handleCodeSecretPublished = this.handleCodeSecretPublished.bind(this);
+    this.setCodeSecretMemo = this.setCodeSecretMemo.bind(this);
+
     this.computeHash = this.computeHash.bind(this);
     this.submitCodeHash = this.submitCodeHash.bind(this);
     this.makeGuess = this.makeGuess.bind(this);
@@ -63,6 +72,7 @@ class Game extends React.Component {
     this.provideFeedback = this.provideFeedback.bind(this);
     this.resetLastGuess = this.resetLastGuess.bind(this);
     this.resetLastFeedback = this.resetLastFeedback.bind(this);
+
   } 
 
   componentDidMount(){
@@ -141,7 +151,7 @@ class Game extends React.Component {
     // this.setState({ _gameDetails: gameDetails });
     // this.setState({ _provider: provider});
     // this.setState({ _mastermind: mastermind });
-    this.setState({ _gameDetails: gameDetails, _provider: provider, _mastermind: mastermind }, () => {
+    this.setState({ _gameDetails: gameDetails, _provider: provider, _mastermind: mastermind, _turnStarted: gameDetails.startTime != 0}, () => {
       if (this.state._gameDetails.joiner === "0x0000000000000000000000000000000000000000") {
         mastermind.on("GameJoined", this.handleGameJoined);
       }
@@ -165,6 +175,7 @@ class Game extends React.Component {
     const { _mastermind } = this.state;
     _mastermind.on("Feedback", this.wrap(this.handleFeedback));
     _mastermind.on("HashPublished", this.wrap(this.handleHashPublished));
+    _mastermind.on("CodeSecretPublished", this.wrap(this.handleCodeSecretPublished));
   }
 
   setupMakerEventListeners() {
@@ -172,6 +183,7 @@ class Game extends React.Component {
     _mastermind.on("Guess", this.wrap(this.handleGuess));
     _mastermind.on("Dispute", this.wrap(this.handleDispute));
     _mastermind.on("TurnStarted", this.wrap(this.handleTurnStarted));
+    _mastermind.on("TurnEnded", this.wrap(this.handleTurnEnded));
   }
 
   resetLastGuess = () => {
@@ -214,10 +226,30 @@ class Game extends React.Component {
       }));
   }
 
+  handleTurnEnded(gameID, codeGuessed) {
+    console.log("TurnEnded received, the code was " + (!codeGuessed ? "not" : "") + " guessed by the breaker");
+    this.setState({ _turnEnded: true });
+  }
+
+  handleCodeSecretPublished(gameId, rawSecretCode) {
+    console.log("CodeSecretPublished received: ", rawSecretCode);
+    const secretCode = rawSecretCode.map(Number);
+    this.setState({ _codeSecret: secretCode });
+  }
+
   handleGameJoined(gameId, joiner, creator) {
     console.log("GameJoined received:");
     this.setState({ _joined: true , joiner: joiner});
   }
+
+  setCodeSecretMemo = (newCode) => {
+    this.setState({ _codeSecretMemo: newCode }, () => {
+      console.log("Code secret memo updated:", JSON.stringify(newCode));
+      localStorage.setItem('_codeSecretMemo_' + this.state.gameId, JSON.stringify(newCode));
+      console.log(localStorage.getItem('_codeSecretMemo_' + this.state.gameId));
+    });
+  }
+  
 
   componentWillUnmount() { //TODO: diversificare unmount in caso si tratti di maker o breaker
     const { _mastermind } = this.state;
@@ -295,15 +327,17 @@ class Game extends React.Component {
         (<BoardBreaker 
         makeGuess={this.makeGuess}
         startTurn={this.startTurn}
+        turnStarted = {this.state._turnStarted}
         codeHash={this.state._codeHash}
         joined={this.state._joined}
         newFeedback={this.state._lastFeedback}
         resetNewFeedback={this.resetLastFeedback}
         guesses={this.state.guesses}
-        feedbacks={this.state.feedbacks}/>)}
+        feedbacks={this.state.feedbacks}
+        codeSecret={this.state._codeSecret}/>)}
       
       {this.isCurrentMaker() &&
-        (<BoardMaker 
+        (<BoardMaker
         hashSecretCode={this.computeHash}
         generateSeed={this.generateRandomString}
         submitSecretHash={ this.submitCodeHash }
@@ -312,7 +346,10 @@ class Game extends React.Component {
         turnStarted = {this.state._turnStarted}
         provideFeedback={this.provideFeedback} 
         guesses={this.state.guesses}
-        feedbacks={this.state.feedbacks}/>)}
+        feedbacks={this.state.feedbacks}
+        turnEnded={this.state._turnEnded}
+        codeSecretMemo={this.state._codeSecretMemo}
+        setCodeSecretMemo={this.setCodeSecretMemo}/>)}
       </div>
 
       //se sono maker
@@ -346,6 +383,9 @@ class Game extends React.Component {
     // Compute the hash
     return ethers.keccak256(combined);
   }
+
+
+  // -------------------------- CONTRACT INTERACTIONS --------------------------
 
   async submitCodeHash(codeHash) {
 

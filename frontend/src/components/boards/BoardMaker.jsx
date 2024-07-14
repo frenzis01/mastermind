@@ -7,7 +7,18 @@ import {colors, colorToInt, intToColor, feedbackColors} from "../../assets/color
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray') };
 
-export function BoardMaker({ hashSecretCode, generateSeed, submitSecretHash, newGuess, resetNewGuess, turnStarted, provideFeedback, guesses, feedbacks}) {
+export function BoardMaker({
+    hashSecretCode,
+    generateSeed,
+    submitSecretHash,
+    newGuess,
+    resetNewGuess,
+    turnStarted,
+    provideFeedback,
+    guesses,
+    feedbacks,
+    codeSecretMemo,
+    setCodeSecretMemo}) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isFeedbackModalOpen, setFeedbackModalOpen] = useState(false);
@@ -70,6 +81,8 @@ export function BoardMaker({ hashSecretCode, generateSeed, submitSecretHash, new
       }
     }
 
+    console.log("My secret code is: ", codeSecretMemo);
+
     if (newGuess && !prevGuessReceived) {
       const guessColors = newGuess.map(intToColor)
       handleGuess(guessColors); // Invoke handleGuess with the received guess
@@ -92,6 +105,7 @@ export function BoardMaker({ hashSecretCode, generateSeed, submitSecretHash, new
    const hash = hashSecretCode(codeColors,generateSeed());
     submitSecretHash(hash);
     setSecretCodeChosen(true);
+    setCodeSecretMemo(codeColors);
     toggleColorChooseModal();
   };
 
