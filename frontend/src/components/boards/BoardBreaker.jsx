@@ -4,7 +4,7 @@ import ColorChooseModal from '../modals/ColorChooseModal'; // Import the ColorCh
 import "../../css/styles.css"
 import { colors, colorToInt, intToColor, feedbackColors } from '../../assets/colors';
 
-const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray') };
+const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill(feedbackColors.xx) };
 
 export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedback, guesses, feedbacks }) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
@@ -15,32 +15,45 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
   const toggleColorChooseModal = () => setColorChooseModalOpen(!isColorChooseModalOpen);
   const waitForNewFeedback = () => setPrevFeedback(false);
 
+  const boardInitialized = rows
+    .map((row,index) => ({ ...row, index }))
+    .every((row) => 
+    (row.index > guesses.length - 1 || row.guess.every(color => color !== null))
+    // This cannot be checked
+    // && (row.index > feedbacks.length || row.feedback.every(color => color !== feedbackColors.xx))
+  );  
+
+  const prevFeedbackReceived = rows[currentRow].guess.every(color => color === null);
+  
   // console.log("Deploying board");
   // startTurn();
   useEffect(() => {
-    if (newFeedback) {
+    if (newFeedback && !prevFeedbackReceived) {
       console.log("New Feedback!")
       handleFeedback(currentRow, newFeedback);
     }
-    if (joined && currentRow === 0 && !newFeedback && !guesses){ //forse TODO: includere caso in cui utente joina il game, ma non submitta guess prima di uscire
+    if (joined && currentRow === 0 && !newFeedback && guesses.length === 0){ //forse TODO: includere caso in cui utente joina il game, ma non submitta guess prima di uscire
       console.log("is Joined!")
       startTurn();
     }
-
+    
+    console.log("Board initialized: " + boardInitialized);
+    console.log("currentRow " + currentRow);
+    console.log("currentRow colors: " + rows[currentRow].guess + " " + rows[currentRow].guess.every(color => color !== null));
+    console.log("guesses length" + guesses.length);
+    console.log("codeHash " + codeHash);
     // TODO test
-    if (guesses) {
+    if (guesses && !boardInitialized) {
       console.log("feeds: " + feedbacks)
       console.log(guesses)
-      for (let i = 0; i < guesses.length; i++) {
-        console.log("riga: " + currentRow)
-        handleSubmitGuess(true)(guesses[i].map(intToColor));
-        if(i < feedbacks.length){
-          handleFeedback(i, feedbacks[i]);
-        }
+
+      handleSubmitGuess(true)(guesses[currentRow].map(intToColor));
+      if(currentRow < feedbacks.length){
+        handleFeedback(currentRow, feedbacks[currentRow]);
       }
     }
 
-  }, [joined, newFeedback]);
+  }, [joined, newFeedback, currentRow, rows]);
 
   const handleSubmitGuess = (init) => {
     return (colors) => {
@@ -104,7 +117,7 @@ export function BoardBreaker({ makeGuess, startTurn, codeHash, joined, newFeedba
         </div>
       ))}
       {/* TODO check MakeGuess modal opening logic */}
-      {isColorChooseModalOpen && codeHash && (prevFeedback || currentRow == 0) && <ColorChooseModal submitCode={handleSubmitGuess(false)} onToggleModal={toggleColorChooseModal}/>}
+      {isColorChooseModalOpen && (codeHash || guesses.length !== 0) && (prevFeedbackReceived) && <ColorChooseModal submitCode={handleSubmitGuess(false)} onToggleModal={toggleColorChooseModal}/>}
     </div>
   );
 }
