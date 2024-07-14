@@ -7,7 +7,18 @@ import { colors, colorToInt, intToColor, feedbackColors } from '../../assets/col
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill(feedbackColors.xx) };
 
-export function BoardBreaker({ makeGuess, startTurn, turnStarted, codeHash, joined, newFeedback, resetNewFeedback, guesses, feedbacks }) {
+export function BoardBreaker({ 
+    maxGuesses,
+    makeGuess,
+    startTurn,
+    turnStarted,
+    codeHash,
+    joined,
+    newFeedback,
+    resetNewFeedback,
+    guesses,
+    feedbacks,
+    codeSecretPublished}) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isColorChooseModalOpen, setColorChooseModalOpen] = useState(false);
@@ -55,7 +66,7 @@ export function BoardBreaker({ makeGuess, startTurn, turnStarted, codeHash, join
         makeGuess(colors.map(colorToInt), currentRow);
       }
       // Move to the next row or handle end game logic
-      if (currentRow < 9) {
+      if (currentRow < maxGuesses) {
         resetNewFeedback();
         // setCurrentRow(currentRow + 1);
       } else {
@@ -80,11 +91,19 @@ export function BoardBreaker({ makeGuess, startTurn, turnStarted, codeHash, join
     setCurrentRow(currentRow + 1);
   };
 
+  const handleDispute = () => {
+    // TODO tutto
+  }
+
   return (
     <div className="App">
       <button
-         className='submit-button' 
+         className='btn-faded' 
          onClick={() => {toggleColorChooseModal(); }}>Make a Guess</button>
+      
+      {codeSecretPublished && 
+        <button className='btn-dispute' onClick={handleDispute}>Dispute</button>
+      }
       {rows.map((row, index) => (
         <div
           className="board-row"

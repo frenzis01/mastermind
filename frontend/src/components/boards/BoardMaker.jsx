@@ -5,10 +5,12 @@ import ColorChooseModal from '../modals/ColorChooseModal';
 import "../../css/styles.css"
 import "../../css/boards.css"
 import {colors, colorToInt, intToColor, feedbackColors} from "../../assets/colors";
+import { Col } from 'react-bootstrap';
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray') };
 
 export function BoardMaker({
+    maxGuesses,
     hashSecretCode,
     generateSeed,
     submitSecretHash,
@@ -18,6 +20,9 @@ export function BoardMaker({
     provideFeedback,
     guesses,
     feedbacks,
+    turnEnded,
+    codeSecretPublished,
+    publishCodeSecret,
     codeSecretMemo,
     setCodeSecretMemo}) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
@@ -39,35 +44,6 @@ export function BoardMaker({
   );  
 
   const prevGuessReceived = rows[currentRow].guess.every(color => color !== null);
-
-
-  const handleProvideFeedback = (init) =>{
-    return (feedback) => {
-      console.log('Providing feedback: ', feedback);
-      // console.log(feedback)
-      const newRows = [...rows];
-      const feedbackCircles = [
-        ...Array(feedback.cc).fill(feedbackColors.cc),
-        ...Array(feedback.nc).fill(feedbackColors.nc), // Very light gray
-        ...Array(6 - feedback.cc - feedback.nc).fill(feedbackColors.xx),
-      ];
-      newRows[currentRow].feedback = feedbackCircles;
-      setRows(newRows);
-      if (!init) {
-        toggleFeedbackModal();
-        provideFeedback(feedback.cc, feedback.nc);
-      }
-      // Call the contract
-      
-      if (currentRow < 9) {
-        // TODO implement endgame
-        setCurrentRow(currentRow + 1);
-        resetNewGuess()
-      } else {
-        console.log('Game Over');
-      }
-    }
-  };
 
   // Use useEffect to listen for changes in `onGuess` prop
   useEffect(() => {
@@ -100,7 +76,6 @@ export function BoardMaker({
   };
 
   const handleSecretCodeChosen = (codeColors) => {
-   // TODO: Implement this function
    console.log('Secret Code Chosen: ', codeColors);
    codeColors = codeColors.map(colorToInt);
    const hash = hashSecretCode(codeColors,generateSeed());
@@ -109,6 +84,41 @@ export function BoardMaker({
     setCodeSecretMemo(codeColors);
     toggleColorChooseModal();
   };
+
+  const handleProvideFeedback = (init) =>{
+    return (feedback) => {
+      console.log('Providing feedback: ', feedback);
+      // console.log(feedback)
+      const newRows = [...rows];
+      const feedbackCircles = [
+        ...Array(feedback.cc).fill(feedbackColors.cc),
+        ...Array(feedback.nc).fill(feedbackColors.nc), // Very light gray
+        ...Array(6 - feedback.cc - feedback.nc).fill(feedbackColors.xx),
+      ];
+      newRows[currentRow].feedback = feedbackCircles;
+      setRows(newRows);
+      if (!init) {
+        toggleFeedbackModal();
+        provideFeedback(feedback.cc, feedback.nc);
+      }
+      // Call the contract
+      
+      if (currentRow < maxGuesses - 1) {
+        // TODO implement endgame
+        setCurrentRow(currentRow + 1);
+        resetNewGuess()
+      } else {
+        console.log('Game Over');
+      }
+    }
+  };
+
+  const handlePublishCodeSecret = (codeColors) => {
+    console.log('Publishing Secret Code: ', codeColors);
+    toggleColorChooseModal();
+    publishCodeSecret(codeColors.map(colorToInt));
+
+  }
 
   return (
     <div className="App">
@@ -121,9 +131,9 @@ export function BoardMaker({
           Choose Secret Code
         </button>
       )}
-      {isSecretCodeChosen && (
+      {isSecretCodeChosen && !turnEnded && (
         <button
-          className='submit-button'
+          className='btn-faded'
           onClick={() => {
             toggleFeedbackModal();
           }}
@@ -131,6 +141,17 @@ export function BoardMaker({
           Provide Feedback
         </button>
       )}
+      {turnEnded && !codeSecretPublished && (
+        <button
+          className='btn-faded'
+          onClick={() => {
+            toggleColorChooseModal();
+          }}
+        >
+          Publish Secret Code
+        </button>
+      )  
+      }
       {rows.map((row, index) => (
         <div
           className="board-row"
@@ -149,11 +170,14 @@ export function BoardMaker({
           </div>
         </div>
       ))}
-      {isFeedbackModalOpen && prevGuessReceived && (
+      {prevGuessReceived && isFeedbackModalOpen && (
         <ProvideFeedbackModal submitFeedback={handleProvideFeedback(false)} onToggleModal={toggleFeedbackModal} />
       )}
-      {isColorChooseModalOpen && !isSecretCodeChosen && (
+      {!isSecretCodeChosen && isColorChooseModalOpen && (
         <ColorChooseModal submitCode={handleSecretCodeChosen} onToggleModal={toggleColorChooseModal} />
+      )}
+      {turnEnded && !codeSecretPublished && isColorChooseModalOpen && (
+        <ColorChooseModal submitCode={handlePublishCodeSecret} onToggleModal={toggleColorChooseModal} initColors={codeSecretMemo} />
       )}
     </div>
   );

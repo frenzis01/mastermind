@@ -376,6 +376,13 @@ class Home extends React.Component {
       joiner: joiner,
       creator: creator
     }
+    if(creator === this.state.selectedAddress){
+      // // Add to available games
+      // this.setState((prevState) => ({
+      //   availableGames: [...prevState.availableGames, eventData]
+      // }));
+      this._updateAvailableGames();
+    }
     this.setState((prevState) => ({
       availableGames: prevState.availableGames.filter(game => game.gameId !== eventData.gameId)
     }));

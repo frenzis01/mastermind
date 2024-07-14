@@ -49,6 +49,8 @@ class Game extends React.Component {
       // persistent (known by the player) codeSecret(s) to be displayed in BoardMaker
       // These codes will persist in case of page reload or change page/game
       _codeSecretMemo: JSON.parse(localStorage.getItem('_codeSecretMemo_' + gameId)) || undefined,
+      // parse as Uint8Array // TODO
+      _codeSeedMemo: JSON.parse(localStorage.getItem('_codeSeedMemo_' + gameId)) || undefined,
       _catchedEvents: new Set()
     };
 
@@ -65,6 +67,7 @@ class Game extends React.Component {
     this.handleTurnEnded = this.handleTurnEnded.bind(this);
     this.handleCodeSecretPublished = this.handleCodeSecretPublished.bind(this);
     this.setCodeSecretMemo = this.setCodeSecretMemo.bind(this);
+    this.setCodeSeedMemo = this.setCodeSeedMemo.bind(this);
 
     this.computeHash = this.computeHash.bind(this);
     this.submitCodeHash = this.submitCodeHash.bind(this);
@@ -73,7 +76,7 @@ class Game extends React.Component {
     this.provideFeedback = this.provideFeedback.bind(this);
     this.resetLastGuess = this.resetLastGuess.bind(this);
     this.resetLastFeedback = this.resetLastFeedback.bind(this);
-
+    this.publishCodeSecret = this.publishCodeSecret.bind(this);
   } 
 
   componentDidMount(){
@@ -149,9 +152,6 @@ class Game extends React.Component {
     }
 
     console.log(gameDetails);
-    // this.setState({ _gameDetails: gameDetails });
-    // this.setState({ _provider: provider});
-    // this.setState({ _mastermind: mastermind });
     this.setState({ _gameDetails: gameDetails, _provider: provider, _mastermind: mastermind, _turnStarted: gameDetails.startTime != 0}, () => {
       if (this.state._gameDetails.joiner === "0x0000000000000000000000000000000000000000") {
         mastermind.on("GameJoined", this.handleGameJoined);
@@ -251,6 +251,14 @@ class Game extends React.Component {
     });
   }
   
+  setCodeSeedMemo = (newSeed) => {
+    // TODO ensure that this is later parsed as Uint8Array
+    this.setState({ _codeSeedMemo: newSeed }, () => {
+      console.log("Code seed memo updated:", JSON.stringify(newSeed));
+      localStorage.setItem('_codeSeedMemo_' + this.state.gameId, JSON.stringify(newSeed));
+      console.log(localStorage.getItem('_codeSeedMemo_' + this.state.gameId));
+    });
+  }
 
   componentWillUnmount() { //TODO: diversificare unmount in caso si tratti di maker o breaker
     const { _mastermind } = this.state;
@@ -307,16 +315,18 @@ class Game extends React.Component {
     //stampare a schermo informazioni sull'attuale game in corso
     return (
       <div className="container p-4">
-      <div className="row">
-        <div className="secret-row">
-            {this.state._codeSecretMemo && 
-              this.state._codeSecretMemo.map((i,index) => (
-              <div className="large-color-circle" key={index} style={{ backgroundColor: intToColor(i) || 'white' }} />))}
-            {!this.state._codeSecretMemo && 
-               Array(6).fill(-1).map((i,index) => (
-                <div className="large-color-circle" key={index} style={{ backgroundColor: intToColor(i) || 'white' }} />))}
-        </div>
-      </div>
+        {this.isCurrentMaker() &&
+          <div className="row">
+            <div className="secret-row">
+              {this.state._codeSecretMemo &&
+                this.state._codeSecretMemo.map((i, index) => (
+                  <div className="large-color-circle" key={index} style={{ backgroundColor: intToColor(i) || 'white' }} />))}
+              {!this.state._codeSecretMemo &&
+                Array(6).fill(-1).map((i, index) => (
+                  <div className="large-color-circle" key={index} style={{ backgroundColor: intToColor(i) || 'white' }} />))}
+            </div>
+          </div>
+        }
 
       <div className="row">
         <div className="col-12">
@@ -335,33 +345,37 @@ class Game extends React.Component {
       se sono breaker
       render di BoardBreaker -> component per giocare come breaker */}
 
-      {!this.isCurrentMaker() && 
-        (<BoardBreaker 
-        makeGuess={this.makeGuess}
-        startTurn={this.startTurn}
-        turnStarted = {this.state._turnStarted}
-        codeHash={this.state._codeHash}
-        joined={this.state._joined}
-        newFeedback={this.state._lastFeedback}
-        resetNewFeedback={this.resetLastFeedback}
-        guesses={this.state.guesses}
-        feedbacks={this.state.feedbacks}
-        codeSecret={this.state._codeSecret}/>)}
-      
-      {this.isCurrentMaker() &&
-        (<BoardMaker
-        hashSecretCode={this.computeHash}
-        generateSeed={this.generateRandomString}
-        submitSecretHash={ this.submitCodeHash }
-        newGuess = {this.state._lastGuess}
-        resetNewGuess={this.resetLastGuess}
-        turnStarted = {this.state._turnStarted}
-        provideFeedback={this.provideFeedback} 
-        guesses={this.state.guesses}
-        feedbacks={this.state.feedbacks}
-        turnEnded={this.state._turnEnded}
-        codeSecretMemo={this.state._codeSecretMemo}
-        setCodeSecretMemo={this.setCodeSecretMemo}/>)}
+        {!this.isCurrentMaker() &&
+          (<BoardBreaker
+            maxGuesses={Number(this.state._gameDetails.maxGuesses)}
+            makeGuess={this.makeGuess}
+            startTurn={this.startTurn}
+            turnStarted={this.state._turnStarted}
+            codeHash={this.state._codeHash}
+            joined={this.state._joined}
+            newFeedback={this.state._lastFeedback}
+            resetNewFeedback={this.resetLastFeedback}
+            guesses={this.state.guesses}
+            feedbacks={this.state.feedbacks}
+            codeSecretPublished={this.state._codeSecret} />)}
+
+        {this.isCurrentMaker() &&
+          (<BoardMaker
+            maxGuesses={Number(this.state._gameDetails.maxGuesses)}
+            hashSecretCode={this.computeHash}
+            generateSeed={this.generateRandomString}
+            submitSecretHash={this.submitCodeHash}
+            newGuess={this.state._lastGuess}
+            resetNewGuess={this.resetLastGuess}
+            turnStarted={this.state._turnStarted}
+            provideFeedback={this.provideFeedback}
+            guesses={this.state.guesses}
+            feedbacks={this.state.feedbacks}
+            turnEnded={this.state._turnEnded}
+            codeSecretPublished={this.state._codeSecret}
+            publishCodeSecret={this.publishCodeSecret}
+            codeSecretMemo={this.state._codeSecretMemo}
+            setCodeSecretMemo={this.setCodeSecretMemo} />)}
       </div>
 
       //se sono maker
@@ -389,6 +403,8 @@ class Game extends React.Component {
     const types = new Array(intArray.length).fill('uint256');
     const serializedArray = abiCoder.encode(types, intArray);
 
+    this.setCodeSeedMemo(seed);
+
     // Concatenate the seed and the serialized array
     const combined = ethers.concat([seed, serializedArray]);
 
@@ -398,6 +414,42 @@ class Game extends React.Component {
 
 
   // -------------------------- CONTRACT INTERACTIONS --------------------------
+
+  async publishCodeSecret(codeSecret) {
+
+    this._dismissTransactionError();
+    let req = undefined;
+    
+    try{
+      req = await this.state._mastermind.publishCodeSecret(this.state.gameId, codeSecret);
+      this.setState({ reqBeingSent: req.hash });
+      const receipt = await req.wait();
+      // The receipt, contains a status flag, which is 0 to indicate an error.
+      if (receipt.status === 0) {
+        throw new Error("Transaction failed");
+      }
+      
+      this.setState({_codeSecret : true});
+      // await this._updateBalance();
+      // this.redirectToGame(gameId, this.state.selectedAddress)
+
+    } catch (error) {
+      // We check the error code to see if this error was produced because the
+      // user rejected a tx. If that's the case, we do nothing.
+      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
+        return;
+      }
+
+      // Other errors are logged and stored in the Dapp's state. This is used to
+      // show them to the user, and for debugging.
+      console.error(error);
+      this.setState({ transactionError: error });
+    } finally {
+      // If we leave the try/catch, we aren't sending a request anymore, so we clear
+      // this part of the state.
+      this.setState({ reqBeingSent: undefined });
+    }
+  }
 
   async submitCodeHash(codeHash) {
 

@@ -2,14 +2,17 @@
 import { useState } from "react";
 import "../../css/boards.css"
 import "../../css/styles.css"
-import {colors, colorToInt} from "../../assets/colors";
+import {colors, colorToInt, intToColor} from "../../assets/colors";
 
 const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
 
-export function ColorChooseModal({ submitCode, onToggleModal }) {
+export function ColorChooseModal({ submitCode, onToggleModal, initColors}) {
   const [isModalOpen, setModalOpen] = useState(true);
   const [selectedColors, setSelectedColors] = useState(
-    Array(6).fill().map(getRandomColor)
+    Array(6).fill().map((v,index) => {
+      if (initColors) { console.log(index); return intToColor(initColors[index]); }
+      else { return getRandomColor() }
+    })
   );
   const [activeCircle, setActiveCircle] = useState(0);
 
