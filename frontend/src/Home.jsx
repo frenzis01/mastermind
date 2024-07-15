@@ -260,6 +260,9 @@ class Home extends React.Component {
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
 
+    provider.polling = true;
+    provider.pollingInterval = 500; // Set to 1000 ms (1 second)
+
     // Then, we initialize the contract using that provider and the token's artifact.
     const mastermind = new ethers.Contract(
       contractAddress.Mastermind,

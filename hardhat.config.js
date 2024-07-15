@@ -4,6 +4,8 @@ require("@nomicfoundation/hardhat-toolbox");
 module.exports = {
   networks: {
     hardhat: {
+      gasPrice: 0,
+      gas: 0,
       mining: {
         auto: false,
         interval: 500

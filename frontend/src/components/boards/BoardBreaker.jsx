@@ -35,12 +35,14 @@ export function BoardBreaker({
 
   const prevFeedbackReceived = rows[currentRow].guess.every(color => color === null);
   
+  const codeHashPresent = codeHash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
+
   useEffect(() => {
     if (newFeedback && !prevFeedbackReceived) {
       console.log("New Feedback!")
       handleFeedback(currentRow, newFeedback);
     }
-    if (joined && currentRow === 0 && !codeHash && !turnStarted && !newFeedback && guesses.length === 0){ //forse TODO: includere caso in cui utente joina il game, ma non submitta guess prima di uscire
+    if (joined && currentRow === 0 && !codeHashPresent && !turnStarted && !newFeedback && guesses.length === 0){ //forse TODO: includere caso in cui utente joina il game, ma non submitta guess prima di uscire
       console.log("is Joined!")
       startTurn();
     }
@@ -123,7 +125,7 @@ export function BoardBreaker({
         </div>
       ))}
       {/* TODO check MakeGuess modal opening logic */}
-      {isColorChooseModalOpen && (codeHash || guesses.length !== 0) && (prevFeedbackReceived) && <ColorChooseModal submitCode={handleSubmitGuess(false)} onToggleModal={toggleColorChooseModal}/>}
+      {isColorChooseModalOpen && (codeHashPresent || guesses.length !== 0) && (prevFeedbackReceived) && <ColorChooseModal submitCode={handleSubmitGuess(false)} onToggleModal={toggleColorChooseModal}/>}
     </div>
   );
 }

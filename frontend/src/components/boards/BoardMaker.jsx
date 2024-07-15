@@ -47,6 +47,7 @@ export function BoardMaker({
   );  
 
   const prevGuessReceived = rows[currentRow].guess.every(color => color !== null);
+  const codeHashPresent = codeHash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
 
   // Use useEffect to listen for changes in `onGuess` prop
   useEffect(() => {
@@ -81,8 +82,9 @@ export function BoardMaker({
   const handleSecretCodeChosen = (codeColors) => {
    console.log('Secret Code Chosen: ', codeColors);
    codeColors = codeColors.map(colorToInt);
-   const seed = generateSeed()
+   var seed = generateSeed();
    const hash = hashSecretCode(codeColors,seed);
+   console.log('Maker Seed: ', seed);
     submitSecretHash(hash);
     setSecretCodeChosen(true);
     setCodeSecretMemo(codeColors);
@@ -129,7 +131,7 @@ export function BoardMaker({
 
   return (
     <div className="App">
-      {!codeHash && (
+      {!codeHashPresent && (
         <button
           className='submit-secret-button'
           onClick={() => {console.log('isModalOpen' + isColorChooseModalOpen); toggleColorChooseModal()}}
@@ -138,7 +140,7 @@ export function BoardMaker({
           Choose Secret Code
         </button>
       )}
-      {codeHash && !turnEnded && (
+      {codeHashPresent && !turnEnded && (
         <button
           className='btn-faded'
           onClick={() => {
@@ -148,7 +150,7 @@ export function BoardMaker({
           Provide Feedback
         </button>
       )}
-      {turnEnded && !codeSecretPublished && codeHash && (
+      {turnEnded && !codeSecretPublished && codeHashPresent && turnStarted && (
         <button
           className='btn-faded'
           onClick={() => {
@@ -180,10 +182,10 @@ export function BoardMaker({
       {prevGuessReceived && isFeedbackModalOpen && (
         <ProvideFeedbackModal submitFeedback={handleProvideFeedback(false)} onToggleModal={toggleFeedbackModal} />
       )}
-      {!isSecretCodeChosen && isColorChooseModalOpen && (
+      {!isSecretCodeChosen && isColorChooseModalOpen && turnStarted && (
         <ColorChooseModal submitCode={handleSecretCodeChosen} onToggleModal={toggleColorChooseModal} />
       )}
-      {turnEnded && !codeSecretPublished && isColorChooseModalOpen && (
+      {turnEnded && !codeSecretPublished && codeHashPresent && turnStarted && isColorChooseModalOpen && (
         <ColorChooseModal submitCode={handlePublishCodeSecret} onToggleModal={toggleColorChooseModal} initColors={codeSecretMemo} />
       )}
     </div>

@@ -104,8 +104,16 @@ class Game extends React.Component {
   async _initializeEthers() {
     // We first initialize ethers by creating a provider using window.ethereum
     const provider = new ethers.BrowserProvider(window.ethereum);
+    
     const signer = await provider.getSigner();
 
+    console.log(provider.pollingInterval);
+
+    provider.polling = true;
+    provider.pollingInterval = 1000; // Set to 1000 ms (1 second)
+    console.log(provider);
+    console.log(provider.pollingInterval);
+    
     // Then, we initialize the contract using that provider and the token's artifact.
     const mastermind = new ethers.Contract(
       contractAddress.Mastermind,
@@ -405,6 +413,7 @@ class Game extends React.Component {
 
   // Function A: Generate a random 64-character long string
   generateRandomString() {
+    console.log("Generating random string");
     const array = new Uint8Array(32);
     window.crypto.getRandomValues(array);
     return array;
@@ -455,7 +464,12 @@ class Game extends React.Component {
     let req = undefined;
     
     try{
+      console.log("Publishing code secret");
+      console.log(codeSeed);
+      console.log(codeSecret);
       req = await this.state._mastermind.publishCodeSecret(this.state.gameId, codeSecret, codeSeed);
+      console.log(req);
+
       this.setState({ reqBeingSent: req.hash });
       const receipt = await req.wait();
       // The receipt, contains a status flag, which is 0 to indicate an error.
