@@ -10,7 +10,7 @@ contract Mastermind {
     uint256 public constant NUM_GUESSES = 10;
     uint256 public constant K_EXTRA_POINTS = 10;
     uint256 public constant B_AFKBLOCKS = 10;
-    uint256 public constant TIME_TO_DISPUTE = 20000;
+    uint256 public constant TIME_TO_DISPUTE = 60000;
 
 
     // Struct to store game information

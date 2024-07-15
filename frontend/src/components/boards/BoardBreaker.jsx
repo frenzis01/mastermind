@@ -1,5 +1,4 @@
-// BoardBreaker.js
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import ColorChooseModal from '../modals/ColorChooseModal'; // Import the ColorChooseModal component
 import "../../css/styles.css"
 import "../../css/boards.css"
@@ -18,23 +17,24 @@ export function BoardBreaker({
     resetNewFeedback,
     guesses,
     feedbacks,
-    codeSecretPublished}) {
+    codeSecretPublished,
+    disputeFeedback}) {
+    
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isColorChooseModalOpen, setColorChooseModalOpen] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]); // State to track selected rows
+  const [isDisputeMode, setIsDisputeMode] = useState(false); // State to track dispute mode
 
   const toggleColorChooseModal = () => setColorChooseModalOpen(!isColorChooseModalOpen);
 
   const boardInitialized = rows
-    .map((row,index) => ({ ...row, index }))
+    .map((row, index) => ({ ...row, index }))
     .every((row) => 
     (row.index > guesses.length - 1 || row.guess.every(color => color !== null))
-    // This cannot be checked
-    // && (row.index > feedbacks.length || row.feedback.every(color => color !== feedbackColors.xx))
-  );  
+  );
 
   const prevFeedbackReceived = rows[currentRow].guess.every(color => color === null);
-  
   const codeHashPresent = codeHash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
 
   useEffect(() => {
@@ -42,19 +42,16 @@ export function BoardBreaker({
       console.log("New Feedback!")
       handleFeedback(currentRow, newFeedback);
     }
-    if (joined && currentRow === 0 && !codeHashPresent && !turnStarted && !newFeedback && guesses.length === 0){ //forse TODO: includere caso in cui utente joina il game, ma non submitta guess prima di uscire
+    if (joined && currentRow === 0 && !codeHashPresent && !turnStarted && !newFeedback && guesses.length === 0) {
       console.log("is Joined!")
       startTurn();
     }
-    // TODO test
     if (guesses.length !== 0 && !boardInitialized) {
-
       handleSubmitGuess(true)(guesses[currentRow].map(intToColor));
-      if(currentRow < feedbacks.length){
+      if (currentRow < feedbacks.length) {
         handleFeedback(currentRow, feedbacks[currentRow]);
       }
     }
-
   }, [joined, newFeedback, currentRow, rows]);
 
   const handleSubmitGuess = (init) => {
@@ -67,13 +64,10 @@ export function BoardBreaker({
         toggleColorChooseModal();
         makeGuess(colors.map(colorToInt), currentRow);
       }
-      // Move to the next row or handle end game logic
       if (currentRow < maxGuesses) {
         resetNewFeedback();
-        // setCurrentRow(currentRow + 1);
       } else {
         console.log('Game Over');
-        // TODO implement end game logic
       }
     }
   };
@@ -85,7 +79,7 @@ export function BoardBreaker({
     const newRows = [...rows];
     const feedbackCircles = [
       ...Array(feedback.cc).fill(feedbackColors.cc),
-      ...Array(feedback.nc).fill(feedbackColors.nc), // Very light gray
+      ...Array(feedback.nc).fill(feedbackColors.nc),
       ...Array(6 - feedback.cc - feedback.nc).fill(feedbackColors.xx),
     ];
     newRows[rowIndex].feedback = feedbackCircles;
@@ -93,24 +87,46 @@ export function BoardBreaker({
     setCurrentRow(currentRow + 1);
   };
 
+  const toggleRowSelection = (index) => {
+    setSelectedRows((prevSelectedRows) => {
+      if (prevSelectedRows.includes(index)) {
+        return prevSelectedRows.filter(rowIndex => rowIndex !== index);
+      } else {
+        return [...prevSelectedRows, index];
+      }
+    });
+  };
+
   const handleDispute = () => {
-    // TODO tutto
-  }
+    setIsDisputeMode(!isDisputeMode);
+    if (isDisputeMode) {
+      console.log('Selected rows for dispute:', selectedRows);
+      // Perform actions with selectedRows, e.g., send to server or handle dispute logic
+      disputeFeedback(selectedRows);
+    }
+  };
 
   return (
     <div className="App">
       {!codeSecretPublished && <button
-         className='btn-faded' 
-         onClick={() => {toggleColorChooseModal(); }}>Make a Guess</button>
+        className='btn-faded'
+        onClick={() => { toggleColorChooseModal(); }}>Make a Guess</button>
       }
       {codeSecretPublished && 
-        <button className='dispute-button' onClick={handleDispute}>The maker cheated! Dispute!</button>
+        <button className='dispute-button' onClick={handleDispute}>
+          {isDisputeMode ? 'Confirm Dispute' : 'The maker cheated! Dispute!'}
+        </button>
       }
       {rows.map((row, index) => (
         <div
           className="board-row"
           key={index}
-          style={{ backgroundColor: row.guess.includes(null) ? '#d3d3d3' : '#2e2e2e' }}
+          onClick={isDisputeMode ? () => toggleRowSelection(index) : undefined}
+          style={{
+            backgroundColor: row.guess.includes(null) ? '#d3d3d3' : '#2e2e2e',
+            border: selectedRows.includes(index) ? '2px solid red' : 'none', // Highlight selected rows
+            cursor: isDisputeMode ? 'pointer' : 'default'
+          }}
         >
           <div className="feedback-grid">
             {row.feedback.map((color, i) => (
@@ -124,8 +140,7 @@ export function BoardBreaker({
           </div>
         </div>
       ))}
-      {/* TODO check MakeGuess modal opening logic */}
-      {isColorChooseModalOpen && (codeHashPresent || guesses.length !== 0) && (prevFeedbackReceived) && <ColorChooseModal submitCode={handleSubmitGuess(false)} onToggleModal={toggleColorChooseModal}/>}
+      {isColorChooseModalOpen && (codeHashPresent || guesses.length !== 0) && (prevFeedbackReceived) && <ColorChooseModal submitCode={handleSubmitGuess(false)} onToggleModal={toggleColorChooseModal} />}
     </div>
   );
 }

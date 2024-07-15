@@ -66,6 +66,7 @@ class Game extends React.Component {
     this.handleGameJoined = this.handleGameJoined.bind(this);
     this.handleTurnEnded = this.handleTurnEnded.bind(this);
     this.handleCodeSecretPublished = this.handleCodeSecretPublished.bind(this);
+    this.handleGameEnded = this.handleGameEnded.bind(this);
     this.setCodeSecretMemo = this.setCodeSecretMemo.bind(this);
     this.setCodeSeedMemo = this.setCodeSeedMemo.bind(this);
 
@@ -77,6 +78,7 @@ class Game extends React.Component {
     this.resetLastGuess = this.resetLastGuess.bind(this);
     this.resetLastFeedback = this.resetLastFeedback.bind(this);
     this.publishCodeSecret = this.publishCodeSecret.bind(this);
+    this.disputeFeedback = this.disputeFeedback.bind(this);
   } 
 
   componentDidMount(){
@@ -195,6 +197,7 @@ class Game extends React.Component {
     _mastermind.on("Feedback", this.wrap(this.handleFeedback));
     _mastermind.on("HashPublished", this.wrap(this.handleHashPublished));
     _mastermind.on("CodeSecretPublished", this.wrap(this.handleCodeSecretPublished));
+    _mastermind.on("GameEnded", this.wrap(this.handleGameEnded));
   }
 
   setupMakerEventListeners() {
@@ -203,6 +206,7 @@ class Game extends React.Component {
     _mastermind.on("Dispute", this.wrap(this.handleDispute));
     _mastermind.on("TurnStarted", this.wrap(this.handleTurnStarted));
     _mastermind.on("TurnEnded", this.wrap(this.handleTurnEnded));
+    _mastermind.on("GameEnded", this.wrap(this.handleGameEnded));
   }
 
   resetLastGuess = () => {
@@ -259,6 +263,10 @@ class Game extends React.Component {
   handleGameJoined(gameId, joiner, creator) {
     console.log("GameJoined received:");
     this.setState({ _joined: true , joiner: joiner});
+  }
+
+  handleGameEnded(gameId, winner, winnerPoints, loserPoints) {
+    console.log("GameEnded received, the winner is " + winner + " with " + winnerPoints + " points");
   }
 
   setCodeSecretMemo (newCode) {
@@ -375,7 +383,9 @@ class Game extends React.Component {
             resetNewFeedback={this.resetLastFeedback}
             guesses={this.state.guesses}
             feedbacks={this.state.feedbacks}
-            codeSecretPublished={this.state._codeSecret} />)}
+            codeSecretPublished={this.state._codeSecret}
+            disputeFeedback={this.disputeFeedback}
+         />)}
 
         {this.isCurrentMaker() &&
           (<BoardMaker
@@ -589,9 +599,6 @@ class Game extends React.Component {
   }
 
   async startTurn() {
-    // return new Promise((resolve) => {
-    //   this.state._mastermind.startTurn(this.state.gameId);
-    // });
     this._dismissTransactionError();
     let req = undefined;
     
@@ -623,6 +630,37 @@ class Game extends React.Component {
   
   }
 
+  async disputeFeedback(guessIDs) {
+    this._dismissTransactionError();
+    let req = undefined;
+  
+    try{
+      req = await this.state._mastermind.disputeFeedback(this.state.gameId,guessIDs);
+      this.setState({ reqBeingSent: req.hash });
+      const receipt = await req.wait();
+      // The receipt, contains a status flag, which is 0 to indicate an error.
+      if (receipt.status === 0) {
+        throw new Error("Transaction failed");
+      }
+
+      // this.setState(prevState => ({
+      //   _gameDetails: {
+      //     ...prevState._gameDetails,
+      //     currentTurn: prevState._gameDetails.currentTurn + 1
+      //   }
+      // }));
+
+    } catch (error) {
+      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
+        return;
+      }
+      console.error(error);
+      this.setState({ transactionError: error });
+    } finally {
+      this.setState({ reqBeingSent: undefined });
+    }
+  
+  }
   /*
   board maker avrà riferimento a "GenerateCodeModal", per submittare 
   */
