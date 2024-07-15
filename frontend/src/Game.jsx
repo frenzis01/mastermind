@@ -85,6 +85,8 @@ class Game extends React.Component {
     this.accuseAFK = this.accuseAFK.bind(this);
     this.addAFKaccuse = this.addAFKaccuse.bind(this);
     this.resetAFKaccuse = this.resetAFKaccuse.bind(this);
+
+    this.wrapContractInteraction = this.wrapContractInteraction.bind(this);
   } 
 
   componentDidMount(){
@@ -501,227 +503,85 @@ class Game extends React.Component {
   // -------------------------- CONTRACT INTERACTIONS --------------------------
 
   async publishCodeSecret(codeSecret, codeSeed) {
+    console.log("Publishing code secret");
+    console.log(codeSeed);
+    console.log(codeSecret);
 
-    this._dismissTransactionError();
-    let req = undefined;
-    
-    try{
-      console.log("Publishing code secret");
-      console.log(codeSeed);
-      console.log(codeSecret);
-      req = await this.state._mastermind.publishCodeSecret(this.state.gameId, codeSecret, codeSeed);
-      console.log(req);
-
-      this.setState({ reqBeingSent: req.hash });
-      const receipt = await req.wait();
-      // The receipt, contains a status flag, which is 0 to indicate an error.
-      if (receipt.status === 0) {
-        throw new Error("Transaction failed");
-      }
-      
-      this.setState({_codeSecret : true});
-      // await this._updateBalance();
-      // this.redirectToGame(gameId, this.state.selectedAddress)
-
-    } catch (error) {
-      // We check the error code to see if this error was produced because the
-      // user rejected a tx. If that's the case, we do nothing.
-      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
-        return;
-      }
-
-      // Other errors are logged and stored in the Dapp's state. This is used to
-      // show them to the user, and for debugging.
-      console.error(error);
-      this.setState({ transactionError: error });
-    } finally {
-      // If we leave the try/catch, we aren't sending a request anymore, so we clear
-      // this part of the state.
-      this.setState({ reqBeingSent: undefined });
-    }
+    this.wrapContractInteraction(
+      this.state._mastermind.publishCodeSecret, 
+      [this.state.gameId, codeSecret, codeSeed], () => {
+      this.setState({_codeSecret : true});});
   }
 
   async submitCodeHash(codeHash) {
-
-    this._dismissTransactionError();
-    let req = undefined;
-    
-    try{
-      req = await this.state._mastermind.submitCodeHash(this.state.gameId, codeHash);
-      this.setState({ reqBeingSent: req.hash });
-      const receipt = await req.wait();
-      // The receipt, contains a status flag, which is 0 to indicate an error.
-      if (receipt.status === 0) {
-        throw new Error("Transaction failed");
-      }
-      
-      this.setState({_codeHash : true});
-      // await this._updateBalance();
-      // this.redirectToGame(gameId, this.state.selectedAddress)
-
-    } catch (error) {
-      // We check the error code to see if this error was produced because the
-      // user rejected a tx. If that's the case, we do nothing.
-      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
-        return;
-      }
-
-      // Other errors are logged and stored in the Dapp's state. This is used to
-      // show them to the user, and for debugging.
-      console.error(error);
-      this.setState({ transactionError: error });
-    } finally {
-      // If we leave the try/catch, we aren't sending a request anymore, so we clear
-      // this part of the state.
-      this.setState({ reqBeingSent: undefined });
-    }
+    wrapContractInteraction(
+      this.state._mastermind.submitCodeHash,
+      [this.state.gameId, codeHash],
+      () => {
+        this.setState({_codeHash : true});
+      });
   }
 
   async makeGuess(guess) {
-
-    this._dismissTransactionError();
-    let req = undefined;
-    
-    try{
-      req = await this.state._mastermind.makeGuess(this.state.gameId,guess);
-      this.setState({ reqBeingSent: req.hash });
-      const receipt = await req.wait();
-      // The receipt, contains a status flag, which is 0 to indicate an error.
-      if (receipt.status === 0) {
-        throw new Error("Transaction failed");
-      }
-
-      this.setState({_lastGuess : guess});
-      this.resetAFKaccuse( this.state.selectedAddress );
-
-    } catch (error) {
-      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
-        return;
-      }
-      console.error(error);
-      this.setState({ transactionError: error });
-    } finally {
-      this.setState({ reqBeingSent: undefined });
-    }
+    this.wrapContractInteraction(
+      this.state._mastermind.makeGuess,
+      [this.state.gameId, guess],
+      () => {
+        this.setState({_lastGuess : guess});
+        this.resetAFKaccuse( this.state.selectedAddress );
+      });
   }
 
   async provideFeedback(cc,nc) {
-    this._dismissTransactionError();
-    let req = undefined;
-    
-    try{
-      req = await this.state._mastermind.provideFeedback(this.state.gameId,cc,nc);
-      this.setState({ reqBeingSent: req.hash });
-      const receipt = await req.wait();
-      // The receipt, contains a status flag, which is 0 to indicate an error.
-      if (receipt.status === 0) {
-        throw new Error("Transaction failed");
-      }
-
-      this.setState({_lastFeedback : {"cc": cc, "nc": nc}});
-      this.resetAFKaccuse( this.state.selectedAddress );
-
-    } catch (error) {
-      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
-        return;
-      }
-      console.error(error);
-      this.setState({ transactionError: error });
-    } finally {
-      this.setState({ reqBeingSent: undefined });
-    }
+    this.wrapContractInteraction(
+      this.state._mastermind.provideFeedback,
+      [this.state.gameId,cc,nc],
+      () => {
+        this.setState({_lastFeedback : {"cc": cc, "nc": nc}});
+        this.resetAFKaccuse( this.state.selectedAddress );
+      });
   }
 
   async startTurn() {
-    this._dismissTransactionError();
-    let req = undefined;
-    
-    try{
-      req = await this.state._mastermind.startTurn(this.state.gameId);
-      this.setState({ reqBeingSent: req.hash });
-      const receipt = await req.wait();
-      // The receipt, contains a status flag, which is 0 to indicate an error.
-      if (receipt.status === 0) {
-        throw new Error("Transaction failed");
-      }
-
-      this.setState(prevState => ({
-        _gameDetails: {
-          ...prevState._gameDetails,
-          currentTurn: prevState._gameDetails.currentTurn + 1
-        }
-      }));
-
-      this.resetAFKaccuse(this.state._gameDetails.creator);
-      this.resetAFKaccuse(this.state._gameDetails.joiner);
-
-    } catch (error) {
-      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
-        return;
-      }
-      console.error(error);
-      this.setState({ transactionError: error });
-    } finally {
-      this.setState({ reqBeingSent: undefined });
-    }
-  
+    this.wrapContractInteraction(
+      this.state._mastermind.startTurn,
+      [this.state.gameId],
+      () => {
+        this.setState(prevState => ({
+          _gameDetails: {
+            ...prevState._gameDetails,
+            currentTurn: prevState._gameDetails.currentTurn + 1
+          }
+        }));
+        this.resetAFKaccuse(this.state._gameDetails.creator);
+        this.resetAFKaccuse(this.state._gameDetails.joiner);
+      });
   }
 
   async disputeFeedback(guessIDs) {
-    this._dismissTransactionError();
-    let req = undefined;
-  
-    try{
-      req = await this.state._mastermind.disputeFeedback(this.state.gameId,guessIDs);
-      this.setState({ reqBeingSent: req.hash });
-      const receipt = await req.wait();
-      // The receipt, contains a status flag, which is 0 to indicate an error.
-      if (receipt.status === 0) {
-        throw new Error("Transaction failed");
-      }
+    this.wrapContractInteraction(
+      this.state._mastermind.disputeFeedback,
+      [this.state.gameId,guessIDs],
+      () => {
+        this.setState({_disputed : true});
+      });
 
-      this.setState({_disputed : true});
-
-    } catch (error) {
-      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
-        return;
-      }
-      console.error(error);
-      this.setState({ transactionError: error });
-    } finally {
-      this.setState({ reqBeingSent: undefined });
-    }
-  
   }
 
   async accuseAFK(){
-    this._dismissTransactionError();
-    let req = undefined;
-  
-    try{
-      req = await this.state._mastermind.accuseAFK(this.state.gameId);
-      this.setState({ reqBeingSent: req.hash });
-      const receipt = await req.wait();
-      // The receipt, contains a status flag, which is 0 to indicate an error.
-      if (receipt.status === 0) {
-        throw new Error("Transaction failed");
-      }
-
-      // We should use the block timestamp instead of Date.now(), but it is a good approximation
-      // Serves only as an indicator for there being an accusation, and to avoid flooding the contract
-      // with useless accusations
-      this.addAFKaccuse(this.state.selectedAddress, Date.now() );
-
-    } catch (error) {
-      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
-        return;
-      }
-      console.error(error);
-      this.setState({ transactionError: error });
-    } finally {
-      this.setState({ reqBeingSent: undefined });
-    }
+    this.wrapContractInteraction(
+      this.state._mastermind.accuseAFK,
+      [this.state.gameId],
+      () => {
+        // We should use the block timestamp instead of Date.now(), but it is a good approximation
+        // Serves only as an indicator for there being an accusation, and to avoid flooding the contract
+        // with useless accusations
+        this.addAFKaccuse(this.state.selectedAddress, Date.now());
+      });
   }
+  
+
+  // -------------------------- TRANSACTION HANDLING --------------------------
   
   async wrapContractInteraction (contractInvokation,args,successCallback) {
     this._dismissTransactionError();
@@ -739,17 +599,24 @@ class Game extends React.Component {
       successCallback();
 
     } catch (error) {
+      // We check the error code to see if this error was produced because the
+      // user rejected a tx. If that's the case, we do nothing.
       if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
         return;
       }
+
+      // Other errors are logged and stored in the Dapp's state. This is used to
+      // show them to the user, and for debugging.
       console.error(error);
       this.setState({ transactionError: error });
     } finally {
+      // If we leave the try/catch, we aren't sending a request anymore, so we clear
+      // this part of the state.
       this.setState({ reqBeingSent: undefined });
     }
   }
 
-  // -------------------------- ERROR HANDLING --------------------------
+  // This method just clears part of the state.
   _dismissTransactionError() {
     this.setState({ transactionError: undefined });
   }
