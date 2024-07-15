@@ -10,6 +10,7 @@ import { Col } from 'react-bootstrap';
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray') };
 
 export function BoardMaker({
+    maxTurns,
     maxGuesses,
     hashSecretCode,
     generateSeed,
@@ -27,7 +28,8 @@ export function BoardMaker({
     codeSecretMemo,
     codeSeedMemo,
     setCodeSecretMemo,
-    setCodeSeedMemo}) {
+    setCodeSeedMemo
+    }) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isFeedbackModalOpen, setFeedbackModalOpen] = useState(false);
@@ -161,11 +163,15 @@ export function BoardMaker({
         </button>
       )  
       }
+      { turnEnded && codeSecretPublished && codeHashPresent && 
+      // TODO implement "Game will end soon" if max number of turns reached
+          <div> The breaker will either start a new Turn or dispute the Feedbacks you provided.</div>
+      }
       {rows.map((row, index) => (
         <div
           className="board-row"
           key={index}
-          style={{ backgroundColor: row.guess.includes(null) ? '#d3d3d3' : '#2e2e2e' }}
+          style={{ backgroundColor: row.guess.includes(null) ? '#d3d3d3' : '#353535' }}
         >
           <div className="feedback-grid">
             {row.feedback.map((color, i) => (

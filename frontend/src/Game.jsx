@@ -45,6 +45,8 @@ class Game extends React.Component {
       _joined: false,
       _turnStarted: false,
       _turnEnded: false,
+      _disputed: false,
+      _accusedAFK: {}, // dictionary indicating the time of accusation for each player
       _codeSecret: undefined,
       // persistent (known by the player) codeSecret(s) to be displayed in BoardMaker
       // These codes will persist in case of page reload or change page/game
@@ -66,6 +68,7 @@ class Game extends React.Component {
     this.handleGameJoined = this.handleGameJoined.bind(this);
     this.handleTurnEnded = this.handleTurnEnded.bind(this);
     this.handleCodeSecretPublished = this.handleCodeSecretPublished.bind(this);
+    this.handleAFKAccusation = this.handleAFKAccusation.bind(this);
     this.handleGameEnded = this.handleGameEnded.bind(this);
     this.setCodeSecretMemo = this.setCodeSecretMemo.bind(this);
     this.setCodeSeedMemo = this.setCodeSeedMemo.bind(this);
@@ -79,6 +82,9 @@ class Game extends React.Component {
     this.resetLastFeedback = this.resetLastFeedback.bind(this);
     this.publishCodeSecret = this.publishCodeSecret.bind(this);
     this.disputeFeedback = this.disputeFeedback.bind(this);
+    this.accuseAFK = this.accuseAFK.bind(this);
+    this.addAFKaccuse = this.addAFKaccuse.bind(this);
+    this.resetAFKaccuse = this.resetAFKaccuse.bind(this);
   } 
 
   componentDidMount(){
@@ -265,6 +271,11 @@ class Game extends React.Component {
     this.setState({ _joined: true , joiner: joiner});
   }
 
+  handleAFKAccusation(gameId, accused) {
+    console.log("AFKAccusation received, the accused is " + accused);
+    
+  }
+
   handleGameEnded(gameId, winner, winnerPoints, loserPoints) {
     console.log("GameEnded received, the winner is " + winner + " with " + winnerPoints + " points");
   }
@@ -322,6 +333,24 @@ class Game extends React.Component {
       return false;
   }
 
+  addAFKaccuse = (player, timeOfAccusation) => {
+    this.setState(prevState => ({
+      _accusedAFK: {
+        ...prevState._accusedAFK,
+        [player]: timeOfAccusation
+      }
+    }));
+  }
+
+  resetAFKaccuse = (player) => {
+    this.setState(prevState => ({
+      _accusedAFK: {
+        ...prevState._accusedAFK,
+        [player]: undefined
+      }
+    }));
+  }
+
   render() {
     if (this.state._mastermind === undefined) {
       return <Loading />;
@@ -356,7 +385,7 @@ class Game extends React.Component {
 
       <div className="row">
         <div className="col-12">
-          <h3>Game ID: {this.state.gameId} / Current Turn: {parseInt(this.state._gameDetails.currentTurn)} </h3>
+          <h3>Game #{this.state.gameId} - Turn {parseInt(this.state._gameDetails.currentTurn)}/{parseInt(this.state._gameDetails.numTurns)} </h3>
           Selected Address: {this.state.selectedAddress}
           <br />
           You are the {this.isCurrentMaker() ? "Maker" : "Breaker"}
@@ -373,6 +402,7 @@ class Game extends React.Component {
 
         {!this.isCurrentMaker() &&
           (<BoardBreaker
+            numTurns={Number(this.state._gameDetails.numTurns)}
             maxGuesses={Number(this.state._gameDetails.maxGuesses)}
             makeGuess={this.makeGuess}
             startTurn={this.startTurn}
@@ -385,11 +415,13 @@ class Game extends React.Component {
             feedbacks={this.state.feedbacks}
             codeSecretPublished={this.state._codeSecret}
             disputeFeedback={this.disputeFeedback}
+            disputed={this.state._disputed}
          />)}
 
         {this.isCurrentMaker() &&
           (<BoardMaker
           // TODO add seed and display it to allow player to annotate it
+            numTurns={Number(this.state._gameDetails.numTurns)}
             maxGuesses={Number(this.state._gameDetails.maxGuesses)}
             hashSecretCode={this.computeHash}
             generateSeed={this.generateRandomString}
@@ -560,6 +592,7 @@ class Game extends React.Component {
       }
 
       this.setState({_lastGuess : guess});
+      this.resetAFKaccuse( this.state.selectedAddress );
 
     } catch (error) {
       if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
@@ -586,6 +619,7 @@ class Game extends React.Component {
       }
 
       this.setState({_lastFeedback : {"cc": cc, "nc": nc}});
+      this.resetAFKaccuse( this.state.selectedAddress );
 
     } catch (error) {
       if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
@@ -618,6 +652,9 @@ class Game extends React.Component {
         }
       }));
 
+      this.resetAFKaccuse(this.state._gameDetails.creator);
+      this.resetAFKaccuse(this.state._gameDetails.joiner);
+
     } catch (error) {
       if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
         return;
@@ -643,12 +680,7 @@ class Game extends React.Component {
         throw new Error("Transaction failed");
       }
 
-      // this.setState(prevState => ({
-      //   _gameDetails: {
-      //     ...prevState._gameDetails,
-      //     currentTurn: prevState._gameDetails.currentTurn + 1
-      //   }
-      // }));
+      this.setState({_disputed : true});
 
     } catch (error) {
       if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
@@ -661,15 +693,63 @@ class Game extends React.Component {
     }
   
   }
-  /*
-  board maker avrà riferimento a "GenerateCodeModal", per submittare 
-  */
 
-  // _generateRandomSalt() {
-  //   return crypto.randomBytes(32); // 32 bytes * 2 hex chars per byte = 64 hex chars
-  // }
+  async accuseAFK(){
+    this._dismissTransactionError();
+    let req = undefined;
+  
+    try{
+      req = await this.state._mastermind.accuseAFK(this.state.gameId);
+      this.setState({ reqBeingSent: req.hash });
+      const receipt = await req.wait();
+      // The receipt, contains a status flag, which is 0 to indicate an error.
+      if (receipt.status === 0) {
+        throw new Error("Transaction failed");
+      }
 
-  // // Logic to join a game
+      // We should use the block timestamp instead of Date.now(), but it is a good approximation
+      // Serves only as an indicator for there being an accusation, and to avoid flooding the contract
+      // with useless accusations
+      this.addAFKaccuse(this.state.selectedAddress, Date.now() );
+
+    } catch (error) {
+      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
+        return;
+      }
+      console.error(error);
+      this.setState({ transactionError: error });
+    } finally {
+      this.setState({ reqBeingSent: undefined });
+    }
+  }
+  
+  async wrapContractInteraction (contractInvokation,args,successCallback) {
+    this._dismissTransactionError();
+    let req = undefined;
+  
+    try{
+      req = await contractInvokation(...args);
+      this.setState({ reqBeingSent: req.hash });
+      const receipt = await req.wait();
+      // The receipt, contains a status flag, which is 0 to indicate an error.
+      if (receipt.status === 0) {
+        throw new Error("Transaction failed");
+      }
+
+      successCallback();
+
+    } catch (error) {
+      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
+        return;
+      }
+      console.error(error);
+      this.setState({ transactionError: error });
+    } finally {
+      this.setState({ reqBeingSent: undefined });
+    }
+  }
+
+  // -------------------------- ERROR HANDLING --------------------------
   _dismissTransactionError() {
     this.setState({ transactionError: undefined });
   }

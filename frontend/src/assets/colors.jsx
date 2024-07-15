@@ -24,3 +24,5 @@ export const colorToInt = (color) => {
 export const intToColor = (int) => {
    return colors[int];
 }
+
+export const disputeColor = "#00886f"

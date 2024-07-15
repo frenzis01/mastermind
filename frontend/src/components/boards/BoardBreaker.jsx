@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import ColorChooseModal from '../modals/ColorChooseModal'; // Import the ColorChooseModal component
 import "../../css/styles.css"
 import "../../css/boards.css"
-import { colors, colorToInt, intToColor, feedbackColors } from '../../assets/colors';
+import { colors, colorToInt, intToColor, feedbackColors, disputeColor } from '../../assets/colors';
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill(feedbackColors.xx) };
 
@@ -18,7 +18,8 @@ export function BoardBreaker({
     guesses,
     feedbacks,
     codeSecretPublished,
-    disputeFeedback}) {
+    disputeFeedback,
+    disputed}) {
     
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
@@ -88,6 +89,7 @@ export function BoardBreaker({
   };
 
   const toggleRowSelection = (index) => {
+    if (index > currentRow -1 ) return;
     setSelectedRows((prevSelectedRows) => {
       if (prevSelectedRows.includes(index)) {
         return prevSelectedRows.filter(rowIndex => rowIndex !== index);
@@ -106,16 +108,32 @@ export function BoardBreaker({
     }
   };
 
+  const nextTurn = () => {
+    startTurn();
+    // Reload page
+    window.location.reload(); // TODO Test if is this okay
+  }
+
   return (
     <div className="App">
-      {!codeSecretPublished && <button
-        className='btn-faded'
-        onClick={() => { toggleColorChooseModal(); }}>Make a Guess</button>
-      }
-      {codeSecretPublished && 
-        <button className='dispute-button' onClick={handleDispute}>
-          {isDisputeMode ? 'Confirm Dispute' : 'The maker cheated! Dispute!'}
-        </button>
+      
+      {!disputed &&
+      <>
+        {/* in-game buttons */}
+        {!codeSecretPublished && <button
+          className='btn-faded'
+          onClick={() => { toggleColorChooseModal(); }}>Make a Guess</button>
+        }
+        {codeSecretPublished && 
+          <button className='dispute-button' onClick={handleDispute}>
+            {isDisputeMode ? 'Confirm Dispute' : 'The maker cheated! Dispute!'}
+          </button>
+        }
+        {codeSecretPublished && <button className='btn-faded' onClick={startTurn}> Start next Turn</button>}
+      </>}
+      {disputed &&
+        // <div className="disputed-message">
+        <div> Opponent claims you have cheated in this turn. The game will end soon, establishing who is not being honest.</div>
       }
       {rows.map((row, index) => (
         <div
@@ -123,9 +141,11 @@ export function BoardBreaker({
           key={index}
           onClick={isDisputeMode ? () => toggleRowSelection(index) : undefined}
           style={{
-            backgroundColor: row.guess.includes(null) ? '#d3d3d3' : '#2e2e2e',
-            border: selectedRows.includes(index) ? '2px solid red' : 'none', // Highlight selected rows
-            cursor: isDisputeMode ? 'pointer' : 'default'
+            // Darker gray #e2e2e2
+            backgroundColor: row.guess.includes(null) ? '#d3d3d3' : '#353535',
+            border: selectedRows.includes(index) ? `3px solid ${disputeColor}` : 'none', // Highlight selected rows
+            cursor: isDisputeMode ? 'pointer' : 'default',
+            boxShadow: selectedRows.includes(index) ? '0px 0px 45px rgba(255, 255, 255, 0.8)' : 'none' // Add shadow to selected rows;
           }}
         >
           <div className="feedback-grid">
