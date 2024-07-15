@@ -50,8 +50,8 @@ class Game extends React.Component {
       _codeSecret: undefined,
       // persistent (known by the player) codeSecret(s) to be displayed in BoardMaker
       // These codes will persist in case of page reload or change page/game
-      _codeSecretMemo: JSON.parse(localStorage.getItem('_codeSecretMemo_' + gameId)) || undefined,
-      // parse as Uint8Array // TODO
+      _codeSecretMemo: this.jsonStringParse(localStorage.getItem('_codeSecretMemo_' + gameId)) || undefined,
+      // fundamental to parse as Uint8Array
       _codeSeedMemo: this.jsonStringToUint8Array(localStorage.getItem('_codeSeedMemo_' + gameId)) || undefined,
       _catchedEvents: new Set()
     };
@@ -83,6 +83,7 @@ class Game extends React.Component {
     this.publishCodeSecret = this.publishCodeSecret.bind(this);
     this.disputeFeedback = this.disputeFeedback.bind(this);
     this.accuseAFK = this.accuseAFK.bind(this);
+    this.verifyAFKAccusation = this.verifyAFKAccusation.bind(this);
     this.addAFKaccuse = this.addAFKaccuse.bind(this);
     this.resetAFKaccuse = this.resetAFKaccuse.bind(this);
 
@@ -168,8 +169,11 @@ class Game extends React.Component {
       console.log(feedbacks)
       this.setState({ feedbacks: feedbacks });
     }
-
+    
     console.log(gameDetails);
+
+    this.addAFKaccuse(gameDetails.creator, gameDetails.creatorAFKaccused === 0n ? undefined : Number(gameDetails.creatorAFKaccused));
+    this.addAFKaccuse(gameDetails.joiner, gameDetails.joinerAFKaccused === 0n ? undefined : Number(gameDetails.joinerAFKaccused));
     this.setState({ 
         _gameDetails: gameDetails,
         _provider: provider,
@@ -274,12 +278,16 @@ class Game extends React.Component {
   }
 
   handleAFKAccusation(gameId, accused) {
-    console.log("AFKAccusation received, the accused is " + accused);
-    
+    if (accused === this.state.selectedAddress) {
+      console.log("You have been accused of being AFK");
+    }
   }
 
   handleGameEnded(gameId, winner, winnerPoints, loserPoints) {
     console.log("GameEnded received, the winner is " + winner + " with " + winnerPoints + " points");
+    // reset persistent codeSecretMemo and codeSeedMemo
+    this.setCodeSecretMemo(undefined);
+    this.setCodeSeedMemo(undefined);
   }
 
   setCodeSecretMemo (newCode) {
@@ -291,7 +299,6 @@ class Game extends React.Component {
   }
   
   setCodeSeedMemo (newSeed) {
-    // TODO ensure that this is later parsed as Uint8Array
     this.setState({ _codeSeedMemo: newSeed }, () => {
       console.log("Code seed memo updated:", newSeed);
       localStorage.setItem('_codeSeedMemo_' + this.state.gameId, JSON.stringify(newSeed));
@@ -353,6 +360,15 @@ class Game extends React.Component {
     }));
   }
 
+  isAccused() {
+    return this.state._accusedAFK[this.state.selectedAddress] !== undefined;
+  }
+
+  hasAccused() {
+    const accused = this.state.selectedAddress === this.state._gameDetails.creator ? this.state._gameDetails.joiner : this.state._gameDetails.creator;
+    return this.state._accusedAFK[accused] !== undefined;
+  }
+
   render() {
     if (this.state._mastermind === undefined) {
       return <Loading />;
@@ -377,23 +393,46 @@ class Game extends React.Component {
             <div className="secret-row">
               {this.state._codeSecretMemo &&
                 this.state._codeSecretMemo.map((i, index) => (
-                  <div className="large-color-circle" key={index} style={{ backgroundColor: intToColor(i) || 'white' }} />))}
+                  <div className="large-color-circle" key={index} 
+                  style={{ 
+                    backgroundColor: intToColor(i) || 'white', 
+                    cursor: 'default'   }} />))}
               {!this.state._codeSecretMemo &&
-                Array(6).fill(-1).map((i, index) => (
-                  <div className="large-color-circle" key={index} style={{ backgroundColor: intToColor(i) || 'white' }} />))}
+                Array(6).fill().map((i, index) => (
+                  <div className="large-color-circle" key={index} 
+                  style={{ 
+                    backgroundColor: 'white',
+                    cursor: 'default'   }} />))}
             </div>
           </div>
         }
 
-      <div className="row">
-        <div className="col-12">
-          <h3>Game #{this.state.gameId} - Turn {parseInt(this.state._gameDetails.currentTurn)}/{parseInt(this.state._gameDetails.numTurns)} </h3>
-          Selected Address: {this.state.selectedAddress}
-          <br />
-          You are the {this.isCurrentMaker() ? "Maker" : "Breaker"}
-          {/* resto delle informazioni */}
+        <div className="row">
+          {this.isAccused() &&
+          <div className='secret-row'>
+            {/* TODO fancy up this  <div className='afk-accusation'> */}
+              You have been accused of being AFK
+            {/* </div> */}
+          </div>
+          }
+          <div className="col-8">
+            <h3>
+              Game #{this.state.gameId} - Turn {parseInt(this.state._gameDetails.currentTurn)}/{parseInt(this.state._gameDetails.numTurns)}
+            </h3>
+            Selected Address: {this.state.selectedAddress}
+            <br />
+            You are the {this.isCurrentMaker() ? "Maker" : "Breaker"}
+            {/* resto delle informazioni */}
+          </div>
+          { !this.hasAccused() &&
+          <div className="col-4 d-flex align-items-center justify-content-end">
+            <button className='btn-accuse-afk' onClick={this.accuseAFK}>Accuse opponent of being AFK</button>
+          </div>}
+          { this.hasAccused() &&
+          <div className="col-4 d-flex align-items-center justify-content-end">
+            <button className='btn-accuse-afk' onClick={this.verifyAFKAccusation}>Verify AFK accusation</button>
+          </div>}
         </div>
-      </div>
 
       {/* 
       se sono maker
@@ -445,12 +484,6 @@ class Game extends React.Component {
           />)}
       </div>
 
-      //se sono maker
-      //render di BoardMaker -> component per giocare come maker
-
-      //se sono breaker
-      //render di BoardBreaker -> component per giocare come breaker
-
       //pulsantino per accusa di AFK
       );
 }
@@ -480,8 +513,15 @@ class Game extends React.Component {
     return ethers.keccak256(combined);
   }
 
+  jsonStringParse (jsonString) {
+    if (!jsonString || jsonString === "undefined") {
+      return undefined;
+    }
+    return JSON.parse(jsonString);
+  }
+
   jsonStringToUint8Array(jsonString) {
-    if (!jsonString) {
+    if (!jsonString || jsonString === "undefined") {
       return undefined;
     }
     // Parse the JSON string to an object
@@ -519,6 +559,7 @@ class Game extends React.Component {
       [this.state.gameId, codeHash],
       () => {
         this.setState({_codeHash : true});
+        this.resetAFKaccuse(this.state.selectedAddress);
       });
   }
 
@@ -528,7 +569,7 @@ class Game extends React.Component {
       [this.state.gameId, guess],
       () => {
         this.setState({_lastGuess : guess});
-        this.resetAFKaccuse( this.state.selectedAddress );
+        this.resetAFKaccuse(this.state.selectedAddress);
       });
   }
 
@@ -538,7 +579,7 @@ class Game extends React.Component {
       [this.state.gameId,cc,nc],
       () => {
         this.setState({_lastFeedback : {"cc": cc, "nc": nc}});
-        this.resetAFKaccuse( this.state.selectedAddress );
+        this.resetAFKaccuse(this.state.selectedAddress);
       });
   }
 
@@ -548,6 +589,7 @@ class Game extends React.Component {
       [this.state.gameId],
       () => {
         this.setState(prevState => ({
+          _turnStarted: true,
           _gameDetails: {
             ...prevState._gameDetails,
             currentTurn: prevState._gameDetails.currentTurn + 1
@@ -569,6 +611,7 @@ class Game extends React.Component {
   }
 
   async accuseAFK(){
+    const accused = this.state.selectedAddress === this.state._gameDetails.creator ? this.state._gameDetails.joiner : this.state._gameDetails.creator;
     this.wrapContractInteraction(
       this.state._mastermind.accuseAFK,
       [this.state.gameId],
@@ -576,13 +619,24 @@ class Game extends React.Component {
         // We should use the block timestamp instead of Date.now(), but it is a good approximation
         // Serves only as an indicator for there being an accusation, and to avoid flooding the contract
         // with useless accusations
-        this.addAFKaccuse(this.state.selectedAddress, Date.now());
+        this.addAFKaccuse(accused, Date.now());
+      });
+  }
+
+  async verifyAFKAccusation() {
+    const accused = this.state.selectedAddress === this.state._gameDetails.creator ? this.state._gameDetails.joiner : this.state._gameDetails.creator;
+    this.wrapContractInteraction(
+      this.state._mastermind.verifyAFKAccusation,
+      [this.state.gameId],
+      () => {
+        // TODO what if the game ends?
+        this.resetAFKaccuse(accused);
       });
   }
   
 
   // -------------------------- TRANSACTION HANDLING --------------------------
-  
+
   async wrapContractInteraction (contractInvokation,args,successCallback) {
     this._dismissTransactionError();
     let req = undefined;

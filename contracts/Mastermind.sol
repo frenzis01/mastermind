@@ -9,7 +9,7 @@ contract Mastermind {
     uint256 public constant NUM_TURNS = 4;
     uint256 public constant NUM_GUESSES = 10;
     uint256 public constant K_EXTRA_POINTS = 10;
-    uint256 public constant B_AFKBLOCKS = 10;
+    uint256 public constant B_AFKBLOCKS = 100;
     uint256 public constant TIME_TO_DISPUTE = 60000;
 
 
@@ -303,6 +303,8 @@ contract Mastermind {
 
         game.codeHash = _hash;
 
+        game.accusedAFK[msg.sender] = 0; // Reset the AFK accusation if present
+
         emit HashPublished(_gameId, codeMaker, _hash);
     }
 
@@ -386,6 +388,13 @@ contract Mastermind {
 
     function isBreakerTurn(uint256 _gameId) internal view returns (bool) {
         Game storage game = games[_gameId];
+        // If the hash has not been published yet, it's the maker turn to do so,
+        // even if guesses.length === feedbacks.length
+        if (game.codeHash == 0x0 && 
+            game.guesses[game.currentTurn].length == 0 &&
+            game.feedbacks[game.currentTurn].length == 0) {
+            return false;
+        }
         return game.guesses[game.currentTurn].length == game.feedbacks[game.currentTurn].length;
     }
 
@@ -865,9 +874,14 @@ contract Mastermind {
         bytes32 codeHash,
         uint256 guessesLength,
         uint256 feedbacksLength,
-        uint256[] memory codeSecret
+        uint256[] memory codeSecret,
+        uint256 creatorAFKaccused,
+        uint256 joinerAFKaccused
     ) {
         Game storage game = games[_gameId];
+        uint256 _creatorAFKaccused = game.accusedAFK[game.creator];
+        uint256 _joinerAFKaccused = game.accusedAFK[game.joiner];
+
         return (
             block.timestamp,
             game.creator,
@@ -891,7 +905,9 @@ contract Mastermind {
             game.codeHash,
             game.guesses.length == 0 ? 0 : game.guesses[game.currentTurn].length,
             game.feedbacks.length == 0 ? 0 : game.feedbacks[game.currentTurn].length,
-            game.codeSecret
+            game.codeSecret,
+            _creatorAFKaccused,
+            _joinerAFKaccused
         );
     }
 
