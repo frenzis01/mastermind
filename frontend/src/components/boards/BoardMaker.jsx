@@ -88,6 +88,7 @@ export function BoardMaker({
    const hash = hashSecretCode(codeColors,seed);
    console.log('Maker Seed: ', seed);
     submitSecretHash(hash);
+    // TODO call these only if the submit is successful
     setSecretCodeChosen(true);
     setCodeSecretMemo(codeColors);
     setCodeSeedMemo(seed);
@@ -122,12 +123,13 @@ export function BoardMaker({
     }
   };
 
-  const handlePublishCodeSecret = (codeColors) => {
-    // TODO add modal to enter seed
+  const handlePublishCodeSecret = (colorsAndSeed) => {
+    const codeColors = colorsAndSeed.colors;
+    const codeSeed = colorsAndSeed.textInput;
     console.log('Publishing Secret Code: ', codeColors);
     toggleColorChooseModal();
-    console.log('My seed is:', codeSeedMemo);
-    publishCodeSecret(codeColors.map(colorToInt), codeSeedMemo);
+    console.log('My seed is:', codeSeed);
+    publishCodeSecret(codeColors.map(colorToInt), codeSeed);
 
   }
 
@@ -189,10 +191,10 @@ export function BoardMaker({
         <ProvideFeedbackModal submitFeedback={handleProvideFeedback(false)} onToggleModal={toggleFeedbackModal} />
       )}
       {!isSecretCodeChosen && isColorChooseModalOpen && turnStarted && (
-        <ColorChooseModal submitCode={handleSecretCodeChosen} onToggleModal={toggleColorChooseModal} />
+        <ColorChooseModal submitCode={handleSecretCodeChosen} onToggleModal={toggleColorChooseModal} showTextInput={false}/>
       )}
       {turnEnded && !codeSecretPublished && codeHashPresent && turnStarted && isColorChooseModalOpen && (
-        <ColorChooseModal submitCode={handlePublishCodeSecret} onToggleModal={toggleColorChooseModal} initColors={codeSecretMemo} />
+        <ColorChooseModal submitCode={handlePublishCodeSecret} onToggleModal={toggleColorChooseModal} initColors={codeSecretMemo} showTextInput={true} initText={codeSeedMemo} />
       )}
     </div>
   );

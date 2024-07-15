@@ -554,7 +554,7 @@ class Game extends React.Component {
   }
 
   async submitCodeHash(codeHash) {
-    wrapContractInteraction(
+    this.wrapContractInteraction(
       this.state._mastermind.submitCodeHash,
       [this.state.gameId, codeHash],
       () => {

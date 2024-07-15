@@ -116,7 +116,7 @@ export function BoardBreaker({
 
   return (
     <div className="App">
-      
+      {/* TODO write all these conditions in a more readable way */}
       {!disputed &&
       <>
         {/* in-game buttons */}
@@ -160,7 +160,14 @@ export function BoardBreaker({
           </div>
         </div>
       ))}
-      {isColorChooseModalOpen && (codeHashPresent || guesses.length !== 0) && (prevFeedbackReceived) && <ColorChooseModal submitCode={handleSubmitGuess(false)} onToggleModal={toggleColorChooseModal} />}
+      {isColorChooseModalOpen &&
+       (codeHashPresent || guesses.length !== 0) &&
+       (prevFeedbackReceived) &&
+       <ColorChooseModal 
+        submitCode={handleSubmitGuess(false)} 
+        onToggleModal={toggleColorChooseModal} 
+        initColors={currentRow !== 0 ? rows[currentRow-1].map(colorToInt) : undefined}
+        showTextInput={false} />}
     </div>
   );
 }

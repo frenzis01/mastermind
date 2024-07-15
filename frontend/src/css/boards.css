@@ -11,15 +11,41 @@
    text-align: center;
  }
  
+
+ /* TODO THESE FIXES COLORCHOOSEMODAL, BUT BREAKS OTHER MODALS */
+/* Custom Modal styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5) !important; /* Semi-transparent black backdrop */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050; /* Ensure this matches or is higher than Bootstrap's backdrop z-index */
+}
+
+.modal-content {
+  background: white !important; /* White background for modal content */
+  padding: 20px;
+  border-radius: 10px !important;
+  max-width: 23vw; /* Adjust as needed to control width of modal */
+  max-height: 100vh; /* Adjust as needed to control height of modal */
+  overflow-y: auto; /* Enable vertical scrolling if content exceeds modal height */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Optional: Adding a box shadow for depth */
+}
  /* Modal styles */
- .modal-backdrop {
+ /* .modal-backdrop {
    position: fixed;
    top: 0;
    left: 0;
    width: 100vw;
    height: 100vh;
-   /* background: rgba(0, 0, 0, 0.5); */
-   /* background- */
    display: flex;
    justify-content: center;
    align-items: center;
@@ -32,7 +58,7 @@
    display: flex;
    flex-direction: column;
    align-items: center;
- }
+ } */
  
  .color-row {
    display: flex;
@@ -74,7 +100,7 @@
    background-color: #007bff;
    color: white;
    border: none;
-   border-radius: 8px;
+   border-radius: 15px;
    cursor: pointer;
  }
 

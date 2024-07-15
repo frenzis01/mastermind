@@ -1,20 +1,26 @@
-// ColorChooseModal.js
-import { useState } from "react";
-import "../../css/boards.css"
-import "../../css/styles.css"
-import {colors, colorToInt, intToColor} from "../../assets/colors";
+// ColorChooseModal.jsx
+import React, { useState, useEffect } from "react";
+import "../../css/styles.css";
+import "../../css/boards.css";
+import { colors, colorToInt, intToColor } from "../../assets/colors";
 
 const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
 
-export function ColorChooseModal({ submitCode, onToggleModal, initColors}) {
+export function ColorChooseModal({ submitCode, onToggleModal, initColors, showTextInput, initText }) {
   const [isModalOpen, setModalOpen] = useState(true);
   const [selectedColors, setSelectedColors] = useState(
-    Array(6).fill().map((v,index) => {
-      if (initColors) { return intToColor(initColors[index]); }
-      else { return getRandomColor() }
+    Array(6).fill().map((_, index) => {
+      if (initColors) return intToColor(initColors[index]);
+      else return getRandomColor();
     })
   );
   const [activeCircle, setActiveCircle] = useState(0);
+  const [textInput, setTextInput] = useState(initText || "");
+  const [errorText, setErrorText] = useState("");
+
+  useEffect(() => {
+    setTextInput(initText || "");
+  }, [initText]);
 
   const handleColorChange = (color) => {
     const newColors = [...selectedColors];
@@ -27,6 +33,25 @@ export function ColorChooseModal({ submitCode, onToggleModal, initColors}) {
     }
   };
 
+  const handleSubmit = () => {
+    if (showTextInput && !textInput.trim()) {
+      setErrorText("Text input cannot be empty.");
+      return;
+    }
+
+    if (!showTextInput) {
+      submitCode(selectedColors);
+    }
+    else {
+      const dataToSubmit = {
+        colors: selectedColors,
+        textInput: textInput
+      };
+      submitCode(dataToSubmit);
+    }
+    onToggleModal();
+  };
+
   return (
     <>
       {isModalOpen && (
@@ -36,7 +61,7 @@ export function ColorChooseModal({ submitCode, onToggleModal, initColors}) {
               {selectedColors.map((color, index) => (
                 <div
                   key={index}
-                  className={`large-color-circle ${index === activeCircle ? 'active' : ''}`}
+                  className={`large-color-circle ${index === activeCircle ? "active" : ""}`}
                   style={{ backgroundColor: color }}
                   onClick={() => setActiveCircle(index)}
                 />
@@ -52,11 +77,20 @@ export function ColorChooseModal({ submitCode, onToggleModal, initColors}) {
                 />
               ))}
             </div>
-            <button
-              className="submit-button"
-              onClick={() => {onToggleModal(); submitCode(selectedColors)}}
-            >
-              Submit Code
+            {showTextInput && (
+              <div className="input-container">
+                <input
+                  type="text"
+                  placeholder="Enter text here..."
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                  className="input-field"
+                />
+                {errorText && <p className="error">{errorText}</p>}
+              </div>
+            )}
+            <button className="submit-button" onClick={handleSubmit}>
+              Submit
             </button>
           </div>
         </div>
