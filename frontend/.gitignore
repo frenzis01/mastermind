@@ -1,5 +1,7 @@
 # Contracts folder ignored
-src/contracts/*
+# src/contracts/*
+src/contracts/contract-address.json
+src/contracts/Mastermind.json
 
 # Logs
 logs
