@@ -1,5 +1,5 @@
 # Contracts folder ignored
-src/contracts
+src/contracts/*
 
 # Logs
 logs

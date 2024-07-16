@@ -154,42 +154,50 @@ class Home extends React.Component {
             
             <div className="box">
               <h3>Started Games</h3>
-              <ul>
-                {this.state.startedGames.map((game) => (
-                  <li className="list" key={game.gameId}>
-                    <div className="content">
-                      <h4>#{Number(game.gameId)} - Stake {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}</h4>
-                      <p>Creator: {game.creator}</p>
-                      <button 
-                        className="btn-faded hidden-button ml-2" 
-                        onClick={() => this.resumeGame(game.gameId)}>
-                        Resume Game
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {this.state.startedGames.length === 0 ? (
+                <p className="under-title  frame-text">Start a new game or create one</p>
+              ) : (
+                <ul>
+                  {this.state.startedGames.map((game) => (
+                        <li className="list" key={game.gameId}>
+                          <div className="content">
+                            <h4>#{Number(game.gameId)} - Stake {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}</h4>
+                            <p>Creator: {game.creator}</p>
+                            <button 
+                              className="btn-faded hidden-button ml-2" 
+                              onClick={() => this.resumeGame(game.gameId)}>
+                              Resume Game
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                  </ul>
+                )}
           </div>
         </div>
 
         <div className="col-lg-6 col-md-6">
           <div className="box">
             <h3>Available Games</h3>
-            <ul>
-              {this.state.availableGames.map((game) => (
-                <li className="list" key={game.gameId}>
-                  <div className="content">
-                    <h4>#{Number(game.gameId)} - Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}</h4>
-                    <p>Creator: {game.creator}</p>
-                    <button 
-                      className="btn-faded hidden-button ml-2" 
-                      onClick={() => this.joinGame(game.gameId, Number(game.gameStake/BigInt(1000000000000000000)))}>
-                      Join Game
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {this.state.availableGames.length === 0 ? (
+                <p className="under-title frame-text">No available games, create one!</p>
+              ) : (
+                <ul>
+                  {this.state.availableGames.map((game) => (
+                    <li className="list" key={game.gameId}>
+                      <div className="content">
+                        <h4>#{Number(game.gameId)} - Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}</h4>
+                        <p>Creator: {game.creator}</p>
+                        <button 
+                          className="btn-faded hidden-button ml-2" 
+                          onClick={() => this.joinGame(game.gameId, Number(game.gameStake/BigInt(1000000000000000000)))}>
+                          Join Game
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+            )}
           </div>
         </div>
 
@@ -379,7 +387,7 @@ class Home extends React.Component {
       joiner: joiner,
       creator: creator
     }
-    if(creator === this.state.selectedAddress){
+    if(creator.toLowerCase() === this.state.selectedAddress.toLowerCase()){
       // // Add to started games
       // this.setState((prevState) => ({
       //   startedGames: [...prevState.startedGames, eventData]
