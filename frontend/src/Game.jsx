@@ -38,6 +38,7 @@ class Game extends React.Component {
       joiner: undefined, // TODO replace with actual value
       guesses: [],
       feedbacks: [],
+      currentTurn: 0,
       _mastermind: undefined,
       _provider: undefined,
       _gameDetails: undefined,
@@ -190,7 +191,8 @@ class Game extends React.Component {
         _turnStarted: gameDetails.startTime != 0,
         _turnEnded: gameDetails.endTime != 0,
         _codeHash: gameDetails.codeHash,
-        _codeSecret: gameDetails.codeSecret.map(Number)
+        _codeSecret: gameDetails.codeSecret.map(Number),
+        currentTurn: gameDetails.currentTurn
   }, () => {
       if (this.state._gameDetails.joiner === "0x0000000000000000000000000000000000000000") {
         mastermind.on("GameJoined", this.wrap(this.handleGameJoined));
@@ -268,16 +270,20 @@ class Game extends React.Component {
     //console.log("StartTurn received:");
     this.setState({ _turnStarted: true });
 
-    this.setState(prevState => ({ //
+    /*this.setState(prevState => ({ //
       _gameDetails: {
         ...prevState._gameDetails,
         currentTurn: prevState._gameDetails.currentTurn + 1
       }
-    }));
+    }));*/
 
     this.resetAFKaccuse(this.getOpponent());
     this.resetAFKaccuse(this.state.selectedAddress);
+    console.log(this.isCurrentMaker())
+    console.log(this.state._gameDetails)
     this.setupNewTurn();
+    console.log(this.isCurrentMaker())
+    console.log(this.state._gameDetails)
   }
 
   handleTurnEnded(gameID, codeGuessed) {
@@ -331,6 +337,8 @@ class Game extends React.Component {
   async setupNewTurn() {
     const { _mastermind } = this.state;
     const gameDetails = (await _mastermind.getGameDetails(this.state.gameId)).toObject();
+    gameDetails.creator = gameDetails.creator.toLowerCase();
+    gameDetails.joiner = gameDetails.creator.toLowerCase();
     this.setState({
       _gameDetails: gameDetails,
       _turnStarted: gameDetails.startTime != 0,
@@ -340,11 +348,14 @@ class Game extends React.Component {
       _lastFeedback: undefined,
       _lastGuess: undefined,
       _disputed: false,
+      currentTurn: Number(gameDetails.currentTurn)
+    }, function(){ //callback
+      this.resetAFKaccuse(this.state._gameDetails.creator);
+      this.resetAFKaccuse(this.state._gameDetails.joiner);
+      this.setCodeSecretMemo(undefined);
+      this.setCodeSeedMemo(undefined);
+      console.log(this.state.currentTurn)
     })
-    this.resetAFKaccuse(this.state._gameDetails.creator);
-    this.resetAFKaccuse(this.state._gameDetails.joiner);
-    this.setCodeSecretMemo(undefined);
-    this.setCodeSeedMemo(undefined);
   }
 
   componentWillUnmount() { //TODO: diversificare unmount in caso si tratti di maker o breaker
@@ -361,7 +372,8 @@ class Game extends React.Component {
 
   isCurrentMaker() {
     const game = this.state._gameDetails;
-    if (game.currentTurn === 0) {
+    console.log(this.state.currentTurn)
+    if (this.state.currentTurn === 0) {
       if (this.state.selectedAddress === game.creator) {
         return game.creatorIsMakerSeed;
       } else {
@@ -369,14 +381,14 @@ class Game extends React.Component {
       }
     }  
       if (this.state.selectedAddress === game.creator) {
-          if ((game.currentTurn % 2 === 1 && game.creatorIsMakerSeed) ||
-              (game.currentTurn % 2 === 0 && !game.creatorIsMakerSeed)) {
+          if ((this.state.currentTurn % 2 === 1 && game.creatorIsMakerSeed) ||
+              (this.state.currentTurn % 2 === 0 && !game.creatorIsMakerSeed)) {
               return true;
           }
       }
       if (this.state.selectedAddress === game.joiner) {
-          if ((game.currentTurn % 2 === 0 && game.creatorIsMakerSeed) ||
-              (game.currentTurn % 2 === 1 && !game.creatorIsMakerSeed)) {
+          if ((this.state.currentTurn % 2 === 0 && game.creatorIsMakerSeed) ||
+              (this.state.currentTurn % 2 === 1 && !game.creatorIsMakerSeed)) {
                 return true;
           }
       }
@@ -462,7 +474,7 @@ class Game extends React.Component {
           }
           <div className="col-8">
             <h3>
-              Game #{this.state.gameId} - Turn {parseInt(this.state._gameDetails.currentTurn)}/{parseInt(this.state._gameDetails.numTurns)}
+              Game #{this.state.gameId} - Turn {parseInt(this.state.currentTurn)}/{parseInt(this.state._gameDetails.numTurns)}
             </h3>
             Selected Address: {this.state.selectedAddress}
             <br />
@@ -636,13 +648,6 @@ class Game extends React.Component {
       this.state._mastermind.startTurn,
       [this.state.gameId],
       () => {
-        this.setState(prevState => ({
-          _turnStarted: true,
-          _gameDetails: {
-            ...prevState._gameDetails,
-            currentTurn: prevState._gameDetails.currentTurn + 1
-          }
-        }));
         this.setupNewTurn();
       });
   }
