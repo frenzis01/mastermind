@@ -12,3 +12,4 @@
    - [ ] Better provide Feedback modal
    - [ ] Accuse AFK button restyle
    - [ ] Add message for "Waiting for someone to join"
+   - [ ] Decimal value in join are not allowed, they become 0

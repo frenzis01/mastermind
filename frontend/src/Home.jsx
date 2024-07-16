@@ -192,7 +192,8 @@ class Home extends React.Component {
                         <p>Creator: {game.creator}</p>
                         <button 
                           className="btn-faded hidden-button ml-2" 
-                          onClick={() => this.joinGame(game.gameId, Number(game.gameStake/BigInt(1000000000000000000)))}>
+                          // TODO fix stake
+                          onClick={() => this.joinGame(game.gameId, Number(game.gameStake/1000000000000000000n))}>
                           Join Game
                         </button>
                       </div>
