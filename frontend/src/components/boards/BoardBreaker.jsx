@@ -22,7 +22,7 @@ export function BoardBreaker({
     disputeFeedback,
     disputed}) {
     
-  const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
+  const [rows, setRows] = useState(Array(maxGuesses).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isColorChooseModalOpen, setColorChooseModalOpen] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]); // State to track selected rows
