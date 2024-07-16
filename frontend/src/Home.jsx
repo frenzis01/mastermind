@@ -64,7 +64,6 @@ class Home extends React.Component {
 
     this.state = this.initialState;
     this.createGame = this.createGame.bind(this)
-    //this.redirectToGame = this.redirectToGame.bind(this);
     
     this.wrap = this.wrap.bind(this);
     this.handleGameCreated = this.handleGameCreated.bind(this);
@@ -254,8 +253,6 @@ class Home extends React.Component {
   _initialize(userAddress) {
     // We first store the user's address in the component's state
     this.setState({selectedAddress: userAddress}, async () => { 
-      //ToDo: controlla che l'utente sotto userAddress non sia già in un game; se lo è redirect a pagina di game
-
       // Then, we initialize ethers, fetch the user balance, get the available games, and start listening for new / joined games
       await this._initializeEthers();
       await this._updateBalance();
@@ -364,7 +361,8 @@ class Home extends React.Component {
 
   // GameCreated handler
   handleGameCreated(gameId, creator, numColors, codeLength, numTurns, maxGuesses, gameStake) {
-    this.addSnack("default", "A new game (#" + gameId + ") with stake " + Number(gameStake/BigInt(1000000000000000000)) + " is available!");
+    if(creator.toLowerCase() !== this.state.selectedAddress)
+      this.addSnack("default", "A new game (#" + gameId + ") with stake " + Number(gameStake/BigInt(1000000000000000000)) + " is available!");
     //console.log("GameCreated received:");
 
     this.setState((prevState) => {
@@ -385,7 +383,8 @@ class Home extends React.Component {
 
   // GameJoined handler
   handleGameJoined(gameId, joiner, creator) {
-    this.addSnack("default", "The game (#" + gameId + ") has been joined!");
+    if(joiner.toLowerCase() !== this.state.selectedAddress)
+      this.addSnack("default", "The game (#" + gameId + ") has been joined!");
     //console.log("GameJoined received:");
     const eventData = {
       gameId: gameId,
@@ -393,10 +392,6 @@ class Home extends React.Component {
       creator: creator
     }
     if(creator.toLowerCase() === this.state.selectedAddress.toLowerCase()){
-      // // Add to started games
-      // this.setState((prevState) => ({
-      //   startedGames: [...prevState.startedGames, eventData]
-      // }));
       this._updateStartedGames();
     }
     this.setState((prevState) => ({
@@ -512,7 +507,7 @@ class Home extends React.Component {
     this.redirectToGame(gameId, this.state.selectedAddress)
   }
 
-  redirectToGame(gameId, selectedAddress) { //ToDo: understand better which fields have to be passed
+  redirectToGame(gameId, selectedAddress) {
     const { navigate } = this.props.router;
     navigate(`/game/${gameId}`, {
       state: {selectedAddress}
@@ -526,8 +521,7 @@ class Home extends React.Component {
     })
   }
 
-  // This is an utility method that turns an RPC error into a human readable
-  // message.
+  // This is an utility method that turns an RPC error into a human readable message.
   _getRpcErrorMessage(error) {
     if (error.data) {
       return error.data.message;
