@@ -6,7 +6,7 @@
   
   body {
     font-family: basic-sans, sans-serif;
-    min-height: 100vh;
+    min-height: 40vh;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -102,8 +102,18 @@
     color: white;
   }
 
-  .create-game-button {
-    margin-bottom: 20px;
+  .frame-text{
+    min-width: 630px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    border-radius: 10px;
+    margin: 10px 0;
+    transition: 0.5s;
+    overflow: hidden;
+    height: 3em; /* Adjust height dynamically based on content */
   }
 
   .box {
