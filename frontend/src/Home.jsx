@@ -129,7 +129,7 @@ class Home extends React.Component {
                 </b>.
               </p>
               <button 
-                className="btn-faded create-game-button-padding" 
+                className="btn-faded create-game-button-padding-bottom" 
                 onClick={() => this.setState({ showModal: true })}>
                 Create Game
               </button>

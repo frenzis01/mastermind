@@ -1,8 +1,9 @@
 import React from "react";
+import "../../css/styles.css"
 
 export function TransactionErrorMessage({ message, dismiss }) {
   return (
-    <div className="alert alert-danger" role="alert">
+    <div className="glassy-text">
       Error sending transaction: {message.substring(0, 100)}
       <button
         type="button"

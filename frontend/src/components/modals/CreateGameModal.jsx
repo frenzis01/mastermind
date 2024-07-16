@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Modal, Button, Form} from 'react-bootstrap';
 
+import "../../css/styles.css";
+
 // eslint-disable-next-line react/prop-types
 export function CreateGameModal({ closeModal, createGame }) {
   const [stake, setStake] = useState('');
@@ -19,10 +21,12 @@ export function CreateGameModal({ closeModal, createGame }) {
       </Modal.Header>
       <Modal.Body>
         <Form onSubmit={handleSubmit}>
-          <Form.Group controlId="formStake">
+          <Form.Group controlId="formStake" className='form-stake'>
             <Form.Label>Stake</Form.Label>
             <Form.Control
               type="number"
+              min={0}
+              step={0.01}
               value={stake}
               onChange={(e) => setStake(e.target.value)}
               required
@@ -37,7 +41,7 @@ export function CreateGameModal({ closeModal, createGame }) {
             />
           </Form.Group>
           {isChallenge && (
-            <Form.Group controlId="formChallengeAddress">
+            <Form.Group controlId="formChallengeAddress" className='form-stake'>
               <Form.Label>Challenge Address</Form.Label>
               <Form.Control
                 type="text"
@@ -47,7 +51,7 @@ export function CreateGameModal({ closeModal, createGame }) {
             </Form.Group>
           )}
           <center>
-          <Button className="btn-faded" type="submit" >
+          <Button className="btn-faded create-game-button-padding-top" type="submit" >
             Create Game
           </Button>
           </center>
