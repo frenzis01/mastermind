@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import "../../css/styles.css";
 import "../../css/boards.css";
 import { colors, colorToInt, intToColor } from "../../assets/colors";
+import { jsonStringToUint8Array } from "../../utils/utils";
 
 const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
 
@@ -15,11 +16,11 @@ export function ColorChooseModal({ submitCode, onToggleModal, initColors, showTe
     })
   );
   const [activeCircle, setActiveCircle] = useState(0);
-  const [textInput, setTextInput] = useState(initText || "");
+  const [textInput, setTextInput] = useState(JSON.stringify(initText) || "");
   const [errorText, setErrorText] = useState("");
 
   useEffect(() => {
-    setTextInput(initText || "");
+    setTextInput(JSON.stringify(initText) || "");
   }, [initText]);
 
   const handleColorChange = (color) => {
@@ -45,7 +46,7 @@ export function ColorChooseModal({ submitCode, onToggleModal, initColors, showTe
     else {
       const dataToSubmit = {
         colors: selectedColors,
-        textInput: textInput
+        textInput: jsonStringToUint8Array(textInput),
       };
       submitCode(dataToSubmit);
     }
@@ -81,7 +82,7 @@ export function ColorChooseModal({ submitCode, onToggleModal, initColors, showTe
               <div className="input-container">
                 <input
                   type="text"
-                  placeholder="Enter text here..."
+                  placeholder="Enter seed here..."
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
                   className="input-field"

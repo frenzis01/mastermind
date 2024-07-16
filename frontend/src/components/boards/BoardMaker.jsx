@@ -27,6 +27,7 @@ export function BoardMaker({
     publishCodeSecret,
     codeSecretMemo,
     codeSeedMemo,
+    disputed,
     }) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
@@ -45,6 +46,7 @@ export function BoardMaker({
     // && (row.index > feedbacks.length || row.feedback.every(color => color !== feedbackColors.xx))
   );  
 
+  const noGuessesPresent = rows[0].guess.every(color => color === null);
   const prevGuessReceived = rows[currentRow].guess.every(color => color !== null);
   const codeHashPresent = codeHash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -59,8 +61,6 @@ export function BoardMaker({
         handleProvideFeedback(true)(feedbacks[currentRow]);
       }
     }
-
-    console.log("My secret code is: ", codeSecretMemo);
 
     if (newGuess && !prevGuessReceived) {
       const guessColors = newGuess.map(intToColor)
@@ -82,7 +82,7 @@ export function BoardMaker({
    codeColors = codeColors.map(colorToInt);
    var seed = generateSeed();
    const hash = hashSecretCode(codeColors,seed);
-   console.log('Maker Seed: ', seed);
+  //  console.log('Maker Seed: ', seed);
     submitSecretHash(hash,codeColors,seed);
     // TODO call these only if the submit is successful
     toggleColorChooseModal();
@@ -126,18 +126,37 @@ export function BoardMaker({
 
   }
 
+  // Game phases
+  const waitingFirstTurnToStart = !turnStarted && !codeHashPresent && noGuessesPresent;
+  const waitingForAGuess = turnStarted && !turnEnded  && codeHashPresent && !prevGuessReceived;
+  const turnJustStarted = turnStarted && !turnEnded && !codeHashPresent && noGuessesPresent;
+  const guessPending = !turnEnded && codeHashPresent && prevGuessReceived;
+  const publishSecret = turnEnded && !codeSecretPublished && codeHashPresent && turnStarted && !noGuessesPresent;
+  const waitNextTurn = turnEnded && codeSecretPublished && codeHashPresent;
+
   return (
     <div className="App">
-      {!codeHashPresent && (
+      {waitingFirstTurnToStart &&
+          // TODO style this
+          <div className='secret-row'>
+            Waiting for the Breaker to start the game
+          </div>
+      }
+      { waitingForAGuess &&
+          <div className='secret-row'>
+            Waiting for the Breaker to make a guess
+          </div>
+      }
+      {turnJustStarted && 
         <button
           className='submit-secret-button'
           onClick={() => {console.log('isModalOpen' + isColorChooseModalOpen); toggleColorChooseModal()}}
           style={{ marginBottom: '20px' }}
-        >
+          >
           Choose Secret Code
         </button>
-      )}
-      {codeHashPresent && !turnEnded && (
+      }
+      {guessPending && (
         <button
           className='btn-faded'
           onClick={() => {
@@ -147,7 +166,7 @@ export function BoardMaker({
           Provide Feedback
         </button>
       )}
-      {turnEnded && !codeSecretPublished && codeHashPresent && turnStarted && (
+      {publishSecret && (
         <button
           className='btn-faded'
           onClick={() => {
@@ -158,9 +177,17 @@ export function BoardMaker({
         </button>
       )  
       }
-      { turnEnded && codeSecretPublished && codeHashPresent && 
-      // TODO implement "Game will end soon" if max number of turns reached
+      { waitNextTurn && 
+        // TODO implement "Game will end soon" if max number of turns reached
+        <>
+        {disputed &&
+          // TODO <div className="disputed-message">
+          <div> Opponent claims you have cheated in this turn. The game will end soon, establishing who is not being honest.</div>
+        }
+        {!disputed &&
           <div> The breaker will either start a new Turn or dispute the Feedbacks you provided.</div>
+        }
+        </>
       }
       {rows.map((row, index) => (
         <div
@@ -180,13 +207,13 @@ export function BoardMaker({
           </div>
         </div>
       ))}
-      {prevGuessReceived && isFeedbackModalOpen && (
+      {guessPending && isFeedbackModalOpen && (
         <ProvideFeedbackModal submitFeedback={handleProvideFeedback(false)} onToggleModal={toggleFeedbackModal} />
       )}
-      {!codeHashPresent && isColorChooseModalOpen && turnStarted && (
+      {turnJustStarted && isColorChooseModalOpen && (
         <ColorChooseModal submitCode={handleSecretCodeChosen} onToggleModal={toggleColorChooseModal} showTextInput={false}/>
       )}
-      {turnEnded && !codeSecretPublished && codeHashPresent && turnStarted && isColorChooseModalOpen && (
+      {publishSecret && isColorChooseModalOpen && (
         <ColorChooseModal submitCode={handlePublishCodeSecret} onToggleModal={toggleColorChooseModal} initColors={codeSecretMemo} showTextInput={true} initText={codeSeedMemo} />
       )}
     </div>

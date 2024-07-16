@@ -183,7 +183,7 @@ class Game extends React.Component {
         _codeHash: gameDetails.codeHash,
         // TODO check if map inside setState is okay
         // length > 1 is important! The very first codeSecret is init to [0] !
-        _codeSecret: gameDetails.codeSecret.length > 1
+        _codeSecret: gameDetails.codeSecret.map(Number)
   }, () => {
       if (this.state._gameDetails.joiner === "0x0000000000000000000000000000000000000000") {
         mastermind.on("GameJoined", this.handleGameJoined);
@@ -210,6 +210,7 @@ class Game extends React.Component {
     _mastermind.on("HashPublished", this.wrap(this.handleHashPublished));
     _mastermind.on("CodeSecretPublished", this.wrap(this.handleCodeSecretPublished));
     _mastermind.on("GameEnded", this.wrap(this.handleGameEnded));
+    _mastermind.on("TurnEnded", this.wrap(this.handleTurnEnded));
   }
 
   setupMakerEventListeners() {
@@ -459,6 +460,7 @@ class Game extends React.Component {
             makeGuess={this.makeGuess}
             startTurn={this.startTurn}
             turnStarted={this.state._turnStarted}
+            turnEnded={this.state._turnEnded}
             codeHash={this.state._codeHash}
             joined={this.state._joined}
             newFeedback={this.state._lastFeedback}
@@ -490,7 +492,8 @@ class Game extends React.Component {
             publishCodeSecret={this.publishCodeSecret}
             codeSecretMemo={this.state._codeSecretMemo}
             codeSeedMemo={this.state._codeSeedMemo}
-          />)}
+            disputed={this.state._disputed}
+            />)}
       </div>
 
       //pulsantino per accusa di AFK
@@ -512,8 +515,6 @@ class Game extends React.Component {
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
     const types = new Array(intArray.length).fill('uint256');
     const serializedArray = abiCoder.encode(types, intArray);
-
-    this.setCodeSeedMemo(seed);
 
     // Concatenate the seed and the serialized array
     const combined = ethers.concat([seed, serializedArray]);
@@ -611,6 +612,8 @@ class Game extends React.Component {
         }));
         this.resetAFKaccuse(this.state._gameDetails.creator);
         this.resetAFKaccuse(this.state._gameDetails.joiner);
+        this.setCodeSecretMemo(undefined);
+        this.setCodeSeedMemo(undefined);
       });
   }
 

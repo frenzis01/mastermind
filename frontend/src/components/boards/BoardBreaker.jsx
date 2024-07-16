@@ -11,6 +11,7 @@ export function BoardBreaker({
     makeGuess,
     startTurn,
     turnStarted,
+    turnEnded,
     codeHash,
     joined,
     newFeedback,
@@ -37,6 +38,7 @@ export function BoardBreaker({
 
   const prevFeedbackReceived = rows[currentRow].guess.every(color => color === null);
   const codeHashPresent = codeHash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
+  console.log("Codesecretpublished: ", codeSecretPublished);
 
   useEffect(() => {
     if (newFeedback && !prevFeedbackReceived) {
@@ -47,6 +49,7 @@ export function BoardBreaker({
       console.log("is Joined!")
       startTurn();
     }
+    console.log("Codesecretpublished: ", codeSecretPublished);
     if (guesses.length !== 0 && !boardInitialized) {
       handleSubmitGuess(true)(guesses[currentRow].map(intToColor));
       if (currentRow < feedbacks.length) {
@@ -114,27 +117,65 @@ export function BoardBreaker({
     window.location.reload(); // TODO Test if is this okay
   }
 
+  const waitingForFeedback = turnStarted && !turnEnded && codeHashPresent && !prevFeedbackReceived && !codeSecretPublished;
+  const waitingForCodeHash = turnStarted && !codeHashPresent;
+  const startTurnPending = !turnStarted && !codeHashPresent && guesses.length === 0;
+  const waitingForCodePublish = turnStarted && turnEnded && codeHashPresent && !codeSecretPublished;
+  const guessPending = turnStarted && !turnEnded && codeHashPresent && prevFeedbackReceived && !codeSecretPublished;
+  const nextTurnPending = turnStarted && codeHashPresent && prevFeedbackReceived && codeSecretPublished;
+  const displaySecretPublished = turnStarted && turnEnded && codeHashPresent && codeSecretPublished;
+
   return (
     <div className="App">
       {/* TODO write all these conditions in a more readable way */}
       {!disputed &&
       <>
-        {/* in-game buttons */}
-        {!codeSecretPublished && <button
+        {startTurnPending &&
+          <div className='secret-row'>
+            Please accept the transaction for starting the game
+          </div>
+        }
+        {waitingForCodeHash &&
+          <div className='secret-row'>
+            Waiting for the Maker to submit the code Hash
+          </div>
+        }
+        {waitingForFeedback &&
+          <div className='secret-row'>
+            Waiting for the Maker to provide feedback
+          </div>
+        }
+        {waitingForCodePublish &&
+          <div className='secret-row'>
+            Waiting for the Maker to publish the secret code
+          </div>
+        }
+        {displaySecretPublished &&
+          <div className='secret-row'>
+                {codeSecretPublished.map((i, index) => (
+                  <div className="large-color-circle" key={index} 
+                  style={{ 
+                    backgroundColor: intToColor(i) || 'white', 
+                    cursor: 'default'   }} />))}
+          </div>
+        }
+        {/* ---------------- BUTTONS ---------------- */}
+        {/* in-game makeGuess button */}
+        {guessPending && <button
           className='btn-faded'
           onClick={() => { toggleColorChooseModal(); }}>Make a Guess</button>
         }
-        {codeSecretPublished && 
+        {/* end-game buttons */}
+        {/* TODO better style, buttons are next to each other */}
+        {nextTurnPending && 
+          <>
           <button className='dispute-button' onClick={handleDispute}>
             {isDisputeMode ? 'Confirm Dispute' : 'The maker cheated! Dispute!'}
           </button>
+          <button className='btn-faded' onClick={nextTurn}> Start next Turn</button>
+          </>
         }
-        {codeSecretPublished && <button className='btn-faded' onClick={startTurn}> Start next Turn</button>}
       </>}
-      {disputed &&
-        // <div className="disputed-message">
-        <div> Opponent claims you have cheated in this turn. The game will end soon, establishing who is not being honest.</div>
-      }
       {rows.map((row, index) => (
         <div
           className="board-row"
@@ -143,9 +184,10 @@ export function BoardBreaker({
           style={{
             // Darker gray #e2e2e2
             backgroundColor: row.guess.includes(null) ? '#d3d3d3' : '#353535',
-            border: selectedRows.includes(index) ? `3px solid ${disputeColor}` : 'none', // Highlight selected rows
+            outline: selectedRows.includes(index) ? `2px solid ${disputeColor}` : 'none', // Highlight selected rows
             cursor: isDisputeMode ? 'pointer' : 'default',
-            boxShadow: selectedRows.includes(index) ? '0px 0px 45px rgba(255, 255, 255, 0.8)' : 'none' // Add shadow to selected rows;
+            boxShadow: selectedRows.includes(index) ? '0px 0px 45px rgba(255, 255, 255, 0.8)' : 'none', // Add shadow to selected rows;
+            transition: "outline 0.15s ease-in-out, box-shadow 0.15s ease-in-out"
           }}
         >
           <div className="feedback-grid">
