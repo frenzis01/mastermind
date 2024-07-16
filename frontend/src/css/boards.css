@@ -191,4 +191,10 @@
    border: 1px solid #ccc;
    margin: 0 5px;
  }
+
+ .wait-message {
+   font-size: 24px;
+   color: white;
+   margin-top: 20px;
+ }
  

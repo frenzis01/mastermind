@@ -29,7 +29,7 @@ export function BoardMaker({
     codeSeedMemo,
     disputed,
     }) {
-  const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
+  const [rows, setRows] = useState(Array(maxGuesses).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isFeedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [isColorChooseModalOpen, setColorChooseModalOpen] = useState(false);
@@ -126,13 +126,14 @@ export function BoardMaker({
 
   }
 
+  const codeSecretPublishedFlag = codeSecretPublished && codeSecretPublished.length > 1;
   // Game phases
   const waitingFirstTurnToStart = !turnStarted && !codeHashPresent && noGuessesPresent;
   const waitingForAGuess = turnStarted && !turnEnded  && codeHashPresent && !prevGuessReceived;
   const turnJustStarted = turnStarted && !turnEnded && !codeHashPresent && noGuessesPresent;
   const guessPending = !turnEnded && codeHashPresent && prevGuessReceived;
-  const publishSecret = turnEnded && !codeSecretPublished && codeHashPresent && turnStarted && !noGuessesPresent;
-  const waitNextTurn = turnEnded && codeSecretPublished && codeHashPresent;
+  const publishSecret = turnEnded && !codeSecretPublishedFlag && codeHashPresent && turnStarted && !noGuessesPresent;
+  const waitNextTurn = turnEnded && codeSecretPublishedFlag && codeHashPresent;
 
   return (
     <div className="App">
@@ -182,10 +183,10 @@ export function BoardMaker({
         <>
         {disputed &&
           // TODO <div className="disputed-message">
-          <div> Opponent claims you have cheated in this turn. The game will end soon, establishing who is not being honest.</div>
+          <div className='secret-row'> Opponent claims you have cheated in this turn. The game will end soon, establishing who is not being honest.</div>
         }
         {!disputed &&
-          <div> The breaker will either start a new Turn or dispute the Feedbacks you provided.</div>
+          <div className='secret-row'> <p className='wait-message'> The breaker will either start a new Turn or dispute the Feedbacks you provided. </p> </div>
         }
         </>
       }

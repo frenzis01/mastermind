@@ -38,6 +38,7 @@ export function BoardBreaker({
 
   const prevFeedbackReceived = rows[currentRow].guess.every(color => color === null);
   const codeHashPresent = codeHash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
+  const codeSecretPublishedFlag = codeSecretPublished && codeSecretPublished.length > 1;
   console.log("Codesecretpublished: ", codeSecretPublished);
 
   useEffect(() => {
@@ -49,7 +50,6 @@ export function BoardBreaker({
       console.log("is Joined!")
       startTurn();
     }
-    console.log("Codesecretpublished: ", codeSecretPublished);
     if (guesses.length !== 0 && !boardInitialized) {
       handleSubmitGuess(true)(guesses[currentRow].map(intToColor));
       if (currentRow < feedbacks.length) {
@@ -71,7 +71,7 @@ export function BoardBreaker({
       if (currentRow < maxGuesses) {
         resetNewFeedback();
       } else {
-        console.log('Game Over');
+        console.log('No More guesses available');
       }
     }
   };
@@ -114,16 +114,16 @@ export function BoardBreaker({
   const nextTurn = () => {
     startTurn();
     // Reload page
-    window.location.reload(); // TODO Test if is this okay
+    // window.location.reload(); // TODO Test if is this okay
   }
 
-  const waitingForFeedback = turnStarted && !turnEnded && codeHashPresent && !prevFeedbackReceived && !codeSecretPublished;
+  const waitingForFeedback = turnStarted && !turnEnded && codeHashPresent && !prevFeedbackReceived && !codeSecretPublishedFlag;
   const waitingForCodeHash = turnStarted && !codeHashPresent;
   const startTurnPending = !turnStarted && !codeHashPresent && guesses.length === 0;
-  const waitingForCodePublish = turnStarted && turnEnded && codeHashPresent && !codeSecretPublished;
-  const guessPending = turnStarted && !turnEnded && codeHashPresent && prevFeedbackReceived && !codeSecretPublished;
-  const nextTurnPending = turnStarted && codeHashPresent && prevFeedbackReceived && codeSecretPublished;
-  const displaySecretPublished = turnStarted && turnEnded && codeHashPresent && codeSecretPublished;
+  const waitingForCodePublish = turnStarted && turnEnded && codeHashPresent && !codeSecretPublishedFlag;
+  const guessPending = turnStarted && !turnEnded && codeHashPresent && prevFeedbackReceived && !codeSecretPublishedFlag;
+  const nextTurnPending = turnStarted && codeHashPresent && prevFeedbackReceived && codeSecretPublishedFlag;
+  const displaySecretPublished = turnStarted && turnEnded && codeHashPresent && codeSecretPublishedFlag;
 
   return (
     <div className="App">

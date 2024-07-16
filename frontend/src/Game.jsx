@@ -88,6 +88,8 @@ class Game extends React.Component {
     this.verifyAFKAccusation = this.verifyAFKAccusation.bind(this);
     this.addAFKaccuse = this.addAFKaccuse.bind(this);
     this.resetAFKaccuse = this.resetAFKaccuse.bind(this);
+    this.setupNewTurn = this.setupNewTurn.bind(this);
+
 
     this.wrapContractInteraction = this.wrapContractInteraction.bind(this);
   } 
@@ -131,8 +133,6 @@ class Game extends React.Component {
 
     provider.polling = true;
     provider.pollingInterval = 1000; // Set to 1000 ms (1 second)
-    console.log(provider);
-    console.log(provider.pollingInterval);
     
     // Then, we initialize the contract using that provider and the token's artifact.
     const mastermind = new ethers.Contract(
@@ -190,8 +190,6 @@ class Game extends React.Component {
         _turnStarted: gameDetails.startTime != 0,
         _turnEnded: gameDetails.endTime != 0,
         _codeHash: gameDetails.codeHash,
-        // TODO check if map inside setState is okay
-        // length > 1 is important! The very first codeSecret is init to [0] !
         _codeSecret: gameDetails.codeSecret.map(Number)
   }, () => {
       if (this.state._gameDetails.joiner === "0x0000000000000000000000000000000000000000") {
@@ -327,6 +325,19 @@ class Game extends React.Component {
       localStorage.setItem('_codeSeedMemo_' + this.state.gameId, JSON.stringify(newSeed));
       console.log(localStorage.getItem('_codeSeedMemo_' + this.state.gameId));
     });
+  }
+
+  async setupNewTurn() {
+    const gameDetails = (await mastermind.getGameDetails(this.state.gameId)).toObject();
+    this.setState({ 
+      _gameDetails: gameDetails,
+      _turnStarted: gameDetails.startTime != 0,
+      _turnEnded: gameDetails.endTime != 0,
+      _codeHash: gameDetails.codeHash,
+      _codeSecret: gameDetails.codeSecret.map(Number),
+      _lastFeedback: undefined,
+      _lastGuess: undefined,
+      _disputed: false,})
   }
 
   componentWillUnmount() { //TODO: diversificare unmount in caso si tratti di maker o breaker
@@ -629,6 +640,7 @@ class Game extends React.Component {
         this.resetAFKaccuse(this.state._gameDetails.joiner);
         this.setCodeSecretMemo(undefined);
         this.setCodeSeedMemo(undefined);
+        this.setupNewTurn();
       });
   }
 
