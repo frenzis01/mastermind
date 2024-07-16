@@ -17,7 +17,10 @@ import { Loading } from "./components/misc/Loading";
 import { CreateGameModal}  from './components/modals/CreateGameModal';
 import { TransactionErrorMessage } from "./components/misc/TransactionErrorMessage";
 import { WaitingForTransactionMessage } from "./components/misc/WaitingForTransactionMessage";
+
 import { withRouter } from './components/WithRouter';
+
+import Snackbar from "./components/snackBar/SnackBar";
 
 import "./css/styles.css"
 
@@ -127,7 +130,7 @@ class Home extends React.Component {
                 </b>.
               </p>
               <button 
-                className="btn-faded create-game-button" 
+                className="btn-faded create-game-button-padding" 
                 onClick={() => this.setState({ showModal: true })}>
                 Create Game
               </button>
@@ -361,7 +364,8 @@ class Home extends React.Component {
 
   // GameCreated handler
   handleGameCreated(gameId, creator, numColors, codeLength, numTurns, maxGuesses, gameStake) {
-    console.log("GameCreated received:");
+    this.addSnack("default", "A new game (#" + gameId + ") with stake " + Number(gameStake/BigInt(1000000000000000000)) + " is available!");
+    //console.log("GameCreated received:");
 
     this.setState((prevState) => {
       const gameExists = prevState.availableGames.some(game => game.gameId === gameId);
@@ -381,7 +385,8 @@ class Home extends React.Component {
 
   // GameJoined handler
   handleGameJoined(gameId, joiner, creator) {
-    console.log("GameJoined received:");
+    this.addSnack("default", "The game (#" + gameId + ") has been joined!");
+    //console.log("GameJoined received:");
     const eventData = {
       gameId: gameId,
       joiner: joiner,
@@ -512,6 +517,13 @@ class Home extends React.Component {
     navigate(`/game/${gameId}`, {
       state: {selectedAddress}
     });
+  }
+
+  addSnack = (type, message) =>{
+    this.props.addCustomSnack(<Snackbar variant={type} message={message} />, {
+      horizontal: "top",
+      vertical: "right"
+    })
   }
 
   // This is an utility method that turns an RPC error into a human readable
