@@ -466,18 +466,6 @@ contract Mastermind {
 
         emit TurnEnded(_gameId, guessed);
         
-
-        // Check if maximum turns have been reached
-        // if (game.currentTurn >= game.numTurns) {
-        //     // End the game if maximum turns reached
-        //     endGame(
-        //         _gameId,
-        //         game.creator,
-        //         game.joiner,
-        //         game.points[game.creator],
-        //         game.points[game.joiner]
-        //     );
-        // }
     }
 
     // Internal function to reset guess state at the end of each turn
@@ -683,6 +671,9 @@ contract Mastermind {
         game.codeSecret = _codeSecret;
         emit CodeSecretPublished(_gameId, _codeSecret);
         
+        // Reset AFK accusation time for sender (i.e. Maker)
+        game.accusedAFK[msg.sender] = 0;
+
         address breaker = getCurrentBreaker(_gameId);
         // Check that the hash of the secret is equal to the hash submitted at the beginning of the turn
         // console.log("Before hashing");
@@ -780,7 +771,7 @@ contract Mastermind {
     event HandlingGame (uint256 gameId);
     function handleDanglingGames() internal {
         // Execute the lookup only 1/3 of the times
-        // Disabled for testing
+        // TODO Disabled for testing and Demo
         // if (randomInt() % 100 < 60) {
         //     return;
         // }

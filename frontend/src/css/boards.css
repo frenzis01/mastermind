@@ -32,6 +32,7 @@
   padding: 20px;
   border-radius: 10px !important;
   max-width: 23vw; /* Adjust as needed to control width of modal */
+  min-width: 570px; /* Adjust as needed to control width of modal */
   max-height: 100vh; /* Adjust as needed to control height of modal */
   overflow-y: auto; /* Enable vertical scrolling if content exceeds modal height */
   display: flex;

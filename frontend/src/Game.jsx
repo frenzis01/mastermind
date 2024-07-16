@@ -228,6 +228,7 @@ class Game extends React.Component {
     console.log("Guess received:", guess.map(Number));
     // Handle event A
     this.setState({ _lastGuess: guess });
+    this.resetAFKaccuse(this.getOpponent());
   }
   
   resetLastFeedback = () => {
@@ -237,6 +238,7 @@ class Game extends React.Component {
     console.log("Feedback received:");
     // Handle event B
     this.setState({ _lastFeedback: {"cc": cc, "nc": nc} });
+    this.resetAFKaccuse(this.getOpponent());
   }
 
   handleDispute(eventData) {
@@ -247,6 +249,7 @@ class Game extends React.Component {
   handleHashPublished(eventData) {
     console.log("Hash published");
     this.setState({ _codeHash: true })
+    this.resetAFKaccuse(this.getOpponent());
   }
 
   handleTurnStarted(gamedId, maker) {
@@ -259,6 +262,9 @@ class Game extends React.Component {
           currentTurn: prevState._gameDetails.currentTurn + 1
         }
       }));
+
+    this.resetAFKaccuse(this.getOpponent());
+    this.resetAFKaccuse(this.state.selectedAddress);
   }
 
   handleTurnEnded(gameID, codeGuessed) {
@@ -270,6 +276,7 @@ class Game extends React.Component {
     console.log("CodeSecretPublished received: ", rawSecretCode);
     const secretCode = rawSecretCode.map(Number);
     this.setState({ _codeSecret: secretCode });
+    this.resetAFKaccuse(this.getOpponent());
   }
 
   handleGameJoined(gameId, joiner, creator) {
@@ -367,6 +374,10 @@ class Game extends React.Component {
   hasAccused() {
     const accused = this.state.selectedAddress === this.state._gameDetails.creator ? this.state._gameDetails.joiner : this.state._gameDetails.creator;
     return this.state._accusedAFK[accused] !== undefined;
+  }
+
+  getOpponent() {
+    return this.state.selectedAddress === this.state._gameDetails.creator ? this.state._gameDetails.joiner : this.state._gameDetails.creator;
   }
 
   render() {
@@ -479,8 +490,6 @@ class Game extends React.Component {
             publishCodeSecret={this.publishCodeSecret}
             codeSecretMemo={this.state._codeSecretMemo}
             codeSeedMemo={this.state._codeSeedMemo}
-            setCodeSecretMemo={this.setCodeSecretMemo}
-            setCodeSeedMemo={this.setCodeSeedMemo}
           />)}
       </div>
 
@@ -547,19 +556,24 @@ class Game extends React.Component {
     console.log(codeSeed);
     console.log(codeSecret);
 
+    // TODO reset afk accuse
     this.wrapContractInteraction(
       this.state._mastermind.publishCodeSecret, 
       [this.state.gameId, codeSecret, codeSeed], () => {
-      this.setState({_codeSecret : true});});
+      this.setState({_codeSecret : true});
+      this.resetAFKaccuse(this.state.selectedAddress)
+    });
   }
 
-  async submitCodeHash(codeHash) {
+  async submitCodeHash(codeHash,codeSecret,codeSeed) {
     this.wrapContractInteraction(
       this.state._mastermind.submitCodeHash,
       [this.state.gameId, codeHash],
       () => {
         this.setState({_codeHash : true});
         this.resetAFKaccuse(this.state.selectedAddress);
+        this.setCodeSecretMemo(codeSecret);
+        this.setCodeSeedMemo(codeSeed);  
       });
   }
 
@@ -611,7 +625,6 @@ class Game extends React.Component {
   }
 
   async accuseAFK(){
-    const accused = this.state.selectedAddress === this.state._gameDetails.creator ? this.state._gameDetails.joiner : this.state._gameDetails.creator;
     this.wrapContractInteraction(
       this.state._mastermind.accuseAFK,
       [this.state.gameId],
@@ -619,18 +632,17 @@ class Game extends React.Component {
         // We should use the block timestamp instead of Date.now(), but it is a good approximation
         // Serves only as an indicator for there being an accusation, and to avoid flooding the contract
         // with useless accusations
-        this.addAFKaccuse(accused, Date.now());
+        this.addAFKaccuse(this.getOpponent(), Date.now());
       });
   }
 
   async verifyAFKAccusation() {
-    const accused = this.state.selectedAddress === this.state._gameDetails.creator ? this.state._gameDetails.joiner : this.state._gameDetails.creator;
     this.wrapContractInteraction(
       this.state._mastermind.verifyAFKAccusation,
       [this.state.gameId],
       () => {
         // TODO what if the game ends?
-        this.resetAFKaccuse(accused);
+        this.resetAFKaccuse(this.getOpponent());
       });
   }
   

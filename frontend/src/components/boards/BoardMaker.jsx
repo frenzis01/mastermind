@@ -27,14 +27,11 @@ export function BoardMaker({
     publishCodeSecret,
     codeSecretMemo,
     codeSeedMemo,
-    setCodeSecretMemo,
-    setCodeSeedMemo
     }) {
   const [rows, setRows] = useState(Array(10).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
   const [isFeedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [isColorChooseModalOpen, setColorChooseModalOpen] = useState(false);
-  const [isSecretCodeChosen, setSecretCodeChosen] = useState(false);
 
   const toggleFeedbackModal = () => setFeedbackModalOpen(!isFeedbackModalOpen);
   
@@ -57,7 +54,6 @@ export function BoardMaker({
     console.log("prevGuessReceived " + prevGuessReceived);
     console.log("boardInitialized "+ boardInitialized);
     if (guesses.length !== 0 && !boardInitialized) {
-      setSecretCodeChosen(true);
       handleGuess(guesses[currentRow].map(intToColor));
       if(currentRow < feedbacks.length){
         handleProvideFeedback(true)(feedbacks[currentRow]);
@@ -87,11 +83,8 @@ export function BoardMaker({
    var seed = generateSeed();
    const hash = hashSecretCode(codeColors,seed);
    console.log('Maker Seed: ', seed);
-    submitSecretHash(hash);
+    submitSecretHash(hash,codeColors,seed);
     // TODO call these only if the submit is successful
-    setSecretCodeChosen(true);
-    setCodeSecretMemo(codeColors);
-    setCodeSeedMemo(seed);
     toggleColorChooseModal();
   };
 
@@ -190,7 +183,7 @@ export function BoardMaker({
       {prevGuessReceived && isFeedbackModalOpen && (
         <ProvideFeedbackModal submitFeedback={handleProvideFeedback(false)} onToggleModal={toggleFeedbackModal} />
       )}
-      {!isSecretCodeChosen && isColorChooseModalOpen && turnStarted && (
+      {!codeHashPresent && isColorChooseModalOpen && turnStarted && (
         <ColorChooseModal submitCode={handleSecretCodeChosen} onToggleModal={toggleColorChooseModal} showTextInput={false}/>
       )}
       {turnEnded && !codeSecretPublished && codeHashPresent && turnStarted && isColorChooseModalOpen && (

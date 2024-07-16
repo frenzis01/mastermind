@@ -166,7 +166,7 @@ export function BoardBreaker({
        <ColorChooseModal 
         submitCode={handleSubmitGuess(false)} 
         onToggleModal={toggleColorChooseModal} 
-        initColors={currentRow !== 0 ? rows[currentRow-1].map(colorToInt) : undefined}
+        initColors={currentRow !== 0 ? rows[currentRow-1].guess.map(colorToInt) : undefined}
         showTextInput={false} />}
     </div>
   );
