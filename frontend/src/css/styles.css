@@ -1,11 +1,11 @@
 /* Main body styles */
 :root {
     --gradient: linear-gradient(90deg, #ee6352, purple, #ee6352);
-  
+    --font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-family: var(--font-family);
   }
   
   body {
-    font-family: basic-sans, sans-serif;
     min-height: 40vh;
     display: flex;
     justify-content: center;
@@ -25,6 +25,10 @@
     100% {background-position: left}
   }
   
+  .label-font {
+    font-family: var(--font-family) !important;
+  }
+
   .content {
     background: transparent;
     width: 40vw;
@@ -71,6 +75,7 @@
     background-position: left;
     transition: background-position 350ms;
     border-radius: 20px; /* More rounded corners */
+    font-family: var(--font-family);
   }
   
   .btn-faded:hover {

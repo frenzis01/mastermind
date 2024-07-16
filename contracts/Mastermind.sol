@@ -7,7 +7,7 @@ contract Mastermind {
     uint256 public constant MAX_COLORS = 10;
     uint256 public constant CODE_LENGTH = 6;
     uint256 public constant NUM_TURNS = 4;
-    uint256 public constant NUM_GUESSES = 10;
+    uint256 public constant NUM_GUESSES = 6;
     uint256 public constant K_EXTRA_POINTS = 10;
     uint256 public constant B_AFKBLOCKS = 100;
     uint256 public constant TIME_TO_DISPUTE = 60000;

@@ -35,42 +35,41 @@ export function ProvideFeedbackModal({ onToggleModal, submitFeedback }) {
       onToggleModal();
     }
   };
-
   return (
-    <div className="modal-backdrop" onClick={onToggleModal}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop d-flex justify-content-center align-items-center" onClick={onToggleModal}>
+      <div className="modal-content bg-light p-4 rounded" style={{ position: 'relative', width: '200px' }} onClick={(e) => e.stopPropagation()}>
         <h2>Provide Feedback</h2>
-        <div className="input-container">
-          <label>
-            CC:
-            <input
-              type="number"
-              value={cc}
-              onChange={handleCcChange}
-              min="0"
-              max="6"
-            />
-          </label>
+        {/* <h5 className="text-muted">Insert description here</h5> */}
+        <div className="form-group d-flex align-items-center">
+          <label className="mr-2 mb-0 label-font" style={{ whiteSpace: 'nowrap', width: '250px' }}>Colors in correct positions</label>
+          <input
+            type="number"
+            className="form-control"
+            value={cc}
+            onChange={handleCcChange}
+            min="0"
+            max="6"
+            style={{ width: '80px' }}
+          />
         </div>
-        <div className="input-container">
-          <label>
-            NC:
-            <input
-              type="number"
-              value={nc}
-              onChange={handleNcChange}
-              min="0"
-              max="6"
-            />
-          </label>
+        <div className="form-group d-flex align-items-center">
+          <label className="mr-2 mb-0 label-font" style={{ whiteSpace: 'nowrap', width: '250px' }}>Colors in wrong positions</label>
+          <input
+            type="number"
+            className="form-control"
+            value={nc}
+            onChange={handleNcChange}
+            min="0"
+            max="6"
+            style={{ width: '80px' }}
+          />
         </div>
-        {error && <div className="error">{error}</div>}
-        <button onClick={handleSubmit} className="submit-button" disabled={cc + nc > 6}>
+        <button onClick={handleSubmit} className="btn btn-primary mt-3 label-font" disabled={cc + nc > 6}>
           Submit Feedback
         </button>
+        {error && <div className="alert alert-danger mt-3">{error}</div>}
       </div>
     </div>
   );
 }
-
 export default ProvideFeedbackModal;

@@ -46,9 +46,11 @@ export function CreateGameModal({ closeModal, createGame }) {
               />
             </Form.Group>
           )}
-          <Button className="btn-faded" type="submit">
+          <center>
+          <Button className="btn-faded" type="submit" >
             Create Game
           </Button>
+          </center>
         </Form>
       </Modal.Body>
     </Modal>

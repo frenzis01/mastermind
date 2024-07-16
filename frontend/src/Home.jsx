@@ -437,6 +437,9 @@ class Home extends React.Component {
         throw new Error("Transaction failed");
       }
 
+      const newGameId = Number(receipt.logs[0].args[0])
+      localStorage.setItem("_codeSecretMemo_" + newGameId, "undefined");
+      localStorage.setItem("_codeSeedMemo_" + newGameId, "undefined");
       this.setState({ showModal: false });
       await this._updateBalance();
       this.redirectToGame(Number(receipt.logs[0].args[0]), this.state.selectedAddress)

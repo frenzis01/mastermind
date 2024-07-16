@@ -193,7 +193,7 @@ class Game extends React.Component {
         _codeSecret: gameDetails.codeSecret.map(Number)
   }, () => {
       if (this.state._gameDetails.joiner === "0x0000000000000000000000000000000000000000") {
-        mastermind.on("GameJoined", this.handleGameJoined);
+        mastermind.on("GameJoined", this.wrap(this.handleGameJoined));
       }
 
       if(this.isCurrentMaker()){
@@ -277,6 +277,7 @@ class Game extends React.Component {
 
     this.resetAFKaccuse(this.getOpponent());
     this.resetAFKaccuse(this.state.selectedAddress);
+    this.setupNewTurn();
   }
 
   handleTurnEnded(gameID, codeGuessed) {
@@ -328,8 +329,9 @@ class Game extends React.Component {
   }
 
   async setupNewTurn() {
-    const gameDetails = (await mastermind.getGameDetails(this.state.gameId)).toObject();
-    this.setState({ 
+    const { _mastermind } = this.state;
+    const gameDetails = (await _mastermind.getGameDetails(this.state.gameId)).toObject();
+    this.setState({
       _gameDetails: gameDetails,
       _turnStarted: gameDetails.startTime != 0,
       _turnEnded: gameDetails.endTime != 0,
@@ -337,7 +339,12 @@ class Game extends React.Component {
       _codeSecret: gameDetails.codeSecret.map(Number),
       _lastFeedback: undefined,
       _lastGuess: undefined,
-      _disputed: false,})
+      _disputed: false,
+    })
+    this.resetAFKaccuse(this.state._gameDetails.creator);
+    this.resetAFKaccuse(this.state._gameDetails.joiner);
+    this.setCodeSecretMemo(undefined);
+    this.setCodeSeedMemo(undefined);
   }
 
   componentWillUnmount() { //TODO: diversificare unmount in caso si tratti di maker o breaker
@@ -428,7 +435,7 @@ class Game extends React.Component {
       <div className="container p-4">
         {this.isCurrentMaker() &&
           <div className="row">
-            <div className="secret-row">
+            <div className="top-secret-row">
               {this.state._codeSecretMemo &&
                 this.state._codeSecretMemo.map((i, index) => (
                   <div className="large-color-circle" key={index} 
@@ -636,10 +643,6 @@ class Game extends React.Component {
             currentTurn: prevState._gameDetails.currentTurn + 1
           }
         }));
-        this.resetAFKaccuse(this.state._gameDetails.creator);
-        this.resetAFKaccuse(this.state._gameDetails.joiner);
-        this.setCodeSecretMemo(undefined);
-        this.setCodeSeedMemo(undefined);
         this.setupNewTurn();
       });
   }
