@@ -12,6 +12,8 @@ import MastermindArtifact from "./contracts/Mastermind.json";
 import contractAddress from "./contracts/contract-address.json"
 import { intToColor } from './assets/colors';
 
+import Snackbar from "./components/snackBar/SnackBar";
+
 //const crypto = require('crypto');
 
 const ERROR_CODE_TX_REJECTED_BY_USER = 4001;
@@ -92,6 +94,13 @@ class Game extends React.Component {
 
   componentDidMount(){
     this._initializeEthers();
+  }
+
+  addSnack = (type, message) =>{
+    this.props.addCustomSnack(<Snackbar variant={type} message={message} />, {
+      horizontal: "top",
+      vertical: "right"
+    })
   }
 
   wrap = (handler) => {
@@ -226,7 +235,8 @@ class Game extends React.Component {
     this.setState({ _lastGuess: undefined });
   }
   handleGuess(gameId, guess) {
-    console.log("Guess received:", guess.map(Number));
+    this.addSnack("default", "New guess received")
+    //console.log("Guess received:", guess.map(Number));
     // Handle event A
     this.setState({ _lastGuess: guess });
     this.resetAFKaccuse(this.getOpponent());
@@ -236,7 +246,8 @@ class Game extends React.Component {
     this.setState({ _lastFeedback: undefined });
   }
   handleFeedback(gameId,cc,nc) {
-    console.log("Feedback received:");
+    this.addSnack("default", "New Feedback received")
+    //console.log("Feedback received:");
     // Handle event B
     this.setState({ _lastFeedback: {"cc": cc, "nc": nc} });
     this.resetAFKaccuse(this.getOpponent());
@@ -248,21 +259,23 @@ class Game extends React.Component {
   }
 
   handleHashPublished(eventData) {
-    console.log("Hash published");
+    this.addSnack("success", "Hash published")
+    //console.log("Hash published");
     this.setState({ _codeHash: true })
     this.resetAFKaccuse(this.getOpponent());
   }
 
   handleTurnStarted(gamedId, maker) {
-      console.log("StartTurn received:");
-      this.setState({ _turnStarted: true });
+    this.addSnack("success", "Turn started")
+    //console.log("StartTurn received:");
+    this.setState({ _turnStarted: true });
 
-      this.setState(prevState => ({ //
-        _gameDetails: {
-          ...prevState._gameDetails,
-          currentTurn: prevState._gameDetails.currentTurn + 1
-        }
-      }));
+    this.setState(prevState => ({ //
+      _gameDetails: {
+        ...prevState._gameDetails,
+        currentTurn: prevState._gameDetails.currentTurn + 1
+      }
+    }));
 
     this.resetAFKaccuse(this.getOpponent());
     this.resetAFKaccuse(this.state.selectedAddress);
@@ -281,13 +294,15 @@ class Game extends React.Component {
   }
 
   handleGameJoined(gameId, joiner, creator) {
-    console.log("GameJoined received:");
+    this.addSnack("default", "An opponent has joined the game")
+    //console.log("GameJoined received:");
     this.setState({ _joined: true , joiner: joiner});
   }
 
   handleAFKAccusation(gameId, accused) {
     if (accused === this.state.selectedAddress) {
-      console.log("You have been accused of being AFK");
+      this.addSnack("warning", "You have been accused of being AFK")
+      //console.log("You have been accused of being AFK");
     }
   }
 
@@ -676,6 +691,8 @@ class Game extends React.Component {
 
       // Other errors are logged and stored in the Dapp's state. This is used to
       // show them to the user, and for debugging.
+
+      this.addSnack("error", error.reason);
       console.error(error);
       this.setState({ transactionError: error });
     } finally {

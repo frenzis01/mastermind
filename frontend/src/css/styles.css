@@ -102,6 +102,10 @@
     color: white;
   }
 
+  .create-game-button-padding{
+    margin-bottom: 2em;
+  }
+
   .frame-text{
     min-width: 630px;
     display: flex;
