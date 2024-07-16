@@ -182,9 +182,9 @@ describe('Mastermind', function () {
       await mastermind.connect(breaker).makeGuess(1, [1, 1, 1, 1, 1, 1]);
       await mastermind.connect(breaker).accuseAFK(1);
       
-      // Mine 10 blocks 
-      for(let i = 0; i < 10; i++) {
-         await ethers.provider.send("evm_mine"); // this will mine an empty block
+      const afkBlocks = await mastermind.B_AFKBLOCKS();
+      for (let i = 0; i < afkBlocks; i++) {
+         await ethers.provider.send("evm_mine");
       }
 
       expect (await mastermind.connect(breaker).verifyAFKAccusation(1)).to.emit(mastermind, 'GameEnded').withArgs(1, breaker.address, 1, 0);
