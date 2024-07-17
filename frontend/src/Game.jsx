@@ -436,35 +436,35 @@ class Game extends React.Component {
             mastermind
         </div>
         <div class="under-title top-right">
-          Selected Address: {this.state.selectedAddress}
+          Selected Address: <b>{this.state.selectedAddress}</b>
         </div>
         <div className="grid-container">
-          <div className="grid-item left-column">
+          <div className={`grid-item ${this.isCurrentMaker() ? 'left-column-maker' : 'left-column-breaker'}`}>
             <div className="column under-title">
               <h3>
                 Game #{this.state.gameId} - Turn {parseInt(this.state._gameDetails.currentTurn)}/{parseInt(this.state._gameDetails.numTurns)}
-              </h3>
+              </h3> <br></br>
               You are now the <b>{this.isCurrentMaker() ? "Maker" : "Breaker"}</b>
               {/* resto delle informazioni */}
             </div>
           </div>
-          <div className="grid-item">
-            {this.isCurrentMaker() &&
-              <div className="top-secret-row">
-                {this.state._codeSecretMemo &&
-                  this.state._codeSecretMemo.map((i, index) => (
-                    <div className="large-color-circle" key={index} 
-                    style={{ 
-                      backgroundColor: intToColor(i) || 'white', 
-                      cursor: 'default'   }} />))}
-                {!this.state._codeSecretMemo &&
-                  Array(6).fill().map((i, index) => (
-                    <div className="large-color-circle" key={index} 
-                    style={{ 
-                      backgroundColor: 'white',
-                      cursor: 'default'   }} />))}
-              </div>
-            }
+          <div className="grid-item middle-column">
+              {this.isCurrentMaker() &&
+                <div className="top-secret-row">
+                  {this.state._codeSecretMemo &&
+                    this.state._codeSecretMemo.map((i, index) => (
+                      <div className="large-color-circle" key={index} 
+                      style={{ 
+                        backgroundColor: intToColor(i) || 'white', 
+                        cursor: 'default'   }} />))}
+                  {!this.state._codeSecretMemo &&
+                    Array(6).fill().map((i, index) => (
+                      <div className="large-color-circle" key={index} 
+                      style={{ 
+                        backgroundColor: 'white',
+                        cursor: 'default'   }} />))}
+                </div>
+              }
 
             {!this.isCurrentMaker() &&
               (<BoardBreaker
@@ -509,7 +509,7 @@ class Game extends React.Component {
                 />)}
           </div>
 
-          <div className="grid-item right-column">
+          <div className={`grid-item ${this.isCurrentMaker() ? 'right-column-maker' : 'right-column-breaker'}`}>
             <div className="column">
               {this.isAccused() &&
               <div className='secret-row'>
