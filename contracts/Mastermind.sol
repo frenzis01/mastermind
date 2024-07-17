@@ -579,15 +579,15 @@ contract Mastermind {
         address maker = getCurrentMaker(_gameId);
         // Check that feedbacks are consistent
         for (uint i = 0; i < guessIDs.length; i++) {
-            if (!isFeedbackValid(game.guesses[game.currentTurn][guessIDs[i]], game.feedbacks[game.currentTurn][guessIDs[i]], game.codeSecret)){
+            if (isFeedbackValid(game.guesses[game.currentTurn][guessIDs[i]], game.feedbacks[game.currentTurn][guessIDs[i]], game.codeSecret)){
                 emit ResolveDispute(_gameId, maker);
-                endGame(_gameId, maker, breaker, 0, 1);
+                endGame(_gameId, maker, breaker, 1, 0);
                 return;
             }
         }
         // Punish the breaker who has unsuccessfully disputed the feedback
         emit ResolveDispute(_gameId, breaker);
-        endGame(_gameId, maker, breaker, 1, 0);
+        endGame(_gameId, maker, breaker, 0, 1);
     }
 
     function isFeedbackValid (uint256[] memory guess, uint256[] memory feedback, uint256[] memory codeSecret) internal pure returns (bool) {

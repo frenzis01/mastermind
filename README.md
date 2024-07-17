@@ -13,3 +13,4 @@
    - [ ] Accuse AFK button restyle
    - [ ] Add message for "Waiting for someone to join"
    - [ ] Decimal value in join are not allowed, they become 0
+   - [ ] Add message for Breaker to wait the code

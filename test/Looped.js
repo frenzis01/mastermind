@@ -7,7 +7,7 @@ const { expect } = require("chai");
 const crypto = require('crypto');
 const seed = generateRandomString();
 
-describe.only('Mastermind - Looped', function () {
+describe('Mastermind - Looped', function () {
    let mastermind, addr1, addr2, addr3;
 
    before(async function () {
