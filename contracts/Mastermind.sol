@@ -69,6 +69,7 @@ contract Mastermind {
     event GameCreated(
         uint256 gameId,
         address creator,
+        address joiner,
         uint256 numColors,
         uint256 codeLength,
         uint256 numTurns,
@@ -264,6 +265,7 @@ contract Mastermind {
         // Emit event to log game creation
         emit GameCreated(
             newGame.gameId,
+            newGame.joiner,
             newGame.creator,
             newGame.numColors,
             newGame.codeLength,
