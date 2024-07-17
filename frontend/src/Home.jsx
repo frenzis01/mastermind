@@ -53,6 +53,7 @@ class Home extends React.Component {
       // available games
       availableGames: [],
       startedGames: [],
+      newGame: false,
       _provider: undefined,
       _mastermind: undefined,
       // Metamask creates replicas of events for some reason
@@ -186,9 +187,9 @@ class Home extends React.Component {
               ) : (
                 <ul>
                   {this.state.availableGames.map((game) => (
-                    <li className="list" key={game.gameId}>
+                    <li className={`list ${game.joiner !== '0x0000000000000000000000000000000000000000' ? 'glowing' : ''}`} key={game.gameId}>
                       <div className="content">
-                        <h4>#{Number(game.gameId)} - Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}</h4>
+                        <h4>#{Number(game.gameId)} {game.joiner !== '0x0000000000000000000000000000000000000000' ? '- Challenge -' : "-"} Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}</h4>
                         <p>Creator: {game.creator}</p>
                         <button 
                           className="btn-faded hidden-button ml-2" 
@@ -308,6 +309,9 @@ class Home extends React.Component {
             gameStake: arr[3]
         }
     })
+
+    // Move challenges to the top
+    result.sort((a, b) => (b.joiner !== '0x0000000000000000000000000000000000000000') - (a.joiner !== '0x0000000000000000000000000000000000000000'));
     
     this.setState({ availableGames: result });
   }
@@ -361,24 +365,22 @@ class Home extends React.Component {
   };
 
   // GameCreated handler
-  handleGameCreated(gameId, creator, numColors, codeLength, numTurns, maxGuesses, gameStake) {
+  handleGameCreated(gameId, creator, joiner, numColors, codeLength, numTurns, maxGuesses, gameStake) {
     if(creator.toLowerCase() !== this.state.selectedAddress)
       this.addSnack("default", "A new game (#" + gameId + ") with stake " + Number(gameStake/BigInt(1000000000000000000)) + " is available!");
     //console.log("GameCreated received:");
 
     this.setState((prevState) => {
-      const gameExists = prevState.availableGames.some(game => game.gameId === gameId);
-
-      if(!gameExists){
-        return {availableGames: [...prevState.availableGames, {
-          gameId: gameId,
-          creator: creator,
-          joiner: "0x0000000000000000000000000000000000000000",
-          gameStake: gameStake
-          }]
-        }
+      const newGame = {
+        gameId: gameId,
+        creator: creator,
+        joiner: joiner,
+        gameStake: gameStake
       }
-      return prevState;
+
+      return {availableGames: (joiner !== '0x0000000000000000000000000000000000000000' 
+        ? [newGame, ...prevState.availableGames] 
+        : [...prevState.availableGames, newGame])}
     });
   }
 

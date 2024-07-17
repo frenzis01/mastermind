@@ -111,6 +111,7 @@ class Game extends React.Component {
     return (...args) => {
       const event = args[args.length - 1];  // The event object is always the last argument
 
+      console.log(event)
       const transactionHash = event.log.transactionHash;
       if (this.localCatchedEvents.has(transactionHash) || this.state._catchedEvents.has(transactionHash)) {
         console.log('Event already catched, discarding:', transactionHash);
@@ -432,10 +433,10 @@ class Game extends React.Component {
     //stampare a schermo informazioni sull'attuale game in corso
     return (
       <div className="container-fluid vh-100">
-        <div class="title top-left">
+        <div className="title top-left">
             mastermind
         </div>
-        <div class="under-title top-right">
+        <div className="under-title top-right">
           Selected Address: <b>{this.state.selectedAddress}</b>
         </div>
         <div className="grid-container">
@@ -596,7 +597,7 @@ class Game extends React.Component {
     this.wrapContractInteraction(
       this.state._mastermind.publishCodeSecret, 
       [this.state.gameId, codeSecret, codeSeed], () => {
-      this.setState({_codeSecret : true});
+      this.setState({_codeSecret : codeSecret});
       this.resetAFKaccuse(this.state.selectedAddress)
     });
   }
@@ -606,7 +607,7 @@ class Game extends React.Component {
       this.state._mastermind.submitCodeHash,
       [this.state.gameId, codeHash],
       () => {
-        this.setState({_codeHash : true});
+        this.setState({_codeHash : codeHash});
         this.resetAFKaccuse(this.state.selectedAddress);
         this.setCodeSecretMemo(codeSecret);
         this.setCodeSeedMemo(codeSeed);  
