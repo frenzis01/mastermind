@@ -12,7 +12,7 @@ const crypto = require('crypto');
 
 // const { expect } = require('chai');
 
-describe.only('Mastermind', function () {
+describe('Mastermind', function () {
    // let mastermind;
 
    // before(async function () {

@@ -357,6 +357,12 @@ contract Mastermind {
         require(game.endTime != 0, "Cannot start new turn, current one has not finished yet");
         require(game.codeSecret.length != 0, "Cannot start new turn, previous code secret has not been published yet");
         require(msg.sender == getCurrentBreaker(_gameId) || msg.sender == address(this), "Only the previous breaker can start a new turn");
+        
+        // If the game has ended, do not start a new turn
+        if (game.currentTurn == game.numTurns) {
+            endGame(_gameId, game.creator, game.joiner, game.points[game.creator], game.points[game.joiner]);
+        }
+
         // Increment current turn and mark the turn as started
         resetGuessState(_gameId);
         game.currentTurn++;

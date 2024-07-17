@@ -13,7 +13,7 @@ const { expect } = require("chai");
 const { computeHash, generateRandomString } = require('./Mastermind');
 
 
-describe('Mastermind', function () {
+describe('Parallel', function () {
 
    before(async function () {
       // Deploy the contract once before all tests
@@ -57,7 +57,8 @@ async function playGame(mastermind, addr1, addr2){
    
    breaker = await mastermind.getCurrentBreaker(gID);
    breaker = await ethers.provider.getSigner(breaker);
-   for (let i = 0; i <= NUM_TURNS; i++) {
+   let dispute = false;
+   for (let i = 0; i < NUM_TURNS; i++) {
    
       await mastermind.connect(breaker).startTurn(gID);
       breaker = await mastermind.getCurrentBreaker(gID);
@@ -72,10 +73,14 @@ async function playGame(mastermind, addr1, addr2){
          await mastermind.connect(maker).provideFeedback(gID, 1, 0);
       }
       await mastermind.connect(maker).publishCodeSecret(gID, [1, 2, 3, 4, 5, 6],seed);
-      if (genRandomInteger(0,100) < 10) {
+      dispute = genRandomInteger(0,100) < 10;
+      if (dispute) {
          await mastermind.connect(breaker).disputeFeedback(gID, [1, 2]);
          break;
       }
+   }
+   if (!dispute) {
+      expect (await mastermind.connect(breaker).startTurn(gID)).to.emit(mastermind, 'GameEnded')
    }
    
 }
