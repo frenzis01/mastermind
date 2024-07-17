@@ -79,13 +79,11 @@ export function BoardMaker({
   };
 
   const handleSecretCodeChosen = (codeColors) => {
-   console.log('Secret Code Chosen: ', codeColors);
-   codeColors = codeColors.map(colorToInt);
-   var seed = generateSeed();
-   const hash = hashSecretCode(codeColors,seed);
-  //  console.log('Maker Seed: ', seed);
-    submitSecretHash(hash,codeColors,seed);
-    // TODO call these only if the submit is successful
+    console.log('Secret Code Chosen: ', codeColors);
+    codeColors = codeColors.map(colorToInt);
+    var seed = generateSeed();
+    const hash = hashSecretCode(codeColors, seed);
+    submitSecretHash(hash, codeColors, seed);
     toggleColorChooseModal();
   };
 
@@ -112,7 +110,7 @@ export function BoardMaker({
         setCurrentRow(currentRow + 1);
         resetNewGuess()
       } else {
-        console.log('Game Over');
+        // console.log('Game Over');
       }
     }
   };

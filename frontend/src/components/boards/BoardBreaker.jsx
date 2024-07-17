@@ -30,21 +30,23 @@ export function BoardBreaker({
   const [isColorChooseModalOpen, setColorChooseModalOpen] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]); // State to track selected rows
   const [isDisputeMode, setIsDisputeMode] = useState(false); // State to track dispute mode
+  const [lastFeedback, setLastFeedback] = useState(false);
 
+  
   const toggleColorChooseModal = () => setColorChooseModalOpen(!isColorChooseModalOpen);
-
+  
   const boardInitialized = rows
     .map((row, index) => ({ ...row, index }))
     .every((row) => 
-    (row.index > guesses.length - 1 || row.guess.every(color => color !== null))
+      (row.index > guesses.length - 1 || row.guess.every(color => color !== null))
   );
 
-  const prevFeedbackReceived = rows[currentRow].guess.every(color => color === null);
+  const prevFeedbackReceived = lastFeedback || rows[currentRow].guess.every(color => color === null);
   const codeHashPresent = codeHash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
   const codeSecretPublishedFlag = codeSecretPublished && codeSecretPublished.length > 1;
   const lastTurn = currentTurn === maxTurns;
   console.log("Codesecretpublished: ", codeSecretPublished);
-
+  
   useEffect(() => {
     if (newFeedback && !prevFeedbackReceived) {
       console.log("New Feedback!")
@@ -55,6 +57,7 @@ export function BoardBreaker({
       startTurn();
     }
     if (guesses.length !== 0 && !boardInitialized) {
+      setLastFeedback(feedbacks && feedbacks.length == maxGuesses);
       handleSubmitGuess(true)(guesses[currentRow].map(intToColor));
       if (currentRow < feedbacks.length) {
         handleFeedback(currentRow, feedbacks[currentRow]);
@@ -92,7 +95,13 @@ export function BoardBreaker({
     ];
     newRows[rowIndex].feedback = feedbackCircles;
     setRows(newRows);
-    setCurrentRow(currentRow + 1);
+    if (currentRow < maxGuesses - 1) {
+      setCurrentRow(currentRow + 1);
+    }
+    else {
+      setLastFeedback(true);
+    }
+
   };
 
   const toggleRowSelection = (index) => {
@@ -117,8 +126,6 @@ export function BoardBreaker({
 
   const nextTurn = () => {
     startTurn();
-    // Reload page
-    // window.location.reload(); // TODO Test if is this okay
   }
 
   const waitingForFeedback = turnStarted && !turnEnded && codeHashPresent && !prevFeedbackReceived && !codeSecretPublishedFlag;

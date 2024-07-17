@@ -41,6 +41,8 @@ class Game extends React.Component {
       joiner: undefined, // TODO replace with actual value
       guesses: [],
       feedbacks: [],
+      makerListeners: {},
+      breakerListeners: {},
       _mastermind: undefined,
       _provider: undefined,
       _gameDetails: undefined,
@@ -207,9 +209,11 @@ class Game extends React.Component {
       }
 
       if(this.isCurrentMaker()){
+        this.removeBreakerEventListeners();
         this.setupMakerEventListeners();
       }
       else{
+        this.removeMakerEventListeners();
         this.setupBreakerEventListeners();
       }
 
@@ -223,38 +227,58 @@ class Game extends React.Component {
 
   setupBreakerEventListeners() {
     const { _mastermind } = this.state;
-    _mastermind.on("Feedback", this.wrap(this.handleFeedback));
-    _mastermind.on("HashPublished", this.wrap(this.handleHashPublished));
-    _mastermind.on("CodeSecretPublished", this.wrap(this.handleCodeSecretPublished));
-    _mastermind.on("GameEnded", this.wrap(this.handleGameEnded));
-    _mastermind.on("TurnEnded", this.wrap(this.handleTurnEnded));
+    const breakerListeners = {
+      "Feedback": this.wrap(this.handleFeedback),
+      "HashPublished": this.wrap(this.handleHashPublished),
+      "CodeSecretPublished": this.wrap(this.handleCodeSecretPublished),
+      "GameEnded": this.wrap(this.handleGameEnded),
+      "TurnEnded": this.wrap(this.handleTurnEnded),
+      "AFKAccusation": this.wrap(this.handleAFKAccusation)
+    };
+
+    for (const [event, listener] of Object.entries(breakerListeners)) {
+      _mastermind.on(event, listener);
+    }
+
+    this.setState({ breakerListeners: breakerListeners });
   }
 
   setupMakerEventListeners() {
     const { _mastermind } = this.state;
-    _mastermind.on("Guess", this.wrap(this.handleGuess));
-    _mastermind.on("Dispute", this.wrap(this.handleDispute));
-    _mastermind.on("TurnStarted", this.wrap(this.handleTurnStarted));
-    _mastermind.on("TurnEnded", this.wrap(this.handleTurnEnded));
-    _mastermind.on("GameEnded", this.wrap(this.handleGameEnded));
-  }
-  
-  removeBreakerEventListeners() {
-    const { _mastermind } = this.state;
-    _mastermind.off("Feedback", this.wrap(this.handleFeedback));
-    _mastermind.off("HashPublished", this.wrap(this.handleHashPublished));
-    _mastermind.off("CodeSecretPublished", this.wrap(this.handleCodeSecretPublished));
-    _mastermind.off("GameEnded", this.wrap(this.handleGameEnded));
-    _mastermind.off("TurnEnded", this.wrap(this.handleTurnEnded));
+    const makerListeners = {
+      "Guess": this.wrap(this.handleGuess),
+      "Dispute": this.wrap(this.handleDispute),
+      "TurnStarted": this.wrap(this.handleTurnStarted),
+      "TurnEnded": this.wrap(this.handleTurnEnded),
+      "GameEnded": this.wrap(this.handleGameEnded),
+      "AFKAccusation": this.wrap(this.handleAFKAccusation)
+    };
+
+    for (const [event, listener] of Object.entries(makerListeners)) {
+      _mastermind.on(event, listener);
+    }
+
+    this.setState({ makerListeners: makerListeners });
   }
 
   removeMakerEventListeners() {
-    const { _mastermind } = this.state;
-    _mastermind.off("Guess", this.wrap(this.handleGuess));
-    _mastermind.off("Dispute", this.wrap(this.handleDispute));
-    _mastermind.off("TurnStarted", this.wrap(this.handleTurnStarted));
-    _mastermind.off("TurnEnded", this.wrap(this.handleTurnEnded));
-    _mastermind.off("GameEnded", this.wrap(this.handleGameEnded));
+    const { _mastermind, makerListeners } = this.state;
+
+    for (const [event, listener] of Object.entries(makerListeners)) {
+      _mastermind.off(event, listener);
+    }
+
+    this.setState({ makerListeners: {} });
+  }
+
+  removeBreakerEventListeners() {
+    const { _mastermind, breakerListeners } = this.state;
+
+    for (const [event, listener] of Object.entries(breakerListeners)) {
+      _mastermind.off(event, listener);
+    }
+
+    this.setState({ breakerListeners: {} });
   }
 
   resetLastGuess = () => {
@@ -331,6 +355,7 @@ class Game extends React.Component {
     // reset persistent codeSecretMemo and codeSeedMemo
     this.setCodeSecretMemo(undefined);
     this.setCodeSeedMemo(undefined);
+    winner = winner.toLowerCase();
 
     const stake = ethers.formatEther(this.state._gameDetails.gameStake);
     
@@ -384,6 +409,8 @@ class Game extends React.Component {
       _lastFeedback: undefined,
       _lastGuess: undefined,
       _disputed: false,
+      guesses: [],
+      feedbacks: []
     }, function(){ //callback
       this.resetAFKaccuse(this.state._gameDetails.creator);
       this.resetAFKaccuse(this.state._gameDetails.joiner);
@@ -499,7 +526,8 @@ class Game extends React.Component {
                 Game #{this.state.gameId} - Turn {parseInt(this.state._gameDetails.currentTurn)}/{parseInt(this.state._gameDetails.numTurns)}
               </h3> <br></br>
               You are now the <b>{this.isCurrentMaker() ? "Maker" : "Breaker"}</b>
-              {/* resto delle informazioni */}
+              <br></br>
+              Stake: {2 * ethers.formatEther(this.state._gameDetails.gameStake)} ETH
             </div>
           </div>
           <div className="grid-item middle-column">

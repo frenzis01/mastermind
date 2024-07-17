@@ -501,7 +501,7 @@ contract Mastermind {
             game.points[loser]
         );
         // Transfer game stake to winner
-        payable(winner).transfer(game.gameStake);
+        payable(winner).transfer(game.gameStake * 2);
     }
 
     // Function for a player to dispute feedback received from the opponent

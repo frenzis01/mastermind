@@ -367,7 +367,7 @@ class Home extends React.Component {
   // GameCreated handler
   handleGameCreated(gameId, creator, joiner, numColors, codeLength, numTurns, maxGuesses, gameStake) {
     if(creator.toLowerCase() !== this.state.selectedAddress)
-      this.addSnack("default", "A new game (#" + gameId + ") with stake " + ethers.formatEther(game.gameStake) + " is available!");
+      this.addSnack("default", "A new game (#" + gameId + ") with stake " + ethers.formatEther(gameStake) + " is available!");
     //console.log("GameCreated received:");
 
     this.setState((prevState) => {
