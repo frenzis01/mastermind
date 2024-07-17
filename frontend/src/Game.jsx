@@ -111,14 +111,18 @@ class Game extends React.Component {
     return (...args) => {
       const event = args[args.length - 1];  // The event object is always the last argument
 
-      console.log(event)
       const transactionHash = event.log.transactionHash;
-      if (this.localCatchedEvents.has(transactionHash) || this.state._catchedEvents.has(transactionHash)) {
-        console.log('Event already catched, discarding:', transactionHash);
+      const filter = event.filter;
+
+      const eventIdentifier = `${transactionHash}-${filter}`;
+
+      console.log(eventIdentifier)
+      if (this.localCatchedEvents.has(eventIdentifier) || this.state._catchedEvents.has(eventIdentifier)) {
+        console.log('Event already catched, discarding:', eventIdentifier);
       } else {
-        this.localCatchedEvents.add(transactionHash); // Add to local set
+        this.localCatchedEvents.add(eventIdentifier); // Add to local set
         this.setState((prevState) => ({
-          _catchedEvents: new Set(prevState._catchedEvents).add(transactionHash)
+          _catchedEvents: new Set(prevState._catchedEvents).add(eventIdentifier)
         }), () => {
           handler(...args); // Pass all arguments including the event object to the handler
         });
@@ -231,6 +235,24 @@ class Game extends React.Component {
     _mastermind.on("TurnEnded", this.wrap(this.handleTurnEnded));
     _mastermind.on("GameEnded", this.wrap(this.handleGameEnded));
   }
+  
+  removeBreakerEventListeners() {
+    const { _mastermind } = this.state;
+    _mastermind.off("Feedback", this.wrap(this.handleFeedback));
+    _mastermind.off("HashPublished", this.wrap(this.handleHashPublished));
+    _mastermind.off("CodeSecretPublished", this.wrap(this.handleCodeSecretPublished));
+    _mastermind.off("GameEnded", this.wrap(this.handleGameEnded));
+    _mastermind.off("TurnEnded", this.wrap(this.handleTurnEnded));
+  }
+
+  removeMakerEventListeners() {
+    const { _mastermind } = this.state;
+    _mastermind.off("Guess", this.wrap(this.handleGuess));
+    _mastermind.off("Dispute", this.wrap(this.handleDispute));
+    _mastermind.off("TurnStarted", this.wrap(this.handleTurnStarted));
+    _mastermind.off("TurnEnded", this.wrap(this.handleTurnEnded));
+    _mastermind.off("GameEnded", this.wrap(this.handleGameEnded));
+  }
 
   resetLastGuess = () => {
     this.setState({ _lastGuess: undefined });
@@ -260,7 +282,7 @@ class Game extends React.Component {
   }
   
   handleHashPublished(gameId, codeMaker, hash) {
-    this.addSnack("success", "Hash published")
+    this.addSnack("success", "Code hash published")
     //console.log("Hash published");
     this.setState({ _codeHash: hash })
     this.resetAFKaccuse(this.getOpponent());
@@ -328,7 +350,7 @@ class Game extends React.Component {
     const { _mastermind } = this.state;
     const gameDetails = (await _mastermind.getGameDetails(this.state.gameId)).toObject();
     gameDetails.creator = gameDetails.creator.toLowerCase();
-    gameDetails.joiner = gameDetails.creator.toLowerCase();
+    gameDetails.joiner = gameDetails.joiner.toLowerCase();
     gameDetails.currentTurn = parseInt(gameDetails.currentTurn);
     this.setState({
       _gameDetails: gameDetails,
@@ -344,18 +366,26 @@ class Game extends React.Component {
       this.resetAFKaccuse(this.state._gameDetails.joiner);
       this.setCodeSecretMemo(undefined);
       this.setCodeSeedMemo(undefined);
+      if(this.isCurrentMaker()){
+        this.removeBreakerEventListeners();
+        this.setupMakerEventListeners()
+      }
+      else{
+        this.removeMakerEventListeners();
+        this.setupBreakerEventListeners();
+      }
     })
   }
 
-  componentWillUnmount() { //TODO: diversificare unmount in caso si tratti di maker o breaker
+  componentWillUnmount() {
     const { _mastermind } = this.state;
     if (_mastermind) {
-      _mastermind.off("Guess", this.wrap(this.handleGuess));
-      _mastermind.off("Feedback", this.wrap(this.handleFeedback));
-      _mastermind.off("Dispute", this.wrap(this.handleDispute));
-      _mastermind.on("HashPublished", this.wrap(this.handleHashPublished));
-      _mastermind.on("TurnStarted", this.wrap(this.startTurn));
-      _mastermind.on("GameJoined", this.wrap(this.handleGameJoined)); 
+      if(this.isCurrentMaker()){
+        this.removeMakerEventListeners();
+      }
+      else{
+        this.removeBreakerEventListeners();
+      }
     }
   }
 
@@ -484,6 +514,8 @@ class Game extends React.Component {
                 codeSecretPublished={this.state._codeSecret}
                 disputeFeedback={this.disputeFeedback}
                 disputed={this.state._disputed}
+                currentTurn={this.state._gameDetails.currentTurn}
+                maxTurn={Number(this.state._gameDetails.numTurns)}
             />)}
 
             {this.isCurrentMaker() &&

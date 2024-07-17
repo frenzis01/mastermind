@@ -20,7 +20,9 @@ export function BoardBreaker({
     feedbacks,
     codeSecretPublished,
     disputeFeedback,
-    disputed}) {
+    disputed,
+    currentTurn,
+    maxTurn}) {
     
   const [rows, setRows] = useState(Array(maxGuesses).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
@@ -39,6 +41,7 @@ export function BoardBreaker({
   const prevFeedbackReceived = rows[currentRow].guess.every(color => color === null);
   const codeHashPresent = codeHash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
   const codeSecretPublishedFlag = codeSecretPublished && codeSecretPublished.length > 1;
+  const lastTurn = currentTurn === maxTurn;
   console.log("Codesecretpublished: ", codeSecretPublished);
 
   useEffect(() => {
@@ -168,12 +171,12 @@ export function BoardBreaker({
         }
         {/* end-game buttons */}
         {/* TODO better style, buttons are next to each other */}
-        {nextTurnPending && 
+        {nextTurnPending &&
           <>
           <button className='dispute-button' onClick={handleDispute}>
             {isDisputeMode ? 'Confirm Dispute' : 'The maker cheated! Dispute!'}
           </button>
-          <button className='btn-faded' onClick={nextTurn}> Start next Turn</button>
+          <button className='btn-faded' onClick={nextTurn}> {`${lastTurn ? 'End game' : 'Start next turn'}`}</button>
           </>
         }
       </>}

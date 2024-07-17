@@ -186,7 +186,7 @@ export function BoardMaker({
           <div className='secret-row'> Opponent claims you have cheated in this turn. The game will end soon, establishing who is not being honest.</div>
         }
         {!disputed &&
-          <div className='secret-row'> <p className='wait-message'> The breaker will either start a new Turn or dispute the Feedbacks you provided. </p> </div>
+          <div className='secret-row'> The breaker will either start a new Turn or dispute the Feedbacks you provided. </div>
         }
         </>
       }
