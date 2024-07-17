@@ -265,8 +265,8 @@ contract Mastermind {
         // Emit event to log game creation
         emit GameCreated(
             newGame.gameId,
-            newGame.joiner,
             newGame.creator,
+            newGame.joiner,
             newGame.numColors,
             newGame.codeLength,
             newGame.numTurns,
