@@ -9,7 +9,7 @@ contract Mastermind {
     uint256 public constant NUM_TURNS = 4;
     uint256 public constant NUM_GUESSES = 6;
     uint256 public constant K_EXTRA_POINTS = 10;
-    uint256 public constant B_AFKBLOCKS = 100;
+    uint256 public constant B_AFKBLOCKS = 5;
     uint256 public constant TIME_TO_DISPUTE = 60000;
 
 
@@ -682,7 +682,6 @@ contract Mastermind {
 
         address breaker = getCurrentBreaker(_gameId);
         // Check that the hash of the secret is equal to the hash submitted at the beginning of the turn
-        // console.log("Before hashing");
         if (hashArrayOfIntegers(game.codeSecret, seed) != game.codeHash){
             emit ResolveDispute(_gameId, maker);
             endGame(_gameId, maker, breaker, 0, 1);

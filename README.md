@@ -60,9 +60,13 @@ REPORT_GAS=true npx hardhat test
    - [x] Catch `Accusation time has not expired yet`
    - [ ] Contract interaction wrapper in home
    - [ ] localStorage set in utils
-   - [ ] Create game modal negative stake
+   - [x] Create game modal negative stake
    - [x] Better provide Feedback modal
    - [x] Accuse AFK button restyle
-   - [ ] Add message for "Waiting for someone to join"
+   - [x] Add message for "Waiting for someone to join"
    - [x] Decimal value in join are not allowed, they become 0
-   - [ ] Add message for Breaker to wait the code
+   - [x] Add message for Breaker to wait the code
+   - [ ] Button to redirect to home from Game
+   - [ ] Provide Feedback title style
+   - [ ] Buttons makeGuess and provide feedback bigger
+   - [ ] Snack corretti dopo lo swap board

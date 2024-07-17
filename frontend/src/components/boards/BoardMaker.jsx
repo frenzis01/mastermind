@@ -29,6 +29,7 @@ export function BoardMaker({
     codeSecretMemo,
     codeSeedMemo,
     disputed,
+    currentTurn
     }) {
   const [rows, setRows] = useState(Array(maxGuesses).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
@@ -133,6 +134,7 @@ export function BoardMaker({
   const guessPending = !turnEnded && codeHashPresent && prevGuessReceived;
   const publishSecret = turnEnded && !codeSecretPublishedFlag && codeHashPresent && turnStarted && !noGuessesPresent;
   const waitNextTurn = turnEnded && codeSecretPublishedFlag && codeHashPresent;
+  const lastTurn = currentTurn === maxTurns;
   return (
     <div className="App">
       {waitingFirstTurnToStart &&
@@ -184,7 +186,7 @@ export function BoardMaker({
           <div className='secret-row'> Opponent claims you have cheated in this turn. The game will end soon, establishing who is not being honest.</div>
         }
         {!disputed &&
-          <div className='secret-row'> The breaker will either start a new Turn or dispute the Feedbacks you provided. </div>
+          <div className='secret-row'> The breaker will either {`${lastTurn ? 'end the game' : 'start a new turn'}`}  or dispute the Feedbacks you provided. </div>
         }
         </>
       }

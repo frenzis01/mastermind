@@ -31,7 +31,7 @@ class Game extends React.Component {
 
     this.state = {
       gameId: gameId,
-      selectedAddress: selectedAddress,
+      selectedAddress: selectedAddress.toLowerCase(),
       turn: undefined,
       submitCodeHashModalOpen: true, // TODO true at the beginning?
       reqBeingSent: undefined,
@@ -122,13 +122,17 @@ class Game extends React.Component {
       const eventIdentifier = `${transactionHash}-${filter}`;
 
       console.log(eventIdentifier)
-      if (this.localCatchedEvents.has(eventIdentifier) || this.state._catchedEvents.has(eventIdentifier)) {
-        console.log('Event already catched, discarding:', eventIdentifier);
+      const cond = (this.localCatchedEvents.has(eventIdentifier) || this.state._catchedEvents.has(eventIdentifier)) 
+      // console.log(cond)
+      if (cond) {
+        // console.log('Event already catched, discarding:', eventIdentifier);
       } else {
+        // console.log("Else branch taken")
         this.localCatchedEvents.add(eventIdentifier); // Add to local set
         this.setState((prevState) => ({
           _catchedEvents: new Set(prevState._catchedEvents).add(eventIdentifier)
         }), () => {
+          // console.log("Invoking handler on:", eventIdentifier);
           handler(...args); // Pass all arguments including the event object to the handler
         });
       }
@@ -141,8 +145,7 @@ class Game extends React.Component {
     
     const signer = await provider.getSigner();
 
-    console.log(provider.pollingInterval);
-
+    // Useless probably
     provider.polling = true;
     provider.pollingInterval = 1000; // Set to 1000 ms (1 second)
     
@@ -174,7 +177,6 @@ class Game extends React.Component {
       const rawGuesses = reqGuesses.map(parseProxy);
       const guesses = rawGuesses.map(a => a.map(Number))
 
-      console.log(guesses)
       this.setState({ guesses: guesses});
     }
 
@@ -187,11 +189,9 @@ class Game extends React.Component {
         return { cc: Number(f[0]), nc: Number(f[1]) };
       });
 
-      console.log(feedbacks)
       this.setState({ feedbacks: feedbacks });
     }
     
-    console.log(gameDetails);
 
     this.addAFKaccuse(gameDetails.creator, gameDetails.creatorAFKaccused === 0n ? undefined : Number(gameDetails.creatorAFKaccused));
     this.addAFKaccuse(gameDetails.joiner, gameDetails.joinerAFKaccused === 0n ? undefined : Number(gameDetails.joinerAFKaccused));
@@ -218,7 +218,6 @@ class Game extends React.Component {
       }
 
       if (this.state._gameDetails.joiner !== "0x0000000000000000000000000000000000000000") {
-        console.log("is Joined!")
         this.setState({ _joined: true });
       }
     });
@@ -286,8 +285,6 @@ class Game extends React.Component {
   }
   handleGuess(gameId, guess) {
     this.addSnack("default", "New guess received")
-    //console.log("Guess received:", guess.map(Number));
-    // Handle event A
     this.setState({ _lastGuess: guess });
     this.resetAFKaccuse(this.getOpponent());
   }
@@ -297,27 +294,23 @@ class Game extends React.Component {
   }
   handleFeedback(gameId,cc,nc) {
     this.addSnack("default", "New Feedback received")
-    //console.log("Feedback received:");
-    // Handle event B
     this.setState({ _lastFeedback: {"cc": cc, "nc": nc} });
     this.resetAFKaccuse(this.getOpponent());
   }
 
   handleDispute(eventData) {
-    console.log("Event C received:", eventData);
-    // Handle event C
+    this.addSnack("warning", "Your opponent claims you have cheated");
+    this.setState({ _disputed: true });
   }
   
   handleHashPublished(gameId, codeMaker, hash) {
     this.addSnack("success", "Code hash published")
-    //console.log("Hash published");
     this.setState({ _codeHash: hash })
     this.resetAFKaccuse(this.getOpponent());
   }
 
   handleTurnStarted(gamedId, maker) {
     this.addSnack("success", "Turn started")
-    //console.log("StartTurn received:");
     this.setState({ _turnStarted: true });
 
     this.resetAFKaccuse(this.getOpponent());
@@ -326,12 +319,12 @@ class Game extends React.Component {
   }
 
   handleTurnEnded(gameID, codeGuessed) {
-    console.log("TurnEnded received, the code was " + (!codeGuessed ? "not" : "") + " guessed by the breaker");
+    this.addSnack("default","TurnEnded received, the code was " + (!codeGuessed ? "not" : "") + " guessed by the breaker");
     this.setState({ _turnEnded: true });
   }
 
   handleCodeSecretPublished(gameId, rawSecretCode) {
-    console.log("CodeSecretPublished received: ", rawSecretCode);
+    this.addSnack("success","CodeSecretPublished received: ", rawSecretCode);
     const secretCode = rawSecretCode.map(Number);
     this.setState({ _codeSecret: secretCode });
     this.resetAFKaccuse(this.getOpponent());
@@ -339,14 +332,13 @@ class Game extends React.Component {
 
   handleGameJoined(gameId, joiner, creator) {
     this.addSnack("default", "An opponent has joined the game")
-    //console.log("GameJoined received:");
     this.setState({ _joined: true , joiner: joiner});
   }
 
   handleAFKAccusation(gameId, accused) {
-    if (accused === this.state.selectedAddress) {
+    if (accused.toLowerCase() === this.state.selectedAddress) {
       this.addSnack("warning", "You have been accused of being AFK")
-      //console.log("You have been accused of being AFK");
+      this.addAFKaccuse(accused, Date.now());
     }
   }
 
@@ -355,42 +347,39 @@ class Game extends React.Component {
     // reset persistent codeSecretMemo and codeSeedMemo
     this.setCodeSecretMemo(undefined);
     this.setCodeSeedMemo(undefined);
-    winner = winner.toLowerCase();
+    let _winner = winner.toLowerCase();
 
     const stake = ethers.formatEther(this.state._gameDetails.gameStake);
     
     const messages = {
-      title: winner === this.state.selectedAddress ? "You won!" : "You lost!",
-      text: winner === (this.state.selectedAddress ?
+      title: (_winner === this.state.selectedAddress ? "You won!" : "You lost!"),
+      text: (_winner === this.state.selectedAddress ? 
         `Congratulations! You won ${stake} ETH, having ${winnerPoints} points against ${loserPoints}` :
-        `You lost ${stake} ETH, having ${loserPoints} points against ${winnerPoints}`) + "\\ Go back to the home page to play again!",
+        `You lost ${stake} ETH, having ${loserPoints} points against ${winnerPoints}`) 
+        + ". Go back to the home page to play again!",
         buttonText: "Home",
       }
       
-    if (winnerPoints === 1 && loserPoints === 0) {
+    if (Number(winnerPoints) === 1 && Number(loserPoints) === 0) {
       messages.text =
-        (winner === this.state.selectedAddress ?
+        (_winner === this.state.selectedAddress ?
           (this.state._disputed ? "Your opponent cheated" : "Your opponent went AFK") :
           (this.state._disputed ? "You cheated" : "You went AFK")
         )
-        + "\\ Go back to the home page to play again!";
+        + ". Go back to the home page to play again!";
     }
     this.setState({ _gameEnded: true, _gameEndedMessages: messages });
   }
 
   setCodeSecretMemo (newCode) {
     this.setState({ _codeSecretMemo: newCode }, () => {
-      console.log("Code secret memo updated:", JSON.stringify(newCode));
       localStorage.setItem('_codeSecretMemo_' + this.state.gameId, JSON.stringify(newCode));
-      console.log(localStorage.getItem('_codeSecretMemo_' + this.state.gameId));
     });
   }
   
   setCodeSeedMemo (newSeed) {
     this.setState({ _codeSeedMemo: newSeed }, () => {
-      console.log("Code seed memo updated:", newSeed);
       localStorage.setItem('_codeSeedMemo_' + this.state.gameId, JSON.stringify(newSeed));
-      console.log(localStorage.getItem('_codeSeedMemo_' + this.state.gameId));
     });
   }
 
@@ -590,6 +579,7 @@ class Game extends React.Component {
                 codeSeedMemo={this.state._codeSeedMemo}
                 disputed={this.state._disputed}
                 gameEnded={this.state._gameEnded}
+                currentTurn={this.state._gameDetails.currentTurn}
               />)}
           </div>
 
@@ -639,7 +629,6 @@ class Game extends React.Component {
 
   // Function A: Generate a random 64-character long string
   generateRandomString() {
-    console.log("Generating random string");
     const array = new Uint8Array(32);
     window.crypto.getRandomValues(array);
     return array;
@@ -690,11 +679,6 @@ class Game extends React.Component {
   // -------------------------- CONTRACT INTERACTIONS --------------------------
 
   async publishCodeSecret(codeSecret, codeSeed) {
-    console.log("Publishing code secret");
-    console.log(codeSeed);
-    console.log(codeSecret);
-
-    // TODO reset afk accuse
     this.wrapContractInteraction(
       this.state._mastermind.publishCodeSecret, 
       [this.state.gameId, codeSecret, codeSeed], () => {

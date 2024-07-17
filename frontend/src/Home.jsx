@@ -368,7 +368,6 @@ class Home extends React.Component {
   handleGameCreated(gameId, creator, joiner, numColors, codeLength, numTurns, maxGuesses, gameStake) {
     if(creator.toLowerCase() !== this.state.selectedAddress)
       this.addSnack("default", "A new game (#" + gameId + ") with stake " + ethers.formatEther(gameStake) + " is available!");
-    //console.log("GameCreated received:");
 
     this.setState((prevState) => {
       const newGame = {
@@ -388,7 +387,6 @@ class Home extends React.Component {
   handleGameJoined(gameId, joiner, creator) {
     if(joiner.toLowerCase() !== this.state.selectedAddress)
       this.addSnack("default", "The game (#" + gameId + ") has been joined!");
-    //console.log("GameJoined received:");
     const eventData = {
       gameId: gameId,
       joiner: joiner,

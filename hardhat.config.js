@@ -8,7 +8,7 @@ module.exports = {
       // gas: 0,
       // mining: {
       //   auto: false,
-      //   interval: 500
+      //   interval: 1000
       // }
     }
   },
