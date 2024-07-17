@@ -164,7 +164,7 @@ class Home extends React.Component {
                   {this.state.startedGames.map((game) => (
                         <li className="list" key={game.gameId}>
                           <div className="content">
-                            <h4>#{Number(game.gameId)} - Stake {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}</h4>
+                            <h4>#{Number(game.gameId)} - Stake {ethers.formatEther(game.gameStake)} {this.state.currency}</h4>
                             <p>Creator: {game.creator}</p>
                             <button 
                               className="btn-faded hidden-button ml-2" 
@@ -189,12 +189,12 @@ class Home extends React.Component {
                   {this.state.availableGames.map((game) => (
                     <li className={`list ${game.joiner !== '0x0000000000000000000000000000000000000000' ? 'glowing' : ''}`} key={game.gameId}>
                       <div className="content">
-                        <h4>#{Number(game.gameId)} {game.joiner !== '0x0000000000000000000000000000000000000000' ? '- Challenge -' : "-"} Stake: {Number(game.gameStake/BigInt(1000000000000000000))} {this.state.currency}</h4>
+                        <h4>#{Number(game.gameId)} {game.joiner !== '0x0000000000000000000000000000000000000000' ? '- Challenge -' : "-"} Stake: {ethers.formatEther(game.gameStake)} {this.state.currency}</h4>
                         <p>Creator: {game.creator}</p>
                         <button 
                           className="btn-faded hidden-button ml-2" 
                           // TODO fix stake
-                          onClick={() => this.joinGame(game.gameId, Number(game.gameStake/1000000000000000000n))}>
+                          onClick={() => this.joinGame(game.gameId, ethers.formatEther(game.gameStake))}>
                           Join Game
                         </button>
                       </div>
@@ -367,7 +367,7 @@ class Home extends React.Component {
   // GameCreated handler
   handleGameCreated(gameId, creator, joiner, numColors, codeLength, numTurns, maxGuesses, gameStake) {
     if(creator.toLowerCase() !== this.state.selectedAddress)
-      this.addSnack("default", "A new game (#" + gameId + ") with stake " + Number(gameStake/BigInt(1000000000000000000)) + " is available!");
+      this.addSnack("default", "A new game (#" + gameId + ") with stake " + ethers.formatEther(game.gameStake) + " is available!");
     //console.log("GameCreated received:");
 
     this.setState((prevState) => {

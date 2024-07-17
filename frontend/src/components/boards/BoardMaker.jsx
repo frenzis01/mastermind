@@ -6,6 +6,7 @@ import "../../css/styles.css"
 import "../../css/boards.css"
 import {colors, colorToInt, intToColor, feedbackColors} from "../../assets/colors";
 import { Col } from 'react-bootstrap';
+import NonClosableModal from '../modals/NonClosableModal';
 
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill('gray') };
 
@@ -134,7 +135,6 @@ export function BoardMaker({
   const guessPending = !turnEnded && codeHashPresent && prevGuessReceived;
   const publishSecret = turnEnded && !codeSecretPublishedFlag && codeHashPresent && turnStarted && !noGuessesPresent;
   const waitNextTurn = turnEnded && codeSecretPublishedFlag && codeHashPresent;
-
   return (
     <div className="App">
       {waitingFirstTurnToStart &&

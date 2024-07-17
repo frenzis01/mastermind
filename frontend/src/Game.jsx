@@ -7,6 +7,7 @@ import { BoardMaker } from './components/boards/BoardMaker';
 import { Loading } from './components/misc/Loading';
 import { withRouter } from './components/WithRouter';
 //import ColorChooseModal from './components/modals/ColorChooseModal';
+import { NonClosableModal } from "./components/modals/NonClosableModal";
 
 import MastermindArtifact from "./contracts/Mastermind.json";
 import contractAddress from "./contracts/contract-address.json"
@@ -57,6 +58,8 @@ class Game extends React.Component {
       _codeSecretMemo: this.jsonStringParse(localStorage.getItem('_codeSecretMemo_' + gameId)) || undefined,
       // fundamental to parse as Uint8Array
       _codeSeedMemo: this.jsonStringToUint8Array(localStorage.getItem('_codeSeedMemo_' + gameId)) || undefined,
+      _gameEnded:false,
+      _gameEndedMessages: undefined,
       _catchedEvents: new Set()
     };
 
@@ -91,8 +94,8 @@ class Game extends React.Component {
     this.addAFKaccuse = this.addAFKaccuse.bind(this);
     this.resetAFKaccuse = this.resetAFKaccuse.bind(this);
     this.setupNewTurn = this.setupNewTurn.bind(this);
-
-
+    
+    this.redirectHome = this.redirectHome.bind(this);
     this.wrapContractInteraction = this.wrapContractInteraction.bind(this);
   } 
 
@@ -328,6 +331,26 @@ class Game extends React.Component {
     // reset persistent codeSecretMemo and codeSeedMemo
     this.setCodeSecretMemo(undefined);
     this.setCodeSeedMemo(undefined);
+
+    const stake = ethers.formatEther(this.state._gameDetails.gameStake);
+    
+    const messages = {
+      title: winner === this.state.selectedAddress ? "You won!" : "You lost!",
+      text: winner === (this.state.selectedAddress ?
+        `Congratulations! You won ${stake} ETH, having ${winnerPoints} points against ${loserPoints}` :
+        `You lost ${stake} ETH, having ${loserPoints} points against ${winnerPoints}`) + "\\ Go back to the home page to play again!",
+        buttonText: "Home",
+      }
+      
+    if (winnerPoints === 1 && loserPoints === 0) {
+      messages.text =
+        (winner === this.state.selectedAddress ?
+          (this.state._disputed ? "Your opponent cheated" : "Your opponent went AFK") :
+          (this.state._disputed ? "You cheated" : "You went AFK")
+        )
+        + "\\ Go back to the home page to play again!";
+    }
+    this.setState({ _gameEnded: true, _gameEndedMessages: messages });
   }
 
   setCodeSecretMemo (newCode) {
@@ -496,10 +519,9 @@ class Game extends React.Component {
                         cursor: 'default'   }} />))}
                 </div>
               }
-
             {!this.isCurrentMaker() &&
               (<BoardBreaker
-                numTurns={Number(this.state._gameDetails.numTurns)}
+                maxTurns={Number(this.state._gameDetails.numTurns)}
                 maxGuesses={Number(this.state._gameDetails.maxGuesses)}
                 makeGuess={this.makeGuess}
                 startTurn={this.startTurn}
@@ -514,14 +536,14 @@ class Game extends React.Component {
                 codeSecretPublished={this.state._codeSecret}
                 disputeFeedback={this.disputeFeedback}
                 disputed={this.state._disputed}
-                currentTurn={this.state._gameDetails.currentTurn}
-                maxTurn={Number(this.state._gameDetails.numTurns)}
+                currentTurn={this.state._gameDetails.currentTurn}  
+                gameEnded={this.state._gameEnded}
             />)}
 
             {this.isCurrentMaker() &&
               (<BoardMaker
               // TODO add seed and display it to allow player to annotate it
-                numTurns={Number(this.state._gameDetails.numTurns)}
+                maxTurns={Number(this.state._gameDetails.numTurns)}
                 maxGuesses={Number(this.state._gameDetails.maxGuesses)}
                 hashSecretCode={this.computeHash}
                 generateSeed={this.generateRandomString}
@@ -539,7 +561,8 @@ class Game extends React.Component {
                 codeSecretMemo={this.state._codeSecretMemo}
                 codeSeedMemo={this.state._codeSeedMemo}
                 disputed={this.state._disputed}
-                />)}
+                gameEnded={this.state._gameEnded}
+              />)}
           </div>
 
           <div className={`grid-item ${this.isCurrentMaker() ? 'right-column-maker' : 'right-column-breaker'}`}>
@@ -559,6 +582,21 @@ class Game extends React.Component {
               <div className="d-flex align-items-center">
                 <button className='btn-accuse-afk' onClick={this.verifyAFKAccusation}>Verify AFK accusation</button>
               </div>}
+                {!this.state._joined && <NonClosableModal 
+                  show={!this.state._joined}
+                  title={"No opponent joined yet"}
+                  text={"Wait for someone to join your game"}
+                  buttonText={"Home"}
+                  onClick={this.redirectHome}
+                  ></NonClosableModal>}
+                {this.state._gameEnded && <NonClosableModal
+                show={this.state._gameEnded}
+                title={this.state._gameEndedMessages.title}
+                text={this.state._gameEndedMessages.text}
+                buttonText={this.state._gameEndedMessages.buttonText}
+                onClick={this.redirectHome}
+                ></NonClosableModal>    
+              }
             </div>
           </div>
         </div>
@@ -567,6 +605,9 @@ class Game extends React.Component {
       //pulsantino per accusa di AFK
       );
 }
+  redirectHome() {
+    this.props.router.navigate('/');
+  }
 
   // Function A: Generate a random 64-character long string
   generateRandomString() {

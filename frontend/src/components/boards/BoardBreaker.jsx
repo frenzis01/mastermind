@@ -7,6 +7,7 @@ import { colors, colorToInt, intToColor, feedbackColors, disputeColor } from '..
 const initialRow = { guess: Array(6).fill(null), feedback: Array(6).fill(feedbackColors.xx) };
 
 export function BoardBreaker({ 
+    maxTurns,
     maxGuesses,
     makeGuess,
     startTurn,
@@ -22,7 +23,7 @@ export function BoardBreaker({
     disputeFeedback,
     disputed,
     currentTurn,
-    maxTurn}) {
+    }) {
     
   const [rows, setRows] = useState(Array(maxGuesses).fill().map(() => ({ ...initialRow })));
   const [currentRow, setCurrentRow] = useState(0);
@@ -41,7 +42,7 @@ export function BoardBreaker({
   const prevFeedbackReceived = rows[currentRow].guess.every(color => color === null);
   const codeHashPresent = codeHash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
   const codeSecretPublishedFlag = codeSecretPublished && codeSecretPublished.length > 1;
-  const lastTurn = currentTurn === maxTurn;
+  const lastTurn = currentTurn === maxTurns;
   console.log("Codesecretpublished: ", codeSecretPublished);
 
   useEffect(() => {

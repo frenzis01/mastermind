@@ -7,13 +7,14 @@ cd mastermind
 npm install
 npx hardhat node
 ```
+A list of accounts along with private keys will appear;
+Note at least two of them, you will need them later.
+
 In a *new* terminal run
 ```
 npx hardhat run scripts/deploy.js --network localhost
 ```
 
-After executing the deploy script, in the first terminal a list of accounts along with private keys will appear;
-Note at least two of them, you will need them later.
 
 ### Vite+React Frontend
 ```
@@ -50,18 +51,18 @@ REPORT_GAS=true npx hardhat test
 ```
 
 ### TODOs
-   - [ ] Gas Evaluation
-      - [ ] Guesses and Feedbacks: ```mapping``` vs ```[][][]```
-      - [ ] Breaker/Maker
+   - [x] Gas Evaluation
+      - [x] Guesses and Feedbacks: ```mapping``` vs ```[][][]```
+      - [x] Breaker/Maker
    - [ ] AFK Accusation
       - [ ] *Maker accuse while Breaker is Disputing* is a "race" between AFK Accusation time and Valid Dispute time, but should be okay since the breaker cannot take forever to dispute the feedbacks
    - [x] Handle `Next Turn`
-   - [ ] Catch `Accusation time has not expired yet`
+   - [x] Catch `Accusation time has not expired yet`
    - [ ] Contract interaction wrapper in home
    - [ ] localStorage set in utils
    - [ ] Create game modal negative stake
-   - [ ] Better provide Feedback modal
-   - [ ] Accuse AFK button restyle
+   - [x] Better provide Feedback modal
+   - [x] Accuse AFK button restyle
    - [ ] Add message for "Waiting for someone to join"
-   - [ ] Decimal value in join are not allowed, they become 0
+   - [x] Decimal value in join are not allowed, they become 0
    - [ ] Add message for Breaker to wait the code
