@@ -37,30 +37,20 @@ contract Mastermind {
         mapping(address => bool) accusedFB; // Mapping to track if a player has been accused of providing false feedback
         mapping(address => uint256) accusedAFK; // Mapping to track if a player has been accused of being AFK and at which time
         /**
-         * // TODO evaluate which one of the two following options is better for guesses and feedbacks
+         * The option with the triple array leads to overall lesser gas costs
          */
         // mapping(uint256 => uint256[][]) guesses; // Array to store guesses made by players
         // mapping(uint256 => uint256[][]) feedbacks; // Array to store feedbacks made by players
         uint256[][][] guesses; // Array to store guesses made by players
         uint256[][][] feedbacks; // Array to store feedbacks made by players
+        
         /**
          * 
-         * // TODO evaluate if it's better to hold current breaker and maker instead of deriving them
-         * from the number of guesses/feedbacks
-         * 
-         * This may be done by easily changing the behaviour of getCurrentBreaker and getCurrentMaker  
-         * and by setting maker and breaker in startTurn()
+         * Inferring -as in isCurrentMaker()- who is the maker/breaker seems to yield better gas consumes than holding
+         * current breaker and maker addresses in a state variable and updating them at each turn
          */
-
         // address maker;
         // address breaker;
-
-        /**
-         * 
-         *  TODO Evaluate whether it is better to hold a reference to the player who has to move instead of deriving it from
-         * the number of guesses and feedbacks
-         */
-        // address currentPlayer;
 
         bool creatorIsMakerSeed; // Flag indicating if the creator is the code maker in the seed phase
         bytes32 codeHash; // Hash of the code chosen by the code maker
