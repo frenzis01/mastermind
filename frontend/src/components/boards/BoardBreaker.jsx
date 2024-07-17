@@ -130,6 +130,7 @@ export function BoardBreaker({
       {/* TODO write all these conditions in a more readable way */}
       {!disputed &&
       <>
+      {/* TODO secret row when the breaker is waiting for the opponent to join */}
         {startTurnPending &&
           <div className='secret-row'>
             Please accept the transaction for starting the game
