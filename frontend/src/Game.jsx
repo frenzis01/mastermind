@@ -45,7 +45,7 @@ class Game extends React.Component {
       _gameDetails: undefined,
       _lastGuess: undefined,
       _lastFeedback: undefined,
-      _codeHash: false,
+      _codeHash: undefined,
       _joined: false,
       _turnStarted: false,
       _turnEnded: false,
@@ -107,7 +107,7 @@ class Game extends React.Component {
     })
   }
 
-  wrap = (handler) => {
+  wrap = (handler) => { //ToDo: filtrare event.log.transactionHash e filter
     return (...args) => {
       const event = args[args.length - 1];  // The event object is always the last argument
 
@@ -258,11 +258,11 @@ class Game extends React.Component {
     console.log("Event C received:", eventData);
     // Handle event C
   }
-
-  handleHashPublished(eventData) {
+  
+  handleHashPublished(gameId, codeMaker, hash) {
     this.addSnack("success", "Hash published")
     //console.log("Hash published");
-    this.setState({ _codeHash: true })
+    this.setState({ _codeHash: hash })
     this.resetAFKaccuse(this.getOpponent());
   }
 
