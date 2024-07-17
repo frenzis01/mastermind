@@ -43,17 +43,14 @@ contract Mastermind {
         // mapping(uint256 => uint256[][]) feedbacks; // Array to store feedbacks made by players
         uint256[][][] guesses; // Array to store guesses made by players
         uint256[][][] feedbacks; // Array to store feedbacks made by players
+        
         /**
          * 
-         * // TODO evaluate if it's better to hold current breaker and maker instead of deriving them
-         * from the number of guesses/feedbacks
-         * 
-         * This may be done by easily changing the behaviour of getCurrentBreaker and getCurrentMaker  
-         * and by setting maker and breaker in startTurn()
+         * Inferring -as in isCurrentMaker()- who is the maker/breaker seems to yield better gas consumes than holding
+         * current breaker and maker addresses in a state variable and updating them at each turn
          */
-
-        address maker;
-        address breaker;
+        // address maker;
+        // address breaker;
 
         /**
          * 
@@ -268,10 +265,6 @@ contract Mastermind {
         newGame.codeSecret = new uint256[](1); // Set to 1 instead of 0 to allow the first turn to start
         newGame.joiner = _joiner;
 
-        // We set these inverted so that they get swapped on startTurn
-        newGame.maker = newGame.creatorIsMakerSeed ? newGame.creator : newGame.joiner;
-        newGame.breaker = newGame.creatorIsMakerSeed ? newGame.joiner : newGame.creator;
-
         // Increment total number of games
         totalGames++;
 
@@ -316,46 +309,44 @@ contract Mastermind {
     function joinGame(uint256 _gameId) external payable {
         // Ensure game ID is valid
         require(_gameId < totalGames, "Invalid game ID");
-        Game storage game = games[_gameId];
+        Game storage selectedGame = games[_gameId];
         // Ensure game has not started
-        require(!game.gameStarted, "Game has already started");
+        require(!selectedGame.gameStarted, "Game has already started");
         // Ensure correct game stake is sent
         require(
-            msg.value == game.gameStake,
+            msg.value == selectedGame.gameStake,
             "Incorrect game stake sent"
         );
         // Ensure creator cannot join their own game
         require(
-            msg.sender != game.creator,
+            msg.sender != selectedGame.creator,
             "Creator cannot join their own game"
         );
 
         // If joiner address is empty, set it to the sender's address
-        if (game.joiner == address(0)) {
-            game.joiner = msg.sender;
+        if (selectedGame.joiner == address(0)) {
+            selectedGame.joiner = msg.sender;
         } else {
             // If joiner address is already set, only allow the creator to specify the joiner
             require(
-                game.joiner == msg.sender, "Only a player specified by the creator may join the game"
+                selectedGame.joiner == msg.sender, "Only a player specified by the creator may join the game"
             );
         }
 
         // If both players have joined, start the game
-        game.gameStarted = true;
+        selectedGame.gameStarted = true;
         // Timestamp is instead set when a turn starts
-        // game.startTime = block.timestamp;
+        // selectedGame.startTime = block.timestamp;
 
         // // These are inverted because they get swapped on startTurn
-        // game.maker = game.creatorIsMakerSeed ? game.joiner : game.creator;
-        // game.breaker = game.creatorIsMakerSeed ? game.creator : game.joiner;
-        game.maker = game.creatorIsMakerSeed ? game.creator : game.joiner;
-        game.breaker = game.creatorIsMakerSeed ? game.joiner : game.creator;
+        // selectedGame.maker = selectedGame.creatorIsMakerSeed ? selectedGame.joiner : selectedGame.creator;
+        // selectedGame.breaker = selectedGame.creatorIsMakerSeed ? selectedGame.creator : selectedGame.joiner;
 
-        activeGames.push(getInfoFromGame(game));
+        activeGames.push(getInfoFromGame(selectedGame));
         makeGameNotJoinable(_gameId);
 
         // Emit event to log game join
-        emit GameJoined(_gameId, game.joiner, game.creator);
+        emit GameJoined(_gameId, selectedGame.joiner, selectedGame.creator);
     }
 
 
@@ -383,13 +374,6 @@ contract Mastermind {
 
         game.accusedAFK[game.creator] = 0; // Reset the AFK accusation if present
         game.accusedAFK[game.joiner] = 0; // Reset the AFK accusation if present
-
-        // Swap maker and breaker unless it's the first turn
-        if (game.currentTurn != 1) {
-            address tmp = game.breaker;
-            game.breaker = game.maker;
-            game.maker = tmp;
-        }
 
         // Emit event to log turn start
         emit TurnStarted(_gameId, getCurrentMaker(_gameId));
@@ -721,38 +705,27 @@ contract Mastermind {
         uint256 _gameId
     ) internal view returns (bool) {
         Game storage game = games[_gameId];
-        if (_player == game.maker) {
-            return true;
+        if (game.currentTurn == 0) {
+            if (_player == game.creator) {
+                return game.creatorIsMakerSeed;
+            } else {
+                return !game.creatorIsMakerSeed;
+            }
+        }  
+        if (_player == game.creator) {
+            if ((game.currentTurn % 2 == 1 && game.creatorIsMakerSeed) ||
+                (game.currentTurn % 2 == 0 && !game.creatorIsMakerSeed)) {
+                return true;
+            }
+        }
+        if (_player == game.joiner) {
+            if ((game.currentTurn % 2 == 0 && game.creatorIsMakerSeed) ||
+                (game.currentTurn % 2 == 1 && !game.creatorIsMakerSeed)) {
+                return true;
+            }
         }
         return false;
     }
-
-    // function isCurrentMaker(
-    //     address _player,
-    //     uint256 _gameId
-    // ) internal view returns (bool) {
-    //     Game storage game = games[_gameId];
-    //     if (game.currentTurn == 0) {
-    //         if (_player == game.creator) {
-    //             return game.creatorIsMakerSeed;
-    //         } else {
-    //             return !game.creatorIsMakerSeed;
-    //         }
-    //     }  
-    //     if (_player == game.creator) {
-    //         if ((game.currentTurn % 2 == 1 && game.creatorIsMakerSeed) ||
-    //             (game.currentTurn % 2 == 0 && !game.creatorIsMakerSeed)) {
-    //             return true;
-    //         }
-    //     }
-    //     if (_player == game.joiner) {
-    //         if ((game.currentTurn % 2 == 0 && game.creatorIsMakerSeed) ||
-    //             (game.currentTurn % 2 == 1 && !game.creatorIsMakerSeed)) {
-    //             return true;
-    //         }
-    //     }
-    //     return false;
-    // }
 
     function isCurrentBreaker(
         address _player,
