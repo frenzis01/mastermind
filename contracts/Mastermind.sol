@@ -58,7 +58,7 @@ contract Mastermind {
     }
 
     // Mapping to store game instances
-    Game[] public games;
+    mapping(uint256 => Game) public games;
     GameInfo[] public activeGames;
     GameInfo[] public joinableGames;
 
@@ -233,7 +233,7 @@ contract Mastermind {
         handleDanglingGames();
 
         // Create a new game instance
-        Game storage newGame = games.push();
+        Game storage newGame = games[totalGames];
         newGame.numTurns = NUM_TURNS;
         newGame.creator = msg.sender;
         newGame.numColors = MAX_COLORS;
