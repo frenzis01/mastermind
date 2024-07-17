@@ -37,13 +37,12 @@ contract Mastermind {
         mapping(address => bool) accusedFB; // Mapping to track if a player has been accused of providing false feedback
         mapping(address => uint256) accusedAFK; // Mapping to track if a player has been accused of being AFK and at which time
         /**
-         * // TODO evaluate which one of the two following options is better for guesses and feedbacks
-         * The three dimensions are [#turn][#guess][guess value]
+         * The option with the triple array leads to overall lesser gas costs
          */
-        mapping(uint256 => uint256[][]) guesses; // Array to store guesses made by players
-        mapping(uint256 => uint256[][]) feedbacks; // Array to store feedbacks made by players
-        // uint256[][][] guesses; // Array to store guesses made by players
-        // uint256[][][] feedbacks; // Array to store feedbacks made by players
+        // mapping(uint256 => uint256[][]) guesses; // Array to store guesses made by players
+        // mapping(uint256 => uint256[][]) feedbacks; // Array to store feedbacks made by players
+        uint256[][][] guesses; // Array to store guesses made by players
+        uint256[][][] feedbacks; // Array to store feedbacks made by players
         /**
          * 
          * // TODO evaluate if it's better to hold current breaker and maker instead of deriving them
@@ -261,12 +260,10 @@ contract Mastermind {
         newGame.b = B_AFKBLOCKS;
         newGame.creatorIsMakerSeed = randomBool();
         newGame.codeHash = 0x0;
-        // newGame.guesses = new uint256[][][](0);
-        // newGame.feedbacks = new uint256[][][](0);
-        // newGame.guesses.push(new uint256[][](0));       // First element should be empty, to avoid index-out-of-bounds
-        // newGame.feedbacks.push(new uint256[][](0));     // First element should be empty, to avoid index-out-of-bounds
-        newGame.guesses[0] = new uint256[][](0);       // First element should be empty, to avoid index-out-of-bounds
-        newGame.feedbacks[0] = new uint256[][](0);     // First element should be empty, to avoid index-out-of-bounds
+        newGame.guesses = new uint256[][][](0);
+        newGame.feedbacks = new uint256[][][](0);
+        newGame.guesses.push(new uint256[][](0));       // First element should be empty, to avoid index-out-of-bounds
+        newGame.feedbacks.push(new uint256[][](0));     // First element should be empty, to avoid index-out-of-bounds
         newGame.endTime = 1; // Set to 1 instead of 0 to allow the first turn to start
         newGame.codeSecret = new uint256[](1); // Set to 1 instead of 0 to allow the first turn to start
         newGame.joiner = _joiner;
@@ -471,14 +468,12 @@ contract Mastermind {
         
     }
 
-    // Internal function to reset guess state at the start of each turn
+    // Internal function to reset guess state at the end of each turn
     // This has to be called AFTER having disputed, if required.
     function resetGuessState(uint256 _gameId) internal {
         Game storage game = games[_gameId];
-        // game.guesses.push(new uint256[][](0)); 
-        // game.feedbacks.push(new uint256[][](0));
-        game.guesses[game.currentTurn] = new uint256[][](0);
-        game.feedbacks[game.currentTurn] = new uint256[][](0);
+        game.guesses.push(new uint256[][](0)); 
+        game.feedbacks.push(new uint256[][](0)); 
     }
 
     // Internal function to end the game and determine the winner
@@ -899,10 +894,8 @@ contract Mastermind {
             game.b,
             game.creatorIsMakerSeed,
             game.codeHash,
-            // game.guesses.length == 0 ? 0 : game.guesses[game.currentTurn].length,
-            // game.feedbacks.length == 0 ? 0 : game.feedbacks[game.currentTurn].length,
-            game.guesses[game.currentTurn].length,
-            game.feedbacks[game.currentTurn].length,
+            game.guesses.length == 0 ? 0 : game.guesses[game.currentTurn].length,
+            game.feedbacks.length == 0 ? 0 : game.feedbacks[game.currentTurn].length,
             game.codeSecret,
             _creatorAFKaccused,
             _joinerAFKaccused
