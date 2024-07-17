@@ -12,7 +12,7 @@ const crypto = require('crypto');
 
 // const { expect } = require('chai');
 
-describe('Mastermind', function () {
+describe.only('Mastermind', function () {
    // let mastermind;
 
    // before(async function () {
@@ -206,6 +206,34 @@ describe('Mastermind', function () {
       const p2joinableGames = await mastermind2.getJoinableGames(p2.address);
       expect(p2joinableGames.length).to.equal(3);
    });
+
+   it('should allow to correctly dispute', async function () {
+      await mastermind.connect(addr1).createGame({ value: ethers.parseEther("1") });
+      gameID = await mastermind.getNGames() - 1n;
+      await mastermind.connect(addr2).joinGame(gameID, { value: ethers.parseEther("1") });
+      const intArray = [1, 0, 0, 3, 2, 7]; // Example array of integers
+      seed = generateRandomString();
+      const hashedValue = computeHash(intArray,seed);
+      
+      breaker = await mastermind.getCurrentBreaker(gameID);
+      breaker = await ethers.provider.getSigner(breaker);
+      maker = await mastermind.getCurrentMaker(gameID);
+      maker = await ethers.provider.getSigner(maker);
+
+      await mastermind.connect(breaker).startTurn(gameID);
+      await mastermind.connect(maker).submitCodeHash(gameID, hashedValue);
+      await mastermind.connect(breaker).makeGuess(gameID, [4, 2, 1, 0, 4, 5]);
+      await mastermind.connect(maker).provideFeedback(gameID, 0, 2); // 3 would be correct !
+      await mastermind.connect(breaker).makeGuess(gameID, [1, 0, 3, 6, 7, 2]);
+      await mastermind.connect(maker).provideFeedback(gameID, 2, 3);
+      await mastermind.connect(breaker).makeGuess(gameID, [1, 0, 0, 3, 2, 7]);
+      await mastermind.connect(maker).provideFeedback(gameID, 6, 0);
+      await mastermind.connect(maker).publishCodeSecret(gameID, intArray, seed);
+      await expect (mastermind.connect(breaker).disputeFeedback(gameID, [0]))
+         .to.emit(mastermind, 'Dispute').withArgs(gameID, [0n])
+         .and.to.emit(mastermind, 'ResolveDispute').withArgs(gameID, maker.address)
+   });
+
 });
 
 

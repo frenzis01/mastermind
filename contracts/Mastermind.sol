@@ -491,6 +491,11 @@ contract Mastermind {
         // Assign points to breaker and maker
         address winner = breakerPoints > makerPoints ? breaker : maker;
         address loser = breakerPoints > makerPoints ? maker : breaker;
+        if (breakerPoints == makerPoints) {
+            // In case of a tie, the creator wins
+            winner = game.creator;
+            loser = game.joiner;
+        }
         game.points[breaker] = breakerPoints;
         game.points[maker] = makerPoints;
         // Emit event to log game end
@@ -577,6 +582,7 @@ contract Mastermind {
             if (!isFeedbackValid(game.guesses[game.currentTurn][guessIDs[i]], game.feedbacks[game.currentTurn][guessIDs[i]], game.codeSecret)){
                 emit ResolveDispute(_gameId, maker);
                 endGame(_gameId, maker, breaker, 0, 1);
+                return;
             }
         }
         // Punish the breaker who has unsuccessfully disputed the feedback
@@ -595,12 +601,17 @@ contract Mastermind {
             }
         }
 
+        uint256[] memory newVisitedIndexes = new uint256[](codeSecret.length);
+        for (uint i = 0; i < visitedIndexes.length; i++) {
+            newVisitedIndexes[i] = visitedIndexes[i];
+        }
+
         for (uint i = 0; i < guess.length; i++) {
             if (visitedIndexes[i] == 0) {
                 for (uint j = 0; j < codeSecret.length; j++) {
-                    if (guess[i] == codeSecret[j] && visitedIndexes[j] == 0) {
+                    if (guess[i] == codeSecret[j] && newVisitedIndexes[j] == 0) {
                         correctColors++;
-                        visitedIndexes[j] = 1;
+                        newVisitedIndexes[j] = 1;
                         break;
                     }
                 }
