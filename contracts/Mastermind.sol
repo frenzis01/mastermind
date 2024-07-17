@@ -361,6 +361,7 @@ contract Mastermind {
         // If the game has ended, do not start a new turn
         if (game.currentTurn == game.numTurns) {
             endGame(_gameId, game.creator, game.joiner, game.points[game.creator], game.points[game.joiner]);
+            return;
         }
 
         // Increment current turn and mark the turn as started
@@ -375,10 +376,6 @@ contract Mastermind {
 
         game.accusedAFK[game.creator] = 0; // Reset the AFK accusation if present
         game.accusedAFK[game.joiner] = 0; // Reset the AFK accusation if present
-
-        // address tmp = game.breaker;
-        // game.breaker = game.maker;
-        // game.maker = tmp;
 
         // Emit event to log turn start
         emit TurnStarted(_gameId, getCurrentMaker(_gameId));
