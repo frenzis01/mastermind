@@ -52,20 +52,13 @@ contract Mastermind {
         // address maker;
         // address breaker;
 
-        /**
-         * 
-         *  TODO Evaluate whether it is better to hold a reference to the player who has to move instead of deriving it from
-         * the number of guesses and feedbacks
-         */
-        // address currentPlayer;
-
         bool creatorIsMakerSeed; // Flag indicating if the creator is the code maker in the seed phase
         bytes32 codeHash; // Hash of the code chosen by the code maker
         uint256[] codeSecret; // Code chosen by the code maker, published at the end of each turn
     }
 
     // Mapping to store game instances
-    mapping(uint256 => Game) public games;
+    Game[] public games;
     GameInfo[] public activeGames;
     GameInfo[] public joinableGames;
 
@@ -240,7 +233,7 @@ contract Mastermind {
         handleDanglingGames();
 
         // Create a new game instance
-        Game storage newGame = games[totalGames];
+        Game storage newGame = games.push();
         newGame.numTurns = NUM_TURNS;
         newGame.creator = msg.sender;
         newGame.numColors = MAX_COLORS;
