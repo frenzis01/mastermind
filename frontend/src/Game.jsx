@@ -14,6 +14,8 @@ import { intToColor } from './assets/colors';
 
 import Snackbar from "./components/snackBar/SnackBar";
 
+import "../src/css/styles.css"
+
 //const crypto = require('crypto');
 
 const ERROR_CODE_TX_REJECTED_BY_USER = 4001;
@@ -429,101 +431,104 @@ class Game extends React.Component {
 
     //stampare a schermo informazioni sull'attuale game in corso
     return (
-      <div className="container p-4">
-        {this.isCurrentMaker() &&
-          <div className="row">
-            <div className="top-secret-row">
-              {this.state._codeSecretMemo &&
-                this.state._codeSecretMemo.map((i, index) => (
-                  <div className="large-color-circle" key={index} 
-                  style={{ 
-                    backgroundColor: intToColor(i) || 'white', 
-                    cursor: 'default'   }} />))}
-              {!this.state._codeSecretMemo &&
-                Array(6).fill().map((i, index) => (
-                  <div className="large-color-circle" key={index} 
-                  style={{ 
-                    backgroundColor: 'white',
-                    cursor: 'default'   }} />))}
+      <div className="container-fluid vh-100">
+        <div class="title top-left">
+            mastermind
+        </div>
+        <div class="under-title top-right">
+          Selected Address: {this.state.selectedAddress}
+        </div>
+        <div className="grid-container">
+          <div className="grid-item left-column">
+            <div className="column under-title">
+              <h3>
+                Game #{this.state.gameId} - Turn {parseInt(this.state._gameDetails.currentTurn)}/{parseInt(this.state._gameDetails.numTurns)}
+              </h3>
+              You are now the <b>{this.isCurrentMaker() ? "Maker" : "Breaker"}</b>
+              {/* resto delle informazioni */}
             </div>
           </div>
-        }
+          <div className="grid-item">
+            {this.isCurrentMaker() &&
+              <div className="top-secret-row">
+                {this.state._codeSecretMemo &&
+                  this.state._codeSecretMemo.map((i, index) => (
+                    <div className="large-color-circle" key={index} 
+                    style={{ 
+                      backgroundColor: intToColor(i) || 'white', 
+                      cursor: 'default'   }} />))}
+                {!this.state._codeSecretMemo &&
+                  Array(6).fill().map((i, index) => (
+                    <div className="large-color-circle" key={index} 
+                    style={{ 
+                      backgroundColor: 'white',
+                      cursor: 'default'   }} />))}
+              </div>
+            }
 
-        <div className="row">
-          {this.isAccused() &&
-          <div className='secret-row'>
-            {/* TODO fancy up this  <div className='afk-accusation'> */}
-              You have been accused of being AFK
-            {/* </div> */}
-          </div>
-          }
-          <div className="col-8">
-            <h3>
-              Game #{this.state.gameId} - Turn {parseInt(this.state._gameDetails.currentTurn)}/{parseInt(this.state._gameDetails.numTurns)}
-            </h3>
-            Selected Address: {this.state.selectedAddress}
-            <br />
-            You are the {this.isCurrentMaker() ? "Maker" : "Breaker"}
-            {/* resto delle informazioni */}
-          </div>
-          { !this.hasAccused() &&
-          <div className="col-4 d-flex align-items-center justify-content-end">
-            <button className='btn-accuse-afk' onClick={this.accuseAFK}>Accuse opponent of being AFK</button>
-          </div>}
-          { this.hasAccused() &&
-          <div className="col-4 d-flex align-items-center justify-content-end">
-            <button className='btn-accuse-afk' onClick={this.verifyAFKAccusation}>Verify AFK accusation</button>
-          </div>}
-        </div>
-
-      {/* 
-      se sono maker
-      render di BoardMaker -> component per giocare come maker
-
-      se sono breaker
-      render di BoardBreaker -> component per giocare come breaker */}
-
-        {!this.isCurrentMaker() &&
-          (<BoardBreaker
-            numTurns={Number(this.state._gameDetails.numTurns)}
-            maxGuesses={Number(this.state._gameDetails.maxGuesses)}
-            makeGuess={this.makeGuess}
-            startTurn={this.startTurn}
-            turnStarted={this.state._turnStarted}
-            turnEnded={this.state._turnEnded}
-            codeHash={this.state._codeHash}
-            joined={this.state._joined}
-            newFeedback={this.state._lastFeedback}
-            resetNewFeedback={this.resetLastFeedback}
-            guesses={this.state.guesses}
-            feedbacks={this.state.feedbacks}
-            codeSecretPublished={this.state._codeSecret}
-            disputeFeedback={this.disputeFeedback}
-            disputed={this.state._disputed}
-         />)}
-
-        {this.isCurrentMaker() &&
-          (<BoardMaker
-          // TODO add seed and display it to allow player to annotate it
-            numTurns={Number(this.state._gameDetails.numTurns)}
-            maxGuesses={Number(this.state._gameDetails.maxGuesses)}
-            hashSecretCode={this.computeHash}
-            generateSeed={this.generateRandomString}
-            codeHash={this.state._codeHash}
-            submitSecretHash={this.submitCodeHash}
-            newGuess={this.state._lastGuess}
-            resetNewGuess={this.resetLastGuess}
-            turnStarted={this.state._turnStarted}
-            provideFeedback={this.provideFeedback}
-            guesses={this.state.guesses}
-            feedbacks={this.state.feedbacks}
-            turnEnded={this.state._turnEnded}
-            codeSecretPublished={this.state._codeSecret}
-            publishCodeSecret={this.publishCodeSecret}
-            codeSecretMemo={this.state._codeSecretMemo}
-            codeSeedMemo={this.state._codeSeedMemo}
-            disputed={this.state._disputed}
+            {!this.isCurrentMaker() &&
+              (<BoardBreaker
+                numTurns={Number(this.state._gameDetails.numTurns)}
+                maxGuesses={Number(this.state._gameDetails.maxGuesses)}
+                makeGuess={this.makeGuess}
+                startTurn={this.startTurn}
+                turnStarted={this.state._turnStarted}
+                turnEnded={this.state._turnEnded}
+                codeHash={this.state._codeHash}
+                joined={this.state._joined}
+                newFeedback={this.state._lastFeedback}
+                resetNewFeedback={this.resetLastFeedback}
+                guesses={this.state.guesses}
+                feedbacks={this.state.feedbacks}
+                codeSecretPublished={this.state._codeSecret}
+                disputeFeedback={this.disputeFeedback}
+                disputed={this.state._disputed}
             />)}
+
+            {this.isCurrentMaker() &&
+              (<BoardMaker
+              // TODO add seed and display it to allow player to annotate it
+                numTurns={Number(this.state._gameDetails.numTurns)}
+                maxGuesses={Number(this.state._gameDetails.maxGuesses)}
+                hashSecretCode={this.computeHash}
+                generateSeed={this.generateRandomString}
+                codeHash={this.state._codeHash}
+                submitSecretHash={this.submitCodeHash}
+                newGuess={this.state._lastGuess}
+                resetNewGuess={this.resetLastGuess}
+                turnStarted={this.state._turnStarted}
+                provideFeedback={this.provideFeedback}
+                guesses={this.state.guesses}
+                feedbacks={this.state.feedbacks}
+                turnEnded={this.state._turnEnded}
+                codeSecretPublished={this.state._codeSecret}
+                publishCodeSecret={this.publishCodeSecret}
+                codeSecretMemo={this.state._codeSecretMemo}
+                codeSeedMemo={this.state._codeSeedMemo}
+                disputed={this.state._disputed}
+                />)}
+          </div>
+
+          <div className="grid-item right-column">
+            <div className="column">
+              {this.isAccused() &&
+              <div className='secret-row'>
+                {/* TODO fancy up this  <div className='afk-accusation'> */}
+                  You have been accused of being AFK
+                {/* </div> */}
+              </div>
+              }
+              { !this.hasAccused() &&
+              <div className="d-flex align-items-center">
+                <button className='btn-accuse-afk' onClick={this.accuseAFK}>Accuse opponent of being AFK</button>
+              </div>}
+              { this.hasAccused() &&
+              <div className="d-flex align-items-center">
+                <button className='btn-accuse-afk' onClick={this.verifyAFKAccusation}>Verify AFK accusation</button>
+              </div>}
+            </div>
+          </div>
+        </div>
       </div>
 
       //pulsantino per accusa di AFK
