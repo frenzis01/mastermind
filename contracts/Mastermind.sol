@@ -435,12 +435,13 @@ contract Mastermind {
         require(
             isMakerTurn(_gameId),
             "Code maker has already provided feedback");
-        if (numCorrectPositions == game.codeLength) {
-            endTurn(_gameId,true);
-        }
         game.feedbacks[game.currentTurn].push([numCorrectPositions, numCorrectColors]);
         game.accusedAFK[msg.sender] = 0; // Reset the AFK accusation if present
         emit Feedback(_gameId, numCorrectPositions, numCorrectColors);
+        if (numCorrectPositions == game.codeLength) {
+            endTurn(_gameId,true);
+            return;
+        }
         if (game.guesses[game.currentTurn].length == game.maxGuesses) {
             endTurn(_gameId, false);
         }
