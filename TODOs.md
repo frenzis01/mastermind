@@ -1,0 +1,22 @@
+
+### TODOs
+   - [x] Gas Evaluation
+      - [x] Guesses and Feedbacks: ```mapping``` vs ```[][][]```
+      - [x] Breaker/Maker
+   - [ ] AFK Accusation
+      - [ ] *Maker accuse while Breaker is Disputing* is a "race" between AFK Accusation time and Valid Dispute time, but should be okay since the breaker cannot take forever to dispute the feedbacks
+   - [x] Handle `Next Turn`
+   - [x] Catch `Accusation time has not expired yet`
+   - [ ] Contract interaction wrapper in home
+   - [ ] localStorage set in utils
+   - [x] Create game modal negative stake
+   - [x] Better provide Feedback modal
+   - [x] Accuse AFK button restyle
+   - [x] Add message for "Waiting for someone to join"
+   - [x] Decimal value in join are not allowed, they become 0
+   - [x] Add message for Breaker to wait the code
+   - [ ] Button to redirect to home from Game
+   - [ ] Provide Feedback title style
+   - [ ] Buttons makeGuess and provide feedback bigger
+   - [ ] Snack corretti dopo lo swap board
+   - [ ] Display the salt and allow the maker to copy it

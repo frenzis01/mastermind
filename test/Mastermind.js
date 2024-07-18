@@ -163,8 +163,8 @@ describe('Mastermind', function () {
       await mastermind.connect(breaker).makeGuess(1, [1, 1, 1, 1, 1, 1]);
       await mastermind.connect(breaker).accuseAFK(1);
       
-      // Mine 8 blocks 
-      for(let i = 0; i < 8; i++) {
+      const afkBlocks = Number(await mastermind.B_AFKBLOCKS());
+      for(let i = 0; i < afkBlocks - 2; i++) {
          await ethers.provider.send("evm_mine"); // this will mine an empty block
       }
 
@@ -181,7 +181,6 @@ describe('Mastermind', function () {
       await mastermind.connect(breaker).makeGuess(1, [1, 1, 1, 1, 1, 1]);
       await mastermind.connect(breaker).accuseAFK(1);
       
-      const afkBlocks = await mastermind.B_AFKBLOCKS();
       for (let i = 0; i < afkBlocks; i++) {
          await ethers.provider.send("evm_mine");
       }

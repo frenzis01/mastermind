@@ -2,6 +2,7 @@
 # src/contracts/*
 src/contracts/contract-address.json
 src/contracts/Mastermind.json
+coverage
 
 # Logs
 logs

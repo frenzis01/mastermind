@@ -600,7 +600,7 @@ class Game extends React.Component {
                 maxTurns={Number(this.state._gameDetails.numTurns)}
                 maxGuesses={Number(this.state._gameDetails.maxGuesses)}
                 hashSecretCode={this.computeHash}
-                generateSeed={this.generateRandomString}
+                generateSeed={this.generateRandomSeed}
                 codeHash={this.state._codeHash}
                 submitSecretHash={this.submitCodeHash}
                 newGuess={this.state._lastGuess}
@@ -664,15 +664,14 @@ class Game extends React.Component {
     this.props.router.navigate('/');
   }
 
-  // Function A: Generate a random 64-character long string
-  generateRandomString() {
+  // Generate a random 64-character long string salt
+  generateRandomSeed() {
     const array = new Uint8Array(32);
     window.crypto.getRandomValues(array);
     return array;
-    // return window.crypto.getRandomValues(32); // 32 bytes * 2 hex chars per byte = 64 hex chars
   }
 
-  // Function B: Hash the string prepended to the serialized array
+  // Hash the salt prepended to the serialized array
   computeHash(intArray, seed) {
     // Serialize the array as it would be in Solidity
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();

@@ -139,7 +139,8 @@ describe('Mastermind - Looped', function () {
          await mastermind.connect(maker).submitCodeHash(1, computeHash([1, 2, 3, 4, 5, 6], tmp_seed));
          await mastermind.connect(breaker).makeGuess(1, [1, 1, 1, 1, 1, 1]);
          await mastermind.connect(breaker).accuseAFK(1);
-         for (let i = 0; i < 8; i++) {
+         const afkBlocks = Number(await mastermind.B_AFKBLOCKS());
+         for (let i = 0; i < afkBlocks - 2; i++) {
             await ethers.provider.send("evm_mine");
          }
          try {
@@ -150,7 +151,6 @@ describe('Mastermind - Looped', function () {
          await mastermind.connect(maker).provideFeedback(1, 1, 0);
          await mastermind.connect(breaker).makeGuess(1, [1, 1, 1, 1, 1, 1]);
          await mastermind.connect(breaker).accuseAFK(1);
-         const afkBlocks = await mastermind.B_AFKBLOCKS();
          for (let i = 0; i < afkBlocks; i++) {
             await ethers.provider.send("evm_mine");
          }
