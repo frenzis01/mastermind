@@ -43,6 +43,8 @@ class Game extends React.Component {
       feedbacks: [],
       makerListeners: {},
       breakerListeners: {},
+      playerListeners: {},
+      gameJoinedHandler: undefined,
       _mastermind: undefined,
       _provider: undefined,
       _gameDetails: undefined,
@@ -205,8 +207,11 @@ class Game extends React.Component {
         _codeSecret: gameDetails.codeSecret.map(Number),
   }, () => {
       if (this.state._gameDetails.joiner === "0x0000000000000000000000000000000000000000") {
-        mastermind.on("GameJoined", this.wrap(this.handleGameJoined));
+        this.setState({gameJoinedHandler: this.wrap(this.handleGameJoined)}, function(){
+          mastermind.on("GameJoined", this.state.gameJoinedHandler);
+        })
       }
+      this.setupPlayerEventListeners();
 
       if(this.isCurrentMaker()){
         this.removeBreakerEventListeners();
@@ -224,15 +229,27 @@ class Game extends React.Component {
 
   }
 
+  setupPlayerEventListeners() {
+    const { _mastermind } = this.state;
+    const playerListeners = {
+      "TurnEnded": this.wrap(this.handleTurnEnded),
+      "GameEnded": this.wrap(this.handleGameEnded),
+      "AFKAccusation": this.wrap(this.handleAFKAccusation)
+    };
+
+    for (const [event, listener] of Object.entries(playerListeners)) {
+      _mastermind.on(event, listener);
+    }
+
+    this.setState({ playerListeners: playerListeners });
+  }
+
   setupBreakerEventListeners() {
     const { _mastermind } = this.state;
     const breakerListeners = {
       "Feedback": this.wrap(this.handleFeedback),
       "HashPublished": this.wrap(this.handleHashPublished),
       "CodeSecretPublished": this.wrap(this.handleCodeSecretPublished),
-      "GameEnded": this.wrap(this.handleGameEnded),
-      "TurnEnded": this.wrap(this.handleTurnEnded),
-      "AFKAccusation": this.wrap(this.handleAFKAccusation)
     };
 
     for (const [event, listener] of Object.entries(breakerListeners)) {
@@ -248,9 +265,6 @@ class Game extends React.Component {
       "Guess": this.wrap(this.handleGuess),
       "Dispute": this.wrap(this.handleDispute),
       "TurnStarted": this.wrap(this.handleTurnStarted),
-      "TurnEnded": this.wrap(this.handleTurnEnded),
-      "GameEnded": this.wrap(this.handleGameEnded),
-      "AFKAccusation": this.wrap(this.handleAFKAccusation)
     };
 
     for (const [event, listener] of Object.entries(makerListeners)) {
@@ -258,6 +272,16 @@ class Game extends React.Component {
     }
 
     this.setState({ makerListeners: makerListeners });
+  }
+
+  removePlayerEventListeners() {
+    const { _mastermind, playerListeners } = this.state;
+
+    for (const [event, listener] of Object.entries(playerListeners)) {
+      _mastermind.off(event, listener);
+    }
+
+    this.setState({ playerListeners: {} });
   }
 
   removeMakerEventListeners() {
@@ -324,7 +348,7 @@ class Game extends React.Component {
   }
 
   handleCodeSecretPublished(gameId, rawSecretCode) {
-    this.addSnack("success","CodeSecretPublished received: ", rawSecretCode);
+    this.addSnack("success","Secret Code published");
     const secretCode = rawSecretCode.map(Number);
     this.setState({ _codeSecret: secretCode });
     this.resetAFKaccuse(this.getOpponent());
@@ -350,12 +374,12 @@ class Game extends React.Component {
     let _winner = winner.toLowerCase();
 
     const stake = ethers.formatEther(this.state._gameDetails.gameStake);
-    
+    const isCreator = this.state.selectedAddress === this.state._gameDetails.creator.toLowerCase()
     const messages = {
       title: (_winner === this.state.selectedAddress ? "You won!" : "You lost!"),
       text: (_winner === this.state.selectedAddress ? 
-        `Congratulations! You won ${stake} ETH, having ${winnerPoints} points against ${loserPoints}` :
-        `You lost ${stake} ETH, having ${loserPoints} points against ${winnerPoints}`) 
+        `Congratulations ${isCreator ? 'creator' : 'joiner'}! You won ${stake} ETH, having ${winnerPoints} points against ${loserPoints}` :
+        `${isCreator ? 'Creator' : 'Joiner'}, you lost ${stake} ETH, having ${loserPoints} points against ${winnerPoints}`) 
         + ". Go back to the home page to play again!",
         buttonText: "Home",
       }
@@ -407,7 +431,7 @@ class Game extends React.Component {
       this.setCodeSeedMemo(undefined);
       if(this.isCurrentMaker()){
         this.removeBreakerEventListeners();
-        this.setupMakerEventListeners()
+        this.setupMakerEventListeners();
       }
       else{
         this.removeMakerEventListeners();
@@ -419,12 +443,14 @@ class Game extends React.Component {
   componentWillUnmount() {
     const { _mastermind } = this.state;
     if (_mastermind) {
+      this.removePlayerEventListeners();
       if(this.isCurrentMaker()){
         this.removeMakerEventListeners();
       }
       else{
         this.removeBreakerEventListeners();
       }
+      _mastermind.off("GameJoined", this.state.gameJoinedHandler);
     }
   }
 
@@ -506,7 +532,7 @@ class Game extends React.Component {
             mastermind
         </div>
         <div className="under-title top-right">
-          Selected Address: <b>{this.state.selectedAddress}</b>
+          Your Address: <b>{this.state.selectedAddress}</b>
         </div>
         <div className="grid-container">
           <div className={`grid-item ${this.isCurrentMaker() ? 'left-column-maker' : 'left-column-breaker'}`}>
