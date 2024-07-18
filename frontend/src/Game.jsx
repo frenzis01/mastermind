@@ -513,9 +513,10 @@ class Game extends React.Component {
             <div className="column under-title">
               <h3>
                 Game #{this.state.gameId} - Turn {parseInt(this.state._gameDetails.currentTurn)}/{parseInt(this.state._gameDetails.numTurns)}
-              </h3> <br></br>
-              You are now the <b>{this.isCurrentMaker() ? "Maker" : "Breaker"}</b>
-              <br></br>
+              </h3>
+              <div className='custom-line-height'>
+                You are now the <b>{this.isCurrentMaker() ? "Maker" : "Breaker"}</b>
+              </div>
               Stake: {2 * ethers.formatEther(this.state._gameDetails.gameStake)} ETH
             </div>
           </div>

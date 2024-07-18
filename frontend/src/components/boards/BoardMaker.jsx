@@ -152,7 +152,6 @@ export function BoardMaker({
         <button
           className='submit-secret-button'
           onClick={() => {console.log('isModalOpen' + isColorChooseModalOpen); toggleColorChooseModal()}}
-          style={{ marginBottom: '20px' }}
           >
           Choose Secret Code
         </button>
