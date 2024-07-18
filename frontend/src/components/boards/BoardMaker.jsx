@@ -44,8 +44,6 @@ export function BoardMaker({
     .map((row,index) => ({ ...row, index }))
     .every((row) => 
     (row.index > guesses.length - 1 || row.guess.every(color => color !== null))
-    // This cannot be checked
-    // && (row.index > feedbacks.length || row.feedback.every(color => color !== feedbackColors.xx))
   );  
 
   const noGuessesPresent = rows[0].guess.every(color => color === null);
@@ -138,7 +136,6 @@ export function BoardMaker({
   return (
     <div className="App">
       {waitingFirstTurnToStart &&
-          // TODO style this
           <div className='secret-row'>
             Waiting for the Breaker to start the game
           </div>
@@ -181,7 +178,6 @@ export function BoardMaker({
         // TODO implement "Game will end soon" if max number of turns reached
         <>
         {disputed &&
-          // TODO <div className="disputed-message">
           <div className='secret-row'> Opponent claims you have cheated in this turn. The game will end soon, establishing who is not being honest.</div>
         }
         {!disputed &&

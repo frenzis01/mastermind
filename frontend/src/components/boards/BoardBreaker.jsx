@@ -45,15 +45,14 @@ export function BoardBreaker({
   const codeHashPresent = codeHash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
   const codeSecretPublishedFlag = codeSecretPublished && codeSecretPublished.length > 1;
   const lastTurn = currentTurn === maxTurns;
-  console.log("Codesecretpublished: ", codeSecretPublished);
   
   useEffect(() => {
     if (newFeedback && !prevFeedbackReceived) {
-      console.log("New Feedback!")
+      //console.log("New Feedback!")
       handleFeedback(currentRow, newFeedback);
     }
     if (joined && currentRow === 0 && !codeHashPresent && !turnStarted && !newFeedback && guesses.length === 0) {
-      console.log("is Joined!")
+      //console.log("is Joined!")
       startTurn();
     }
     if (guesses.length !== 0 && !boardInitialized) {
@@ -67,7 +66,7 @@ export function BoardBreaker({
 
   const handleSubmitGuess = (init) => {
     return (colors) => {
-      console.log('Submitting guess: ', colors);
+      //console.log('Submitting guess: ', colors);
       const newRows = [...rows];
       newRows[currentRow].guess = colors;
       setRows(newRows);
@@ -84,7 +83,7 @@ export function BoardBreaker({
   };
 
   const handleFeedback = (rowIndex, feedback) => {
-    console.log("Handling feedback: ", feedback);
+    //console.log("Handling feedback: ", feedback);
     feedback.cc = Number(feedback.cc);
     feedback.nc = Number(feedback.nc);
     const newRows = [...rows];
@@ -118,7 +117,7 @@ export function BoardBreaker({
   const handleDispute = () => {
     setIsDisputeMode(!isDisputeMode);
     if (isDisputeMode) {
-      console.log('Selected rows for dispute:', selectedRows);
+      //console.log('Selected rows for dispute:', selectedRows);
       // Perform actions with selectedRows, e.g., send to server or handle dispute logic
       disputeFeedback(selectedRows);
     }
@@ -138,10 +137,8 @@ export function BoardBreaker({
 
   return (
     <div className="App">
-      {/* TODO write all these conditions in a more readable way */}
       {!disputed &&
       <>
-      {/* TODO secret row when the breaker is waiting for the opponent to join */}
         {startTurnPending &&
           <div className='secret-row'>
             Please accept the transaction for starting the game
@@ -178,7 +175,6 @@ export function BoardBreaker({
           onClick={() => { toggleColorChooseModal(); }}>Make a Guess</button>
         }
         {/* end-game buttons */}
-        {/* TODO better style, buttons are next to each other */}
         {nextTurnPending &&
           <>
           <button className='dispute-button' onClick={handleDispute}>
