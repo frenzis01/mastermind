@@ -230,7 +230,6 @@ contract Mastermind {
         require(msg.value > 0, "Game stake must be greater than 0");
 
 
-        // Place this at the end? // TODO understand whether the game results available before the end of the function
         handleDanglingGames();
 
         // Create a new game instance
@@ -333,10 +332,6 @@ contract Mastermind {
         // Timestamp is instead set when a turn starts
         // selectedGame.startTime = block.timestamp;
 
-        // // These are inverted because they get swapped on startTurn
-        // selectedGame.maker = selectedGame.creatorIsMakerSeed ? selectedGame.joiner : selectedGame.creator;
-        // selectedGame.breaker = selectedGame.creatorIsMakerSeed ? selectedGame.creator : selectedGame.joiner;
-
         activeGames.push(getInfoFromGame(selectedGame));
         makeGameNotJoinable(_gameId);
 
@@ -400,7 +395,6 @@ contract Mastermind {
     // Function for a player to make a guess
     function makeGuess(
         uint256 _gameId,
-        // TODO memory indicates that the data is only stored for the duration of a function call, then discarded
         uint256[] memory guess
     ) external checkGameValidity(_gameId) turnNotEnded(_gameId) {
         // No need for require, checkGameValidity already has require and will revert if the game is invalid
