@@ -71,6 +71,16 @@ class Game extends React.Component {
     this.wrap = this.wrap.bind();
 
     this._initializeEthers = this._initializeEthers.bind(this);
+    this.setupBreakerEventListeners = this.setupBreakerEventListeners.bind(this);
+    this.setupMakerEventListeners = this.setupMakerEventListeners.bind(this);
+    this.setupPlayerEventListeners = this.setupPlayerEventListeners.bind(this);
+    this.removeBreakerEventListeners = this.removeBreakerEventListeners.bind(this);
+    this.removeMakerEventListeners = this.removeMakerEventListeners.bind(this);
+    this.removePlayerEventListeners = this.removePlayerEventListeners.bind(this);
+    
+    this.componentDidMount = this.componentDidMount.bind(this);
+    this.componentWillUnmount = this.componentWillUnmount.bind(this);
+
     this.handleGuess = this.handleGuess.bind(this);
     this.handleFeedback = this.handleFeedback.bind(this);
     this.handleDispute = this.handleDispute.bind(this);
@@ -222,7 +232,7 @@ class Game extends React.Component {
         this.setupBreakerEventListeners();
       }
 
-      if (this.state._gameDetails.joiner !== "0x0000000000000000000000000000000000000000") {
+      if (this.state._gameDetails.joiner !== "0x0000000000000000000000000000000000000000" && this.state._gameDetails.gameStarted === true) {
         this.setState({ _joined: true });
       }
     });
