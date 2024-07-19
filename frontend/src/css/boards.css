@@ -87,17 +87,26 @@
     color: white;
     border: 2px solid rgb(255, 255, 255);
     cursor: pointer;
-    padding: 1em 1.3em;
-    /* background: linear-gradient(90deg, #00886f, #00a896, #02c39a); */
-    /* background: linear-gradient(90deg, #00886f, #0fa3b1, #f2d492);
-    background:  linear-gradient(90deg, #00886f, #00b39a, #880032); */
-    /* background: linear-gradient(90deg, #00886f, #62bbc1, #f79d84); */
+    /* padding: 1em 1.3em; */
+    font-family: var(--font-family);
     background: linear-gradient(90deg, #7338a0, #0f0529);
-
+    padding: 20px;
+    margin: 12px 0;
+ 
     background-size: 300%;
     background-position: left;
     transition: background-position 350ms;
     border-radius: 40px; /* More rounded corners */
+ }
+ 
+ .action-button {
+   margin-top: 20px;
+   margin-bottom: 5px;
+   padding: 20px 20px;
+   /* font-size: 16px; */
+   /* color: white; */
+    border-radius: 40px; /* More rounded corners */
+    cursor: pointer;
  }
 
  .submit-secret-button:hover {

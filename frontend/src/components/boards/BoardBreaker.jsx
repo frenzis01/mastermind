@@ -171,7 +171,7 @@ export function BoardBreaker({
         {/* ---------------- BUTTONS ---------------- */}
         {/* in-game makeGuess button */}
         {guessPending && <button
-          className='btn-faded'
+          className='btn-faded action-button'
           onClick={() => { toggleColorChooseModal(); }}>Make a Guess</button>
         }
         {/* end-game buttons */}

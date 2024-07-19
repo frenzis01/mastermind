@@ -15,9 +15,9 @@
    - [x] Add message for "Waiting for someone to join"
    - [x] Decimal value in join are not allowed, they become 0
    - [x] Add message for Breaker to wait the code
-   - [ ] Button to redirect to home from Game
-   - [ ] Provide Feedback title style
-   - [ ] Buttons makeGuess and provide feedback bigger
-   - [ ] Snack corretti dopo lo swap board
+   - [x] Button to redirect to home from Game
+   - [x] Provide Feedback title style
+   - [x] Buttons makeGuess and provide feedback bigger
+   - [x] Snack corretti dopo lo swap board
    - [ ] Display the salt and allow the maker to copy it
    - [ ] Allow creator to pay only when someone actually joins

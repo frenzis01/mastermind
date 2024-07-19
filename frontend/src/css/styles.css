@@ -85,14 +85,14 @@
   .left-column-maker {
     justify-content: flex-end;
     text-align: center;
-    margin-top: 15em;
+    margin-top: 18em;
     line-height: 5em;
   }
 
   .left-column-breaker {
     justify-content: flex-end;
     text-align: center;
-    margin-top: 7em;
+    margin-top: 10em;
     line-height: 5em;
     margin-right: 3em;
   }
@@ -109,12 +109,12 @@
 
   .right-column-maker {
       justify-content: flex-start;
-      margin-top: 15rem;
+      margin-top: 18rem;
   }
 
   .right-column-breaker {
     justify-content: flex-start;
-    margin-top: 7rem;
+    margin-top: 10rem;
     margin-left: 3em;
   }
 
@@ -132,6 +132,7 @@
 
   .top-right {
     position: absolute;
+    text-align: right;
     top: 0;
     right: 0;
     padding: 10px;

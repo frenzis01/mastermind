@@ -19,19 +19,18 @@ import { bindWrapContractInteraction } from './utils/utils';
 
 import "../src/css/styles.css"
 
-const ERROR_CODE_TX_REJECTED_BY_USER = 4001;
- 
 class Game extends React.Component {
   constructor(props) {
     super(props);
 
     const { id: gameId } = this.props.router.params;
-    const { selectedAddress } = this.props.router.location.state || {};
-
+    const { selectedAddress, _mastermind: home_mastermind_flag, _provider: home_provider_flag } = this.props.router.location.state || {};
 
     this.state = {
       gameId: gameId,
       selectedAddress: selectedAddress.toLowerCase(),
+      home_mastermind_flag: home_mastermind_flag,
+      home_provider_flag: home_provider_flag,
       turn: undefined,
       submitCodeHashModalOpen: true,
       reqBeingSent: undefined,
@@ -94,6 +93,8 @@ class Game extends React.Component {
     this.handleGameEnded = this.handleGameEnded.bind(this);
     this.setCodeSecretMemo = this.setCodeSecretMemo.bind(this);
     this.setCodeSeedMemo = this.setCodeSeedMemo.bind(this);
+    this.getGameEndedMessages = this.getGameEndedMessages.bind(this);
+
 
     this.computeHash = this.computeHash.bind(this);
     this.submitCodeHash = this.submitCodeHash.bind(this);
@@ -208,6 +209,7 @@ class Game extends React.Component {
 
     this.addAFKaccuse(gameDetails.creator, gameDetails.creatorAFKaccused === 0n ? undefined : Number(gameDetails.creatorAFKaccused));
     this.addAFKaccuse(gameDetails.joiner, gameDetails.joinerAFKaccused === 0n ? undefined : Number(gameDetails.joinerAFKaccused));
+
     this.setState({ 
         _gameDetails: gameDetails,
         _provider: provider,
@@ -216,12 +218,30 @@ class Game extends React.Component {
         _turnEnded: gameDetails.endTime != 0,
         _codeHash: gameDetails.codeHash,
         _codeSecret: gameDetails.codeSecret.map(Number),
+        _gameEnded: gameDetails.gameEnded,
   }, () => {
       if (this.state._gameDetails.joiner === "0x0000000000000000000000000000000000000000") {
         this.setState({gameJoinedHandler: this.wrap(this.handleGameJoined)}, function(){
           mastermind.on("GameJoined", this.state.gameJoinedHandler);
         })
       }
+      if (this.state._gameDetails._gameEnded === true) {
+        // If the game is ended, infer winner and set proper messages
+        const creatorPoints = parseInt(gameDetails.creatorPoints);
+        const joinerPoints = parseInt(gameDetails.joinerPoints);
+        // Note the >= in case of a tie
+        const winner = creatorPoints >= joinerPoints ? gameDetails.creator : gameDetails.joiner;
+        this.setState({ _gameEndedMessages:
+        this.getGameEndedMessages(
+          winner,
+          winner === gameDetails.creator ? creatorPoints : joinerPoints,
+          winner === gameDetails.creator ? joinerPoints : creatorPoints
+        )});
+        this.removeBreakerEventListeners();
+        this.removeMakerEventListeners();
+        return; // No need to setup listeners, the game has ended
+      }
+      
       this.setupPlayerEventListeners();
 
       if(this.isCurrentMaker()){
@@ -382,8 +402,13 @@ class Game extends React.Component {
     // reset persistent codeSecretMemo and codeSeedMemo
     this.setCodeSecretMemo(undefined);
     this.setCodeSeedMemo(undefined);
-    let _winner = winner.toLowerCase();
+    const messages = this.getGameEndedMessages(winner, winnerPoints, loserPoints);
+    this.setState({ _gameEnded: true, _gameEndedMessages: messages });
+  }
 
+  getGameEndedMessages(winner, winnerPoints, loserPoints) {
+    const _winner = winner.toLowerCase();
+    
     const stake = ethers.formatEther(this.state._gameDetails.gameStake);
     const isCreator = this.state.selectedAddress === this.state._gameDetails.creator.toLowerCase()
     const messages = {
@@ -403,7 +428,7 @@ class Game extends React.Component {
         )
         + ". Go back to the home page to play again!";
     }
-    this.setState({ _gameEnded: true, _gameEndedMessages: messages });
+    return messages;
   }
 
   setCodeSecretMemo (newCode) {
@@ -525,18 +550,21 @@ class Game extends React.Component {
       return <Loading />;
     }
     // redirect to Home if this.state.selectedAddress or this.state.gameId are not setted
-    if (!this.state.selectedAddress || !this.state.gameId) {
-      return (this.props.router.navigate('/'));
+    if (!this.state.selectedAddress || !this.state.gameId || !this.state.home_mastermind_flag || !this.state.home_provider_flag ) {
+      // return (this.props.router.navigate('/'));
+      return (this.redirectHome());
     }
     
     //print infos about the game
     return (
       <div className="container-fluid vh-100">
-        <div className="title top-left">
+        <div className="title top-left" onClick={this.redirectHome} style={{cursor:"pointer"}}>
             mastermind
         </div>
         <div className="under-title top-right">
-          Your Address: <b>{this.state.selectedAddress}</b>
+          Your Address: <br>
+          </br>
+          <b style={{fontSize: "1em"}} >{this.state.selectedAddress}</b>
         </div>
         <div className="grid-container">
           <div className={`grid-item ${this.isCurrentMaker() ? 'left-column-maker' : 'left-column-breaker'}`}>

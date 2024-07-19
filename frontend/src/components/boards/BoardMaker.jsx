@@ -155,7 +155,7 @@ export function BoardMaker({
       }
       {guessPending && (
         <button
-          className='btn-faded'
+          className='btn-faded action-button'
           onClick={() => {
             toggleFeedbackModal();
           }}

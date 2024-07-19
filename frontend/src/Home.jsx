@@ -30,7 +30,7 @@ import "./css/styles.css"
 const HARDHAT_NETWORK_ID = '31337';
 
 // This is an error code that indicates that the user canceled a transaction
-const ERROR_CODE_TX_REJECTED_BY_USER = 4001;
+import { ERROR_CODE_TX_REJECTED_BY_USER } from "./utils/utils.jsx";
 
 // This component is in charge of doing these things:
 //   1. It connects to the user's wallet
@@ -61,7 +61,8 @@ class Home extends React.Component {
       // Metamask creates replicas of events for some reason
       // We will store here the hash of the transaction of received events,
       // To discard duplicates
-      _catchedEvents: new Set()  
+      _catchedEvents: new Set(),
+      eventListeners: {}
     };
     this.localCatchedEvents = new Set(); // Local set to handle immediate duplicates
 
@@ -93,11 +94,16 @@ class Home extends React.Component {
       );
     }
 
+    
     // Ask the user to connect their wallet.
     //
     // Note that we pass it a callback that is going to be called when the user
     // clicks a button. This callback just calls the _connectWallet method.
     if (!this.state.selectedAddress) {
+      if (localStorage.getItem("firstLogin")){
+        this._connectWallet();
+        return <Loading />;
+      }
       return (
         <div className="content container p-4">
           <h1 className="title">
@@ -265,6 +271,7 @@ class Home extends React.Component {
       this._updateStartedGames();
       this._updateAvailableGames();
       this.setupEventListeners();
+      localStorage.setItem("firstLogin", "true");
     });
   }
 
@@ -339,14 +346,27 @@ class Home extends React.Component {
 
   setupEventListeners() {
     const { _mastermind } = this.state;
-    _mastermind.on("GameCreated", this.wrap(this.handleGameCreated));
-    _mastermind.on("GameJoined", this.wrap(this.handleGameJoined));
+    const eventListeners = {
+      "GameCreated": this.wrap(this.handleGameCreated),
+      "GameJoined": this.wrap(this.handleGameJoined),
+    };
+
+    for (const [event, listener] of Object.entries(eventListeners)) {
+      _mastermind.on(event, listener);
+    }
+
+    this.setState({ eventListeners: eventListeners });
   }
 
   removeEventListeners() {
-    const { _mastermind } = this.state;
-    _mastermind.off("GameCreated", this.wrap(this.handleGameCreated));
-    _mastermind.off("GameJoined", this.wrap(this.handleGameJoined));
+    const { _mastermind, eventListeners } = this.state;
+
+    for (const [event, listener] of Object.entries(eventListeners)) {
+      _mastermind.off(event, listener);
+    }
+
+    this.setState({ eventListeners: {} });
+
   }
 
   wrap = (handler) => {
@@ -484,8 +504,10 @@ class Home extends React.Component {
 
   redirectToGame(gameId, selectedAddress) {
     const { navigate } = this.props.router;
+    const _mastermind = this.state._mastermind ? true : false
+    const _provider = this.state._provider ? true : false
     navigate(`/game/${gameId}`, {
-      state: {selectedAddress}
+      state: {selectedAddress, _mastermind, _provider}
     });
   }
 

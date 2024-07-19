@@ -257,6 +257,7 @@ contract Mastermind {
         newGame.endTime = 1; // Set to 1 instead of 0 to allow the first turn to start
         newGame.codeSecret = new uint256[](1); // Set to 1 instead of 0 to allow the first turn to start
         newGame.joiner = _joiner;
+        newGame.points[newGame.creator] = 0;
 
         // Increment total number of games
         totalGames++;
@@ -332,6 +333,7 @@ contract Mastermind {
         // Timestamp is instead set when a turn starts
         // selectedGame.startTime = block.timestamp;
 
+        selectedGame.points[selectedGame.joiner] = 0;
         activeGames.push(getInfoFromGame(selectedGame));
         makeGameNotJoinable(_gameId);
 
@@ -851,7 +853,9 @@ contract Mastermind {
         uint256 feedbacksLength,
         uint256[] memory codeSecret,
         uint256 creatorAFKaccused,
-        uint256 joinerAFKaccused
+        uint256 joinerAFKaccused,
+        uint256 creatorPoints,
+        uint256 joinerPoints
     ) {
         Game storage game = games[_gameId];
         uint256 _creatorAFKaccused = game.accusedAFK[game.creator];
@@ -882,7 +886,9 @@ contract Mastermind {
             game.feedbacks.length == 0 ? 0 : game.feedbacks[game.currentTurn].length,
             game.codeSecret,
             _creatorAFKaccused,
-            _joinerAFKaccused
+            _joinerAFKaccused,
+            game.points[game.creator],
+            game.points[game.joiner]
         );
     }
 
