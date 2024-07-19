@@ -19,8 +19,6 @@ import { bindWrapContractInteraction } from './utils/utils';
 
 import "../src/css/styles.css"
 
-//const crypto = require('crypto');
-
 const ERROR_CODE_TX_REJECTED_BY_USER = 4001;
  
 class Game extends React.Component {
@@ -35,12 +33,12 @@ class Game extends React.Component {
       gameId: gameId,
       selectedAddress: selectedAddress.toLowerCase(),
       turn: undefined,
-      submitCodeHashModalOpen: true, // TODO true at the beginning?
+      submitCodeHashModalOpen: true,
       reqBeingSent: undefined,
       transactionError: undefined,
       networkError: undefined,
-      //info sul game
-      joiner: undefined, // TODO replace with actual value
+      //infos about the game
+      joiner: undefined,
       guesses: [],
       feedbacks: [],
       makerListeners: {},
@@ -127,7 +125,7 @@ class Game extends React.Component {
     })
   }
 
-  wrap = (handler) => { //ToDo: filtrare event.log.transactionHash e filter
+  wrap = (handler) => { 
     return (...args) => {
       const event = args[args.length - 1];  // The event object is always the last argument
 
@@ -526,19 +524,12 @@ class Game extends React.Component {
     if (this.state._mastermind === undefined) {
       return <Loading />;
     }
-    //controlla se sia presente selectedAddress e gameId: se non lo sono, redirect a Dapp.js
+    // redirect to Home if this.state.selectedAddress or this.state.gameId are not setted
     if (!this.state.selectedAddress || !this.state.gameId) {
-      // TODO check if this is the correct way to redirect
-      // redirect to Home
       return (this.props.router.navigate('/'));
     }
     
-
-    //se non c'è il joiner
-    //render di Loading con messaggio "aspettiamo il joiner"
-    //ci mettiamo in ascolto di GameJoined event (https://stackoverflow.com/questions/58150023/how-do-we-listen-to-solidity-smart-contract-events-on-react-js)
-
-    //stampare a schermo informazioni sull'attuale game in corso
+    //print infos about the game
     return (
       <div className="container-fluid vh-100">
         <div className="title top-left">
@@ -627,9 +618,7 @@ class Game extends React.Component {
             <div className="column">
               {this.isAccused() &&
               <div className='secret-row'>
-                {/* TODO fancy up this  <div className='afk-accusation'> */}
                   You have been accused of being AFK
-                {/* </div> */}
               </div>
               }
               { !this.hasAccused() &&
@@ -660,7 +649,6 @@ class Game extends React.Component {
         </div>
       </div>
 
-      //pulsantino per accusa di AFK
       );
 }
   redirectHome() {
@@ -794,7 +782,6 @@ class Game extends React.Component {
       this.state._mastermind.verifyAFKAccusation,
       [this.state.gameId],
       () => {
-        // TODO what if the game ends?
         this.resetAFKaccuse(this.getOpponent());
       });
   }

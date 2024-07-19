@@ -197,7 +197,6 @@ class Home extends React.Component {
                         <p>Creator: {game.creator}</p>
                         <button 
                           className="btn-faded hidden-button ml-2" 
-                          // TODO fix stake
                           onClick={() => this.joinGame(game.gameId, ethers.formatEther(game.gameStake))}>
                           Join Game
                         </button>
@@ -277,7 +276,7 @@ class Home extends React.Component {
     provider.polling = true;
     provider.pollingInterval = 500; // Set to 1000 ms (1 second)
 
-    // Then, we initialize the contract using that provider and the token's artifact.
+    // Then, we initialize the contract using that provider and the mastermind's artifact.
     const mastermind = new ethers.Contract(
       contractAddress.Mastermind,
       MastermindArtifact.abi,

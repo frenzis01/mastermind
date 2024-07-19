@@ -45,9 +45,9 @@ contract Mastermind {
         uint256[][][] feedbacks; // Array to store feedbacks made by players
         
         /**
+         * holding current breaker and maker addresses in a state variable and updating them at each turn
+         * seems to yield better gas consumes as in isCurrentMaker()
          * 
-         * Inferring -as in isCurrentMaker()- who is the maker/breaker seems to yield better gas consumes than holding
-         * current breaker and maker addresses in a state variable and updating them at each turn
          */
         // address maker;
         // address breaker;
@@ -548,22 +548,6 @@ contract Mastermind {
 
     function resolveDispute (uint256 _gameId, uint256[] memory guessIDs) internal checkGameValidity(_gameId) {
         Game storage game = games[_gameId];
-        // Already performed by disputeFeedback
-        // May assume that the parameter is always legal since the visibility is internal
-        // require(
-        //     guessIDs.length <= game.guesses[game.currentTurn].length,
-        //     "Invalid number of guesses"
-        // );
-        
-        // Redundant check, this is already performed in validDisputeTime(_gameId) 
-        // require(game.codeSecret.length != 0, "Code secret has not been published yet");
-
-        // NO NEED to check that the hash of the secret is equal to the hash submitted at the beginning of the turn
-        // This is already done in the publishCodeSecret function
-        // if (hashArrayOfIntegers(game.codeSecret) != game.codeHash){
-        //     emit ResolveDispute(_gameId, maker);
-        //     endGame(_gameId, maker, breaker, 0, 1);
-        // }
 
         address breaker = getCurrentBreaker(_gameId);
         address maker = getCurrentMaker(_gameId);
@@ -771,7 +755,7 @@ contract Mastermind {
     event HandlingGame (uint256 gameId);
     function handleDanglingGames() internal {
         // Execute the lookup only 1/3 of the times
-        // TODO Disabled for testing and Demo
+        // Disabled for testing and Demo
         // if (randomInt() % 100 < 60) {
         //     return;
         // }

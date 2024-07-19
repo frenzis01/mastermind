@@ -3,9 +3,7 @@ import { Modal, Button } from 'react-bootstrap';
 
 
 export function NonClosableModal ({ show, title, text, buttonText, onClick }) {
-  // Apply styles directly to the document head
-
-
+  
   return (
     <Modal
       show={show}
