@@ -177,10 +177,10 @@ export function BoardBreaker({
         {/* end-game buttons */}
         {nextTurnPending &&
           <>
-          <button className='dispute-button' onClick={handleDispute}>
+          <button className='dispute-button action-button' onClick={handleDispute}>
             {isDisputeMode ? 'Confirm Dispute' : 'The maker cheated! Dispute!'}
           </button>
-          <button className='btn-faded' onClick={nextTurn}> {`${lastTurn ? 'End game' : 'Start next turn'}`}</button>
+          <button className='btn-faded action-button' onClick={nextTurn}> {`${lastTurn ? 'End game' : 'Start next turn'}`}</button>
           </>
         }
       </>}

@@ -596,7 +596,7 @@ class Game extends React.Component {
                 </div>
               }
             {!this.isCurrentMaker() &&
-              (<BoardBreaker
+              <BoardBreaker
                 maxTurns={Number(this.state._gameDetails.numTurns)}
                 maxGuesses={Number(this.state._gameDetails.maxGuesses)}
                 makeGuess={this.makeGuess}
@@ -614,10 +614,11 @@ class Game extends React.Component {
                 disputed={this.state._disputed}
                 currentTurn={this.state._gameDetails.currentTurn}  
                 gameEnded={this.state._gameEnded}
-            />)}
+            />}
 
             {this.isCurrentMaker() &&
-              (<BoardMaker
+              <>
+              <BoardMaker
               // TODO add seed and display it to allow player to annotate it
                 maxTurns={Number(this.state._gameDetails.numTurns)}
                 maxGuesses={Number(this.state._gameDetails.maxGuesses)}
@@ -639,7 +640,17 @@ class Game extends React.Component {
                 disputed={this.state._disputed}
                 gameEnded={this.state._gameEnded}
                 currentTurn={this.state._gameDetails.currentTurn}
-              />)}
+              />
+              {this.state._codeSeedMemo &&
+                 <div className="secret-row bottom-line-container">
+                 <div className="bottom-line-content seed">
+                   {JSON.stringify(this.state._codeSeedMemo)}
+                 </div>
+                 <button className="copy-button" onClick={this.copyToClipboard}>Copy Seed</button>
+               </div>
+              }
+              </  >
+              }
           </div>
 
           <div className={`grid-item ${this.isCurrentMaker() ? 'right-column-maker' : 'right-column-breaker'}`}>
@@ -681,6 +692,17 @@ class Game extends React.Component {
 }
   redirectHome() {
     this.props.router.navigate('/');
+  }
+
+  copyToClipboard = () => {
+    const { _codeSeedMemo } = this.state;
+    navigator.clipboard.writeText(JSON.stringify(_codeSeedMemo))
+      .then(() => {
+        this.addSnack("success", "Seed copied to clipboard");
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+      });
   }
 
   // Generate a random 64-character long string salt

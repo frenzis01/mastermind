@@ -37,7 +37,7 @@ export function ProvideFeedbackModal({ onToggleModal, submitFeedback }) {
   return (
     <div className="modal-backdrop d-flex justify-content-center align-items-center" onClick={onToggleModal}>
       <div className="modal-content bg-light p-4 rounded" style={{ position: 'relative', width: '200px' }} onClick={(e) => e.stopPropagation()}>
-        <h2>Provide Feedback</h2>
+        <h2 className='feedback-title'>Provide Feedback</h2>
         <div className="form-group d-flex align-items-center">
           <label className="mr-2 mb-0 label-font" style={{ whiteSpace: 'nowrap', width: '250px' }}>Colors in correct positions</label>
           <input

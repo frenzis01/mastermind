@@ -118,7 +118,7 @@
   color: white;
   border: 2px solid rgb(255, 255, 255);
   cursor: pointer;
-  padding: .5em 1.25em;
+  /* padding: .5em 1.25em; */
   margin-right: 0.5em;
   /* background: linear-gradient(90deg, #00886f, #00a896, #02c39a); */
   /* background: linear-gradient(90deg, #00886f, #0fa3b1, #f2d492);
@@ -198,6 +198,10 @@
    gap: 5px;
    margin-right: 20px;
  }
+
+ .feedback-title {
+    font-family: var(--font-family);
+ }
  
  .guess-grid {
    display: flex;
@@ -222,4 +226,49 @@
    color: white;
    margin-top: 20px;
  }
- 
+ .bottom-line-container {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 20%; /* Set your desired maximum width here */
+  width: 20%;
+  /* background: rgba(0, 0, 0, 0.5); Semi-transparent background */
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  z-index: 1050; /* Ensure it appears above other content */
+}
+
+.bottom-line-content {
+  white-space: nowrap; /* Prevents text from wrapping to a new line */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Truncate the text with an ellipsis if it overflows */
+  flex-grow: 1;
+  margin-right: 1em; /* Space between text and button */
+  max-width: calc(100% - 2em); /* Adjust for button width + padding */
+  font-style: italic;
+  font-family: monospace;
+}
+
+.copy-button {
+  background-color: #0000003a; /* Bootstrap primary color */
+  color: white;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 250ms;
+  white-space: nowrap; /* Prevents text from wrapping to a new line */
+}
+
+.copy-button:hover {
+  background-color: #0000006a; /* Darker shade for hover effect */
+}
+
+.seed {
+  font-size:0.8em;
+}
