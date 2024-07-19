@@ -3,12 +3,12 @@
    - [x] Gas Evaluation
       - [x] Guesses and Feedbacks: ```mapping``` vs ```[][][]```
       - [x] Breaker/Maker
-   - [ ] AFK Accusation
-      - [ ] *Maker accuse while Breaker is Disputing* is a "race" between AFK Accusation time and Valid Dispute time, but should be okay since the breaker cannot take forever to dispute the feedbacks
+   - [x] AFK Accusation
+      - [x] *Maker accuse while Breaker is Disputing* is a "race" between AFK Accusation time and Valid Dispute time, but should be okay since the breaker cannot take forever to dispute the feedbacks
    - [x] Handle `Next Turn`
    - [x] Catch `Accusation time has not expired yet`
-   - [ ] Contract interaction wrapper in home
-   - [ ] localStorage set in utils
+   - [x] Contract interaction wrapper in home
+   - [ ] ~~localStorage set in utils~~
    - [x] Create game modal negative stake
    - [x] Better provide Feedback modal
    - [x] Accuse AFK button restyle
@@ -20,3 +20,4 @@
    - [ ] Buttons makeGuess and provide feedback bigger
    - [ ] Snack corretti dopo lo swap board
    - [ ] Display the salt and allow the maker to copy it
+   - [ ] Allow creator to pay only when someone actually joins

@@ -15,6 +15,8 @@ import { intToColor } from './assets/colors';
 
 import Snackbar from "./components/snackBar/SnackBar";
 
+import { bindWrapContractInteraction } from './utils/utils';
+
 import "../src/css/styles.css"
 
 //const crypto = require('crypto');
@@ -59,6 +61,7 @@ class Game extends React.Component {
       _codeSecret: undefined,
       // persistent (known by the player) codeSecret(s) to be displayed in BoardMaker
       // These codes will persist in case of page reload or change page/game
+      // They get reset on createGame in Home.jsx or on GameEnded
       _codeSecretMemo: this.jsonStringParse(localStorage.getItem('_codeSecretMemo_' + gameId)) || undefined,
       // fundamental to parse as Uint8Array
       _codeSeedMemo: this.jsonStringToUint8Array(localStorage.getItem('_codeSeedMemo_' + gameId)) || undefined,
@@ -110,7 +113,7 @@ class Game extends React.Component {
     this.setupNewTurn = this.setupNewTurn.bind(this);
     
     this.redirectHome = this.redirectHome.bind(this);
-    this.wrapContractInteraction = this.wrapContractInteraction.bind(this);
+    this.wrapContractInteraction = bindWrapContractInteraction(this);
   } 
 
   componentDidMount(){
@@ -799,42 +802,7 @@ class Game extends React.Component {
 
   // -------------------------- TRANSACTION HANDLING --------------------------
 
-  async wrapContractInteraction (contractInvokation,args,successCallback) {
-    this._dismissTransactionError();
-    let req = undefined;
-  
-    try{
-      req = await contractInvokation(...args);
-      this.setState({ reqBeingSent: req.hash });
-      const receipt = await req.wait();
-      // The receipt, contains a status flag, which is 0 to indicate an error.
-      if (receipt.status === 0) {
-        throw new Error("Transaction failed");
-      }
-
-      successCallback();
-
-    } catch (error) {
-      // We check the error code to see if this error was produced because the
-      // user rejected a tx. If that's the case, we do nothing.
-      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
-        return;
-      }
-
-      // Other errors are logged and stored in the Dapp's state. This is used to
-      // show them to the user, and for debugging.
-
-      this.addSnack("error", error.reason);
-      console.error(error);
-      this.setState({ transactionError: error });
-    } finally {
-      // If we leave the try/catch, we aren't sending a request anymore, so we clear
-      // this part of the state.
-      this.setState({ reqBeingSent: undefined });
-    }
-  }
-
-  // This method just clears part of the state.
+  // // This method just clears part of the state.
   _dismissTransactionError() {
     this.setState({ transactionError: undefined });
   }

@@ -22,6 +22,8 @@ import { withRouter } from './components/WithRouter';
 
 import Snackbar from "./components/snackBar/SnackBar";
 
+import { bindWrapContractInteraction } from "./utils/utils";
+
 import "./css/styles.css"
 
 // This is the default id used by the Hardhat Network
@@ -69,6 +71,8 @@ class Home extends React.Component {
     this.wrap = this.wrap.bind(this);
     this.handleGameCreated = this.handleGameCreated.bind(this);
     this.handleGameJoined = this.handleGameJoined.bind(this);
+    this.wrapContractInteraction = bindWrapContractInteraction(this);
+
   }
 
   componentWillUnmount() {
@@ -405,6 +409,7 @@ class Home extends React.Component {
     this.setState({ transactionError: undefined });
   }
 
+
   // Logic to create the game
   async createGame(stake, challengeAddress){
 
@@ -439,6 +444,7 @@ class Home extends React.Component {
       }
 
       const newGameId = Number(receipt.logs[0].args[0])
+      // Important for localStorage usage in Game.jsx
       localStorage.setItem("_codeSecretMemo_" + newGameId, "undefined");
       localStorage.setItem("_codeSeedMemo_" + newGameId, "undefined");
       this.setState({ showModal: false });
@@ -462,49 +468,15 @@ class Home extends React.Component {
     }
   }
 
-  // Logic to join a game
   async joinGame(gameId, stake){
-
-    // If the request fails, we save that error in the component's state.
-    // We only save one such error, so before sending a second request, we clear it.
-    this._dismissTransactionError();
-    let req = undefined;
-    
-    try{
-      req = await this.state._mastermind.joinGame(Number(gameId).toString(), {
-        from: this.state.selectedAddress,
-        value: ethers.parseEther(stake.toString()),
-        gasLimit: 1000000
-      })
-      this.setState({ reqBeingSent: req.hash });
-      // We use .wait() to wait for the transaction to be mined. This method
-      // returns the transaction's receipt.
-      const receipt = await req.wait();
-      // The receipt, contains a status flag, which is 0 to indicate an error.
-      if (receipt.status === 0) {
-        // We can't know the exact error that made the transaction fail when it
-        // was mined, so we throw this generic one.
-        throw new Error("Transaction failed");
-      }
-  
+    this.wrapContractInteraction(this.state._mastermind.joinGame, [gameId.toString(), {
+      from: this.state.selectedAddress,
+      value: ethers.parseEther(stake.toString()),
+      gasLimit: 1000000
+    }], async () => {
       await this._updateBalance();
-      this.redirectToGame(gameId, this.state.selectedAddress)
-    } catch (error) {
-      // We check the error code to see if this error was produced because the
-      // user rejected a tx. If that's the case, we do nothing.
-      if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
-        return;
-      }
-
-      // Other errors are logged and stored in the Dapp's state. This is used to
-      // show them to the user, and for debugging.
-      console.error(error);
-      this.setState({ transactionError: error });
-    } finally {
-      // If we leave the try/catch, we aren't sending a request anymore, so we clear
-      // this part of the state.
-      this.setState({ reqBeingSent: undefined });
-    }
+      this.redirectToGame(gameId, this.state.selectedAddress);
+    });
   }
 
   resumeGame(gameId){

@@ -28,4 +28,45 @@ export const jsonStringToUint8Array = (jsonString) => {
    // Convert the array to Uint8Array
    return new Uint8Array(array);
  };
- 
+
+
+export async function wrapContractInteraction (component,contractInvokation,args,successCallback) {
+  component._dismissTransactionError();
+  let req = undefined;
+
+  try{
+    req = await contractInvokation(...args);
+    component.setState({ reqBeingSent: req.hash });
+    const receipt = await req.wait();
+    // The receipt, contains a status flag, which is 0 to indicate an error.
+    if (receipt.status === 0) {
+      throw new Error("Transaction failed");
+    }
+
+    successCallback();
+
+  } catch (error) {
+    // We check the error code to see if this error was produced because the
+    // user rejected a tx. If that's the case, we do nothing.
+    if (error.code === ERROR_CODE_TX_REJECTED_BY_USER) {
+      return;
+    }
+
+    // Other errors are logged and stored in the Dapp's state. This is used to
+    // show them to the user, and for debugging.
+
+    component.addSnack("error", error.reason);
+    console.error(error);
+    component.setState({ transactionError: error });
+  } finally {
+    // If we leave the try/catch, we aren't sending a request anymore, so we clear
+    // this part of the state.
+    component.setState({ reqBeingSent: undefined });
+  }
+}
+
+export function bindWrapContractInteraction(component) {
+  return function(asyncFunc, args, successCallback) {
+    return wrapContractInteraction(component, asyncFunc, args, successCallback);
+  };
+}
