@@ -227,13 +227,16 @@
    margin-top: 20px;
  }
  .bottom-line-container {
+  font-family: var(--font-family);
   position: fixed;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   max-width: 20%; /* Set your desired maximum width here */
   width: 20%;
-  /* background: rgba(0, 0, 0, 0.5); Semi-transparent background */
+  background: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(50px);
   color: white;
   display: flex;
   justify-content: space-between;
@@ -241,6 +244,7 @@
   padding: 10px;
   box-sizing: border-box;
   z-index: 1050; /* Ensure it appears above other content */
+  border:none
 }
 
 .bottom-line-content {
@@ -255,7 +259,7 @@
 }
 
 .copy-button {
-  background-color: #0000003a; /* Bootstrap primary color */
+  background-color: #0000001d; /* Bootstrap primary color */
   color: white;
   border: none;
   padding: 10px 30px;
@@ -266,7 +270,7 @@
 }
 
 .copy-button:hover {
-  background-color: #0000006a; /* Darker shade for hover effect */
+  background-color: #00000034; /* Darker shade for hover effect */
 }
 
 .seed {

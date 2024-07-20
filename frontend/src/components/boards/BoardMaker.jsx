@@ -165,7 +165,7 @@ export function BoardMaker({
       )}
       {publishSecret && (
         <button
-          className='btn-faded'
+          className='btn-faded action-button'
           onClick={() => {
             toggleColorChooseModal();
           }}

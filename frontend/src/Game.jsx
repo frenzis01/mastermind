@@ -26,6 +26,7 @@ class Game extends React.Component {
     const { id: gameId } = this.props.router.params;
     const { selectedAddress, _mastermind: home_mastermind_flag, _provider: home_provider_flag } = this.props.router.location.state || {};
 
+    console.log("Game constructor", gameId, selectedAddress, home_mastermind_flag, home_provider_flag);
     this.state = {
       gameId: gameId,
       selectedAddress: selectedAddress.toLowerCase(),
@@ -83,7 +84,7 @@ class Game extends React.Component {
 
     this.handleGuess = this.handleGuess.bind(this);
     this.handleFeedback = this.handleFeedback.bind(this);
-    this.handleDispute = this.handleDispute.bind(this);
+    this.handleResolveDispute = this.handleResolveDispute.bind(this);
     this.handleHashPublished = this.handleHashPublished.bind(this);
     this.handleTurnStarted = this.handleTurnStarted.bind(this);
     this.handleGameJoined = this.handleGameJoined.bind(this);
@@ -169,10 +170,23 @@ class Game extends React.Component {
       MastermindArtifact.abi,
       signer
     );
-    const gameDetails = (await mastermind.getGameDetails(this.state.gameId)).toObject();
+    let gameDetails;
+    try {
+      gameDetails = (await mastermind.getGameDetails(this.state.gameId)).toObject();
+    } catch (error) {
+      if (error.reason === "Invalid game ID") {
+        this.redirectHome();
+      }
+      console.log(error);
+    }
+
     // Perform useful conversions
     gameDetails.creator = gameDetails.creator.toLowerCase();
     gameDetails.joiner = gameDetails.joiner.toLowerCase();
+    if ((gameDetails.creator !== this.state.selectedAddress && gameDetails.joiner !== this.state.selectedAddress) ||
+       (gameDetails.joiner === this.state.selectedAddress && !gameDetails.gameStarted)) {
+      this.redirectHome();
+    }
     gameDetails.currentTurn = parseInt(gameDetails.currentTurn);
 
     const parseProxy = (g) => {
@@ -210,6 +224,8 @@ class Game extends React.Component {
     this.addAFKaccuse(gameDetails.creator, gameDetails.creatorAFKaccused === 0n ? undefined : Number(gameDetails.creatorAFKaccused));
     this.addAFKaccuse(gameDetails.joiner, gameDetails.joinerAFKaccused === 0n ? undefined : Number(gameDetails.joinerAFKaccused));
 
+    const disputeAccused = gameDetails.disputeAccused.toLowerCase() !== "0x0000000000000000000000000000000000000000";
+    console.log("Dispute accused: ", disputeAccused);
     this.setState({ 
         _gameDetails: gameDetails,
         _provider: provider,
@@ -218,14 +234,15 @@ class Game extends React.Component {
         _turnEnded: gameDetails.endTime != 0,
         _codeHash: gameDetails.codeHash,
         _codeSecret: gameDetails.codeSecret.map(Number),
+        _disputed: disputeAccused,
         _gameEnded: gameDetails.gameEnded,
   }, () => {
-      if (this.state._gameDetails.joiner === "0x0000000000000000000000000000000000000000") {
+      if (this.state._gameDetails.joiner !== this.state.selectedAddress) {
         this.setState({gameJoinedHandler: this.wrap(this.handleGameJoined)}, function(){
           mastermind.on("GameJoined", this.state.gameJoinedHandler);
         })
       }
-      if (this.state._gameDetails._gameEnded === true) {
+      if (this.state._gameEnded === true) {
         // If the game is ended, infer winner and set proper messages
         const creatorPoints = parseInt(gameDetails.creatorPoints);
         const joinerPoints = parseInt(gameDetails.joinerPoints);
@@ -294,7 +311,7 @@ class Game extends React.Component {
     const { _mastermind } = this.state;
     const makerListeners = {
       "Guess": this.wrap(this.handleGuess),
-      "Dispute": this.wrap(this.handleDispute),
+      "ResolveDispute": this.wrap(this.handleResolveDispute),
       "TurnStarted": this.wrap(this.handleTurnStarted),
     };
 
@@ -353,9 +370,17 @@ class Game extends React.Component {
     this.resetAFKaccuse(this.getOpponent());
   }
 
-  handleDispute(eventData) {
-    this.addSnack("warning", "Your opponent claims you have cheated");
-    this.setState({ _disputed: true });
+  handleResolveDispute(gameId, accused) {
+    console.log("accused", accused);
+    if (accused.toLowerCase() === this.state.selectedAddress) {
+      this.addSnack("warning", "Your opponent noticed you have cheated");
+      this.setState({
+        // TODO this is a bit hardcoded
+        _gameEndedMessages: this.getGameEndedMessages(this.getOpponent(), 1, 0)
+      }, () => {
+        this.setState({ _disputed: true });
+      })
+    }
   }
   
   handleHashPublished(gameId, codeMaker, hash) {
@@ -642,7 +667,7 @@ class Game extends React.Component {
                 currentTurn={this.state._gameDetails.currentTurn}
               />
               {this.state._codeSeedMemo &&
-                 <div className="secret-row bottom-line-container">
+                 <div className="top-secret-row bottom-line-container">
                  <div className="bottom-line-content seed">
                    {JSON.stringify(this.state._codeSeedMemo)}
                  </div>
@@ -668,21 +693,23 @@ class Game extends React.Component {
               <div className="d-flex align-items-center">
                 <button className='btn-accuse-afk' onClick={this.verifyAFKAccusation}>Verify AFK accusation</button>
               </div>}
-                {!this.state._joined && <NonClosableModal 
+                {/* !gameStarted is needed since sometimes GameJoined is not heard by Metamask for some unknown reason */}
+                {!this.state._joined && !this.state._gameDetails.gameStarted && <NonClosableModal 
                   show={!this.state._joined}
                   title={"No opponent joined yet"}
                   text={"Wait for someone to join your game"}
                   buttonText={"Home"}
                   onClick={this.redirectHome}
                   ></NonClosableModal>}
-                {this.state._gameEnded && <NonClosableModal
+                {this.state._gameEnded && this.state._gameEndedMessages && <NonClosableModal
                 show={this.state._gameEnded}
                 title={this.state._gameEndedMessages.title}
                 text={this.state._gameEndedMessages.text}
                 buttonText={this.state._gameEndedMessages.buttonText}
+                triggerText={this.state._disputed}
                 onClick={this.redirectHome}
-                ></NonClosableModal>    
-              }
+                ></NonClosableModal>}
+
             </div>
           </div>
         </div>

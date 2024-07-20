@@ -175,13 +175,18 @@ export function BoardBreaker({
           onClick={() => { toggleColorChooseModal(); }}>Make a Guess</button>
         }
         {/* end-game buttons */}
-        {nextTurnPending &&
+        {nextTurnPending && !disputed &&
           <>
           <button className='dispute-button action-button' onClick={handleDispute}>
             {isDisputeMode ? 'Confirm Dispute' : 'The maker cheated! Dispute!'}
           </button>
           <button className='btn-faded action-button' onClick={nextTurn}> {`${lastTurn ? 'End game' : 'Start next turn'}`}</button>
           </>
+        }
+        {disputed &&
+          <div className='secret-row'>
+            You disputed some feedbacks. The game will end soon, establishing who is not being honest.
+          </div>
         }
       </>}
       {rows.map((row, index) => (
@@ -218,6 +223,11 @@ export function BoardBreaker({
         onToggleModal={toggleColorChooseModal} 
         initColors={currentRow !== 0 ? rows[currentRow-1].guess.map(colorToInt) : undefined}
         showTextInput={false} />}
+      {isDisputeMode && !disputed &&
+        <div className="top-secret-row bottom-line-container">
+          {"Select the rows you want to dispute and click the button to confirm your dispute."}
+        </div>
+      }
     </div>
   );
 }

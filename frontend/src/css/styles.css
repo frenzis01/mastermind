@@ -49,6 +49,7 @@
     color: #ee6352;
     line-height: .8;
     margin: 0;
+    cursor: default;
     
     background-image: var(--gradient);
     background-clip: text;

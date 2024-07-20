@@ -21,3 +21,5 @@
    - [x] Snack corretti dopo lo swap board
    - [ ] Display the salt and allow the maker to copy it
    - [ ] Allow creator to pay only when someone actually joins
+   - [ ] Is handling dangling games necessary? Is AFK is legal after a game has (almost) ended
+   - [ ] Containerize application

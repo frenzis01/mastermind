@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 
 
-export function NonClosableModal ({ show, title, text, buttonText, onClick }) {
-  
+export function NonClosableModal ({ show, title, text, buttonText, onClick, triggerText }) {
+  useEffect(() => {
+    if (triggerText) {
+      // no-op
+    }
+  }, [triggerText]);
   return (
     <Modal
       show={show}

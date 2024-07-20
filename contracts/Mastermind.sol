@@ -522,7 +522,8 @@ contract Mastermind {
         );
 
         require(
-            guessIDs.length <= game.guesses[game.currentTurn].length,
+            guessIDs.length <= game.guesses[game.currentTurn].length &&
+            guessIDs.length > 0,
             "Invalid number of guesses"
         );
         for (uint i = 0; i < guessIDs.length; i++) {
@@ -553,16 +554,17 @@ contract Mastermind {
 
         address breaker = getCurrentBreaker(_gameId);
         address maker = getCurrentMaker(_gameId);
-        // Check that feedbacks are consistent
+        // Check whether there is at least one consistent feedback
         for (uint i = 0; i < guessIDs.length; i++) {
             if (isFeedbackValid(game.guesses[game.currentTurn][guessIDs[i]], game.feedbacks[game.currentTurn][guessIDs[i]], game.codeSecret)){
-                emit ResolveDispute(_gameId, maker);
+                // Reward the maker, since one of the disputed feedbacks was correct
+                emit ResolveDispute(_gameId, breaker);
                 endGame(_gameId, maker, breaker, 1, 0);
                 return;
             }
         }
-        // Punish the breaker who has unsuccessfully disputed the feedback
-        emit ResolveDispute(_gameId, breaker);
+        // Punish the maker who has cheated, and the breaker has noticed
+        emit ResolveDispute(_gameId, maker);
         endGame(_gameId, maker, breaker, 0, 1);
     }
 
@@ -855,8 +857,10 @@ contract Mastermind {
         uint256 creatorAFKaccused,
         uint256 joinerAFKaccused,
         uint256 creatorPoints,
-        uint256 joinerPoints
+        uint256 joinerPoints,
+        address disputeAccused
     ) {
+        require(_gameId < totalGames, "Invalid game ID");
         Game storage game = games[_gameId];
         uint256 _creatorAFKaccused = game.accusedAFK[game.creator];
         uint256 _joinerAFKaccused = game.accusedAFK[game.joiner];
@@ -888,7 +892,8 @@ contract Mastermind {
             _creatorAFKaccused,
             _joinerAFKaccused,
             game.points[game.creator],
-            game.points[game.joiner]
+            game.points[game.joiner],
+            game.accusedFB[game.creator] ? game.creator : (game.accusedFB[game.joiner] ? game.joiner : address(0))
         );
     }
 
