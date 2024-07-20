@@ -1,0 +1,17 @@
+artifacts
+cache
+coverage
+
+frontend/*
+!frontend/src
+frontend/src/*
+!frontend/src/contracts
+
+node_modules
+test
+
+.gitignore
+coverage.json
+LICENSE
+README.md
+TODOs.md

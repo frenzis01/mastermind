@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  hardhat:
+    build:
+      context: ./hardhat
+      dockerfile: Dockerfile
+    ports:
+      - "8545:8545"  # Expose Hardhat's RPC port
+    networks:
+      - hardhat-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    networks:
+      - hardhat-network
+
+networks:
+  hardhat-network:
+    driver: bridge
