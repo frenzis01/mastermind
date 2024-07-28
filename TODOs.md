@@ -23,3 +23,4 @@
    - [ ] Allow creator to pay only when someone actually joins
    - [ ] Is handling dangling games necessary? Is AFK is legal after a game has (almost) ended
    - [ ] Containerize application
+   - [ ] Add 'Hiding property' in the report 
