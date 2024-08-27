@@ -375,10 +375,9 @@ class Game extends React.Component {
     if (accused.toLowerCase() === this.state.selectedAddress) {
       this.addSnack("warning", "Your opponent noticed you have cheated");
       this.setState({
-        // TODO this is a bit hardcoded
-        _gameEndedMessages: this.getGameEndedMessages(this.getOpponent(), 1, 0)
+        _disputed: true
       }, () => {
-        this.setState({ _disputed: true });
+        this.setState({ _gameEndedMessages: this.getGameEndedMessages(this.getOpponent(), 1, 0) });
       })
     }
   }
