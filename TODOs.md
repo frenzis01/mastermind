@@ -19,8 +19,10 @@
    - [x] Provide Feedback title style
    - [x] Buttons makeGuess and provide feedback bigger
    - [x] Snack corretti dopo lo swap board
-   - [ ] Display the salt and allow the maker to copy it
+   - [x] Display the salt and allow the maker to copy it
    - [ ] Allow creator to pay only when someone actually joins
-   - [ ] Is handling dangling games necessary? Is AFK is legal after a game has (almost) ended
-   - [ ] Containerize application
+   - [x] Is handling dangling games necessary? Is AFK is legal after a game has (almost) ended
+   - [x] Containerize application
    - [ ] Add 'Hiding property' in the report 
+   - [ ] Add points counter in the game boards
+   - [ ] Add ETH won/lost in dispute/afk messages

@@ -130,29 +130,38 @@ class Game extends React.Component {
   wrap = (handler) => { 
     return (...args) => {
       const event = args[args.length - 1];  // The event object is always the last argument
-
       const transactionHash = event.log.transactionHash;
       const filter = event.filter;
-
+      
       const eventIdentifier = `${transactionHash}-${filter}`;
-
+      
       console.log(eventIdentifier)
       const cond = (this.localCatchedEvents.has(eventIdentifier) || this.state._catchedEvents.has(eventIdentifier)) 
       // console.log(cond)
       if (cond) {
         // console.log('Event already catched, discarding:', eventIdentifier);
       } else {
+        console.log(event)
         // console.log("Else branch taken")
         this.localCatchedEvents.add(eventIdentifier); // Add to local set
         this.setState((prevState) => ({
           _catchedEvents: new Set(prevState._catchedEvents).add(eventIdentifier)
         }), () => {
-          // console.log("Invoking handler on:", eventIdentifier);
-          handler(...args); // Pass all arguments including the event object to the handler
+          const makerEvents = ["Guess", "ResolveDispute", "TurnStarted"];
+          const breakerEvents = ["Feedback", "HashPublished", "CodeSecretPublished"];
+          const playerEvents = ["TurnEnded", "GameEnded", "AFKAccusation"];
+
+          if ((makerEvents.includes(filter) && this.isCurrentMaker()) ||
+              (breakerEvents.includes(filter) && !this.isCurrentMaker()) ||
+              playerEvents.includes(filter)){
+          
+              handler(...args); // Pass all arguments including the event object to the handler
+            }
         });
       }
       };
   };
+
 
   async _initializeEthers() {
     // We first initialize ethers by creating a provider using window.ethereum
@@ -256,6 +265,7 @@ class Game extends React.Component {
         )});
         this.removeBreakerEventListeners();
         this.removeMakerEventListeners();
+        this.removePlayerEventListeners();
         return; // No need to setup listeners, the game has ended
       }
       
@@ -299,6 +309,7 @@ class Game extends React.Component {
       "HashPublished": this.wrap(this.handleHashPublished),
       "CodeSecretPublished": this.wrap(this.handleCodeSecretPublished),
     };
+    console.log(breakerListeners)
 
     for (const [event, listener] of Object.entries(breakerListeners)) {
       _mastermind.on(event, listener);
@@ -314,7 +325,7 @@ class Game extends React.Component {
       "ResolveDispute": this.wrap(this.handleResolveDispute),
       "TurnStarted": this.wrap(this.handleTurnStarted),
     };
-
+    console.log(makerListeners)
     for (const [event, listener] of Object.entries(makerListeners)) {
       _mastermind.on(event, listener);
     }
