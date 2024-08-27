@@ -3,14 +3,18 @@ require("@nomicfoundation/hardhat-toolbox");
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   networks: {
-    hardhat: {
-      // gasPrice: 0,
-      // gas: 0,
-      // mining: {
-      //   auto: false,
-      //   interval: 1000
-      // }
-    }
+    // hardhat: {
+    //   chainId: 31337,
+    //   // gasPrice: 0,
+    //   // gas: 0,
+    //   // mining: {
+    //   //   auto: false,
+    //   //   interval: 1000
+    //   // }
+    //   // url: `http://0.0.0.0:8545`, // Listen on all network interfaces
+    // },
+    // // localhost: {
+    // // },
   },
   solidity: {
     version: "0.8.17",
