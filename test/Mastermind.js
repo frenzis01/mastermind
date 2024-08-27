@@ -130,7 +130,7 @@ describe('Mastermind', function () {
       await expect(mastermind.connect(maker).publishCodeSecret(0, [1, 2, 3, 4, 5, 6], seed)).to.emit(mastermind, 'CodeSecretPublished').withArgs(0, [1, 2, 3, 4, 5, 6]);
       await expect(mastermind.connect(breaker).disputeFeedback(0, [1, 2]))
          .to.emit(mastermind, 'Dispute').withArgs(0, [1, 2])
-         .and.to.emit(mastermind, 'ResolveDispute').withArgs(0, maker.address)
+         .and.to.emit(mastermind, 'ResolveDispute').withArgs(0, breaker.address)
          .and.to.emit(mastermind, 'GameEnded').withArgs(0, maker.address, 1, 0);
    });
 
@@ -223,13 +223,14 @@ describe('Mastermind', function () {
       await mastermind.connect(breaker).makeGuess(gameID, [4, 2, 1, 0, 4, 5]);
       await mastermind.connect(maker).provideFeedback(gameID, 0, 2); // 3 would be correct !
       await mastermind.connect(breaker).makeGuess(gameID, [1, 0, 3, 6, 7, 2]);
-      await mastermind.connect(maker).provideFeedback(gameID, 2, 3);
+      await mastermind.connect(maker).provideFeedback(gameID, 2, 3); // This is correct !
       await mastermind.connect(breaker).makeGuess(gameID, [1, 0, 0, 3, 2, 7]);
       await mastermind.connect(maker).provideFeedback(gameID, 6, 0);
       await mastermind.connect(maker).publishCodeSecret(gameID, intArray, seed);
       await expect (mastermind.connect(breaker).disputeFeedback(gameID, [0,1]))
          .to.emit(mastermind, 'Dispute').withArgs(gameID, [0n,1n])
-         .and.to.emit(mastermind, 'ResolveDispute').withArgs(gameID, maker.address)
+         .and.to.emit(mastermind, 'ResolveDispute').withArgs(gameID, breaker.address)
+         // breaker gets punished because the second feedback was correct
    });
 
 });

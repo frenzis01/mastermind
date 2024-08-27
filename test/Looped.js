@@ -110,7 +110,7 @@ describe('Mastermind - Looped', function () {
          await expect(mastermind.connect(maker).publishCodeSecret(0, [1, 2, 3, 4, 5, 6], seed)).to.emit(mastermind, 'CodeSecretPublished').withArgs(0, [1, 2, 3, 4, 5, 6])
          await expect(mastermind.connect(breaker).disputeFeedback(0, [1, 2]))
             .to.emit(mastermind, 'Dispute').withArgs(0, [1, 2])
-            .and.to.emit(mastermind, 'ResolveDispute').withArgs(0, maker.address)
+            .and.to.emit(mastermind, 'ResolveDispute').withArgs(0, breaker.address)
             .and.to.emit(mastermind, 'GameEnded').withArgs(0, maker.address, 1, 0);
       });
 

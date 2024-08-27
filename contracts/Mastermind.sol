@@ -478,6 +478,7 @@ contract Mastermind {
     ) internal {
         makeGameInactive(_gameId);
         Game storage game = games[_gameId];
+        require(!game.gameEnded, "Game has ended");
         // Mark the game as ended
         game.gameEnded = true;
         // Assign points to breaker and maker
@@ -498,7 +499,7 @@ contract Mastermind {
             game.points[loser]
         );
         // Transfer game stake to winner
-        payable(winner).transfer(game.gameStake * 2);
+        payable(winner).transfer(safeMul(game.gameStake,2));
     }
 
     // Function for a player to dispute feedback received from the opponent
@@ -720,6 +721,15 @@ contract Mastermind {
             }
         }
         return false;
+    }
+
+    function safeMul(uint256 a, uint256 b) internal pure returns (uint256 c) {
+        if (a == 0) {
+            return 0;
+        }
+        c = a * b;
+        assert(c / a == b);
+        return c;
     }
 
     function isCurrentBreaker(
