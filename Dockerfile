@@ -3,10 +3,13 @@ FROM node:current-bullseye
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 
+# Update and install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends libc6
+
 # Install dependencies with legacy-peer-deps flag to avoid conflicts
 RUN npm install --legacy-peer-deps
 
-# Install additional dependencies required by hardhat-toolbox with the same flag
+# Install additional dependencies required by hardhat-toolbox
 RUN npm install --save-dev --legacy-peer-deps \
     "@nomicfoundation/hardhat-chai-matchers@^2.0.0" \
     "@nomicfoundation/hardhat-ethers@^3.0.0" \
@@ -29,5 +32,5 @@ RUN npm install --save-dev --legacy-peer-deps \
 # Expose the port that Hardhat uses
 EXPOSE 8545
 
-# Command to start the Hardhat node and deploy scripts
-CMD ["sh", "-c", "npx hardhat node & sleep 5 && npx hardhat run scripts/deploy.js --network localhost"]
+# Start the Hardhat node in the foreground and deploy the contracts
+CMD ["sh", "-c", "npx hardhat node & sleep 5 && npx hardhat run scripts/deploy.js --network localhost && tail -f /dev/null"]
