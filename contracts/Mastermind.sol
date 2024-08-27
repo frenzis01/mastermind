@@ -229,9 +229,6 @@ contract Mastermind {
         // Ensure game stake is greater than 0
         require(msg.value > 0, "Game stake must be greater than 0");
 
-
-        handleDanglingGames();
-
         // Create a new game instance
         Game storage newGame = games[totalGames];
         newGame.numTurns = NUM_TURNS;
@@ -762,40 +759,6 @@ contract Mastermind {
         return h;
     }
 
-    event HandlingGame (uint256 gameId);
-    function handleDanglingGames() internal {
-        // Execute the lookup only 1/3 of the times
-        // Disabled for testing and Demo
-        // if (randomInt() % 100 < 60) {
-        //     return;
-        // }
-        
-        // Reverse lookup of games not yet ended
-        for (uint256 index = activeGames.length ; index > 0; index--) {
-            uint256 i = index -1;
-            Game storage game = games[activeGames[i].gameId];
-            // Check if the turn has ended
-            if 
-                (
-                (game.gameStarted == true) &&
-                (game.endTime != 0) &&
-                // and the secret code has been revealed
-                (game.codeSecret.length != 0) &&
-                // and  if the time limit for disputing feedback has been reached 
-                (block.timestamp > game.endTime + game.timeToDispute) &&
-                (game.gameEnded == false)){
-                    // Check if maximum turns have been reached
-                    if (game.currentTurn >= game.numTurns || game.guessed) {
-                        // Safe to end the game, breaker cannot dispute anymore
-                        endGame(activeGames[i].gameId,game.creator,game.joiner,game.points[game.creator],game.points[game.joiner]);
-                    }
-                    else {
-                        // Start a new turn
-                        startTurn(activeGames[i].gameId);
-                    }
-                }
-        }
-    }
     function makeGameInactive(uint256 gameId) internal {
         // Check if the _gameId is an active game
         bool found = false;
