@@ -1,4 +1,11 @@
-# Mastermind
+<!-- <p align="center">
+<img alt="Logo Banner" src="images/Mastermind_logo_Border.jpg"/>
+<br/>
+</p> -->
+
+![Alt text](media/Mastermind_logo_Border.png)
+<!-- # Mastermind -->
+---
 This is the exam project for the *Peer-to-Peer and Blockchain systems* UniPi course, developed by Francesco Lorenzoni and Emiliano Sescu.
 It consists of an adaptation of the Mastermind game on a Solidity powered blockchain along with a frontend.
 
@@ -84,3 +91,6 @@ In case you want to have the built-in hardhat gas report run
 ```
 REPORT_GAS=true npx hardhat test
 ```
+
+---
+
