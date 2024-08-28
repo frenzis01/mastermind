@@ -420,6 +420,15 @@ contract Mastermind {
             isBreakerTurn(_gameId),
             "Code breaker has already made a guess"
         );
+
+        // Ensure that each color in the guess is within the valid range
+        for (uint256 i = 0; i < guess.length; i++) {
+            require(
+                guess[i] < game.numColors,
+                "Invalid color in guess"
+            );
+        }
+
         game.guesses[game.currentTurn].push(guess);
         game.accusedAFK[msg.sender] = 0; // Reset the AFK accusation if present
         emit Guess(_gameId, guess); // Dummy event, replace with actual logic
