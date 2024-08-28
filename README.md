@@ -57,7 +57,7 @@ cd frontend
 npm install
 npm run dev
 ```
-
+---
 ### Configuring Metamask
 To configure Metamask, <u>click on the Ethereum Mainnet logo in the top left corner of Metamask extension popup and add a new Network with the following parameters</u>,
 ```
