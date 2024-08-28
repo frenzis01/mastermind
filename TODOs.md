@@ -26,3 +26,4 @@
    - [ ] Add 'Hiding property' in the report 
    - [ ] Add points counter in the game boards
    - [ ] Add ETH won/lost in dispute/afk messages
+   - [ ] Remodel with new Event for Tampered code in PublishCodeSecret

@@ -147,9 +147,9 @@ class Game extends React.Component {
         this.setState((prevState) => ({
           _catchedEvents: new Set(prevState._catchedEvents).add(eventIdentifier)
         }), () => {
-          const makerEvents = ["Guess", "ResolveDispute", "TurnStarted"];
+          const makerEvents = ["Guess", "TurnStarted"];
           const breakerEvents = ["Feedback", "HashPublished", "CodeSecretPublished"];
-          const playerEvents = ["TurnEnded", "GameEnded", "AFKAccusation"];
+          const playerEvents = ["TurnEnded", "GameEnded", "AFKAccusation", "ResolveDispute"];
           const gameJoinedEvents = ["GameJoined"];
 
           if ((makerEvents.includes(filter) && this.isCurrentMaker()) ||
@@ -294,7 +294,8 @@ class Game extends React.Component {
     const playerListeners = {
       "TurnEnded": this.wrap(this.handleTurnEnded),
       "GameEnded": this.wrap(this.handleGameEnded),
-      "AFKAccusation": this.wrap(this.handleAFKAccusation)
+      "AFKAccusation": this.wrap(this.handleAFKAccusation),
+      "ResolveDispute": this.wrap(this.handleResolveDispute),
     };
 
     for (const [event, listener] of Object.entries(playerListeners)) {
@@ -324,7 +325,6 @@ class Game extends React.Component {
     const { _mastermind } = this.state;
     const makerListeners = {
       "Guess": this.wrap(this.handleGuess),
-      "ResolveDispute": this.wrap(this.handleResolveDispute),
       "TurnStarted": this.wrap(this.handleTurnStarted),
     };
     console.log(makerListeners)
@@ -383,16 +383,21 @@ class Game extends React.Component {
     this.resetAFKaccuse(this.getOpponent());
   }
 
-  handleResolveDispute(gameId, accused) {
-    console.log("accused", accused);
-    if (accused.toLowerCase() === this.state.selectedAddress) {
-      this.addSnack("warning", "Your opponent noticed you have cheated");
-      this.setState({
-        _disputed: true
-      }, () => {
-        this.setState({ _gameEndedMessages: this.getGameEndedMessages(this.getOpponent(), 1, 0) });
-      })
-    }
+  handleResolveDispute(gameId, punished) {
+    console.log("punished", punished);
+    this.setState({_gameEndedMessages: undefined}, () => {
+      this.setState({ _disputed: true }, () => {
+        if (punished.toLowerCase() === this.state.selectedAddress) {
+          // this.addSnack("warning", "Your opponent noticed you have cheated");
+          this.setState({ _gameEndedMessages: this.getGameEndedMessages(this.getOpponent(), 1, 0) });
+        }
+        else {
+          // this.addSnack("warning", "Your opponent disputed wrongly");
+          this.setState({ _gameEndedMessages: this.getGameEndedMessages(this.state.selectedAddress, 1, 0) });
+        }
+      }
+      );
+    });
   }
   
   handleHashPublished(gameId, codeMaker, hash) {
@@ -445,7 +450,7 @@ class Game extends React.Component {
 
   getGameEndedMessages(winner, winnerPoints, loserPoints) {
     const _winner = winner.toLowerCase();
-    
+
     const stake = ethers.formatEther(this.state._gameDetails.gameStake);
     const isCreator = this.state.selectedAddress === this.state._gameDetails.creator.toLowerCase()
     const messages = {

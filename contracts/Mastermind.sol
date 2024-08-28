@@ -676,6 +676,8 @@ contract Mastermind {
         address breaker = getCurrentBreaker(_gameId);
         // Check that the hash of the secret is equal to the hash submitted at the beginning of the turn
         if (hashArrayOfIntegers(game.codeSecret, seed) != game.codeHash){
+            // End the game and punish the maker, as if he lost the Dispute
+            game.accusedFB[maker] = true;
             emit ResolveDispute(_gameId, maker);
             endGame(_gameId, maker, breaker, 0, 1);
         }
