@@ -1,0 +1,143 @@
+\chapter{Appendix}
+
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+\textbf{Solidity and Network Configuration} & \multicolumn{4}{l|}{} \\ \hline
+Solidity: 0.8.17 & Optim: true & Runs: 2000 & viaIR: true & Block: 30,000,000 gas \\ \hline
+\textbf{Methods} & \multicolumn{4}{l|}{} \\ \hline
+\textbf{Contracts / Methods} & \textbf{Min} & \textbf{Max} & \textbf{Avg} & \textbf{\# calls} \\ \hline
+\texttt{createGame} & 433,538 & 618,776 & 497,713 & 5 \\ \hline
+\texttt{disputeFeedback} & 192,225 & 207,231 & 198,152 & 3 \\ \hline
+\texttt{joinGame} & 174,588 & 175,400 & 175,197 & 4 \\ \hline
+\texttt{makeGuess} & 213,071 & 232,326 & 216,787 & 120 \\ \hline
+\texttt{provideFeedback} & 103,410 & 158,601 & 114,657 & 120 \\ \hline
+\texttt{publishCodeSecret} & 212,875 & 213,277 & 213,115 & 20 \\ \hline
+\texttt{startTurn} & 91,646 & 108,299 & 95,092 & 20 \\ \hline
+\texttt{submitCodeHash} & 59,764 & 62,143 & 61,193 & 20 \\ \hline
+\textbf{Deployments} & \multicolumn{4}{l|}{} \\ \hline
+Mastermind & - & - & 4,378,855 & 14.6\% \\ \hline
+\end{tabular}
+\caption{Parallel.js}
+\label{tab:parallel-1}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+\textbf{Solidity and Network Configuration} & \multicolumn{4}{l|}{} \\ \hline
+Solidity: 0.8.17 & Optim: true & Runs: 2000 & viaIR: true & Block: 30,000,000 gas \\ \hline
+\textbf{Methods} & \multicolumn{4}{l|}{} \\ \hline
+\textbf{Contracts / Methods} & \textbf{Min} & \textbf{Max} & \textbf{Avg} & \textbf{\# calls} \\ \hline
+
+\texttt{accuseAFK} & 71,576 & 71,763 & 71,645 & 25 \\ \hline
+\texttt{createGame} & 433,538 & 459,038 & 445,895 & 30 \\ \hline
+\texttt{createGameWithJoiner} & 473,620 & 516,232 & 494,041 & 40 \\ \hline
+\texttt{disputeFeedback} & 200,310 & 200,472 & 200,407 & 40 \\ \hline
+\texttt{joinGame} & 170,505 & 174,588 & 172,547 & 20 \\ \hline
+\texttt{makeGuess} & 213,071 & 232,326 & 218,384 & 120 \\ \hline
+\texttt{provideFeedback} & 103,410 & 175,930 & 128,764 & 130 \\ \hline
+\texttt{publishCodeSecret} & 212,797 & 213,265 & 213,047 & 40 \\ \hline
+\texttt{startTurn} & 93,886 & 108,299 & 100,905 & 40 \\ \hline
+\texttt{submitCodeHash} & 59,725 & 62,143 & 60,936 & 30 \\ \hline
+\texttt{verifyAFKAccusation} & 80,400 & 80,635 & 80,518 & 20 \\ \hline
+\textbf{Deployments} & \multicolumn{4}{l|}{} \\ \hline
+Mastermind & - & - & 4,378,855 & 14.6\% \\ \hline
+\end{tabular}
+\caption{Looped.js test with Triple array \lstinline{[][][]}}
+\label{tab:looped-1}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+\textbf{Solidity and Network Configuration} & \multicolumn{4}{l|}{} \\ \hline
+Solidity: 0.8.17 & Optim: true & Runs: 2000 & viaIR: true & Block: 30,000,000 gas \\ \hline
+\textbf{Methods} & \multicolumn{4}{l|}{} \\ \hline
+\textbf{Contracts / Methods} & \textbf{Min} & \textbf{Max} & \textbf{Avg} & \textbf{\# calls} \\ \hline
+
+\texttt{createGame} & 388,125 & 470,617 & 428,454 & 5 \\ \hline
+\texttt{disputeFeedback} & 193,426 & 202,354 & 197,011 & 3 \\ \hline
+\texttt{joinGame} & 174,590 & 192,502 & 183,749 & 4 \\ \hline
+\texttt{makeGuess} & 208,627 & 227,882 & 212,559 & 72 \\ \hline
+\texttt{provideFeedback} & 98,806 & 153,846 & 110,330 & 72 \\ \hline
+\texttt{publishCodeSecret} & 212,800 & 213,280 & 213,063 & 12 \\ \hline
+\texttt{startTurn} & 97,984 & 318,779 & 245,084 & 12 \\ \hline
+\texttt{submitCodeHash} & 59,734 & 62,140 & 60,943 & 12 \\ \hline
+\textbf{Deployments} & \multicolumn{4}{l|}{} \\ \hline
+Mastermind & - & - & 4,484,756 & 14.9\% \\ \hline
+\end{tabular}
+\caption{Parallel.js test with Mapping \lstinline{mapping(uint256 => uint256[][])}}
+\label{tab:parallel-2-mapping}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+\textbf{Solidity and Network Configuration} & \multicolumn{4}{l|}{} \\ \hline
+Solidity: 0.8.17 & Optim: true & Runs: 2000 & viaIR: true & Block: 30,000,000 gas \\ \hline
+\textbf{Methods} & \multicolumn{4}{l|}{} \\ \hline
+\textbf{Contracts / Methods} & \textbf{Min} & \textbf{Max} & \textbf{Avg} & \textbf{\# calls} \\ \hline
+
+\texttt{accuseAFK} & 66,968 & 67,173 & 67,026 & 23 \\ \hline
+\texttt{createGame} & 388,125 & 413,625 & 399,818 & 30 \\ \hline
+\texttt{createGameWithJoiner} & 428,208 & 470,820 & 446,142 & 40 \\ \hline
+\texttt{disputeFeedback} & 195,252 & 195,414 & 195,333 & 40 \\ \hline
+\texttt{joinGame} & 170,507 & 174,590 & 172,549 & 20 \\ \hline
+\texttt{makeGuess} & 208,627 & 227,882 & 214,011 & 120 \\ \hline
+\texttt{provideFeedback} & 98,806 & 171,175 & 124,065 & 130 \\ \hline
+\texttt{publishCodeSecret} & 212,800 & 213,268 & 213,054 & 40 \\ \hline
+\texttt{startTurn} & 95,984 & 246,408 & 171,988 & 40 \\ \hline
+\texttt{submitCodeHash} & 59,710 & 62,140 & 60,847 & 30 \\ \hline
+\texttt{verifyAFKAccusation} & 80,397 & 80,632 & 80,538 & 20 \\ \hline
+\textbf{Deployments} & \multicolumn{4}{l|}{} \\ \hline
+Mastermind & - & - & 4,484,756 & 14.9\% \\ \hline
+\end{tabular}
+\caption{Looped.js test with Mapping \lstinline{mapping(uint256 => uint256[][])}}
+\label{tab:looped-2-mapping}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+\textbf{Solidity and Network Configuration} & \multicolumn{4}{l|}{} \\ \hline
+Solidity: 0.8.17 & Optim: true & Runs: 2000 & viaIR: true & Block: 30,000,000 gas \\ \hline
+\textbf{Methods} & \multicolumn{4}{l|}{} \\ \hline
+\textbf{Contracts / Methods} & \textbf{Min} & \textbf{Max} & \textbf{Avg} & \textbf{\# calls} \\ \hline
+
+\texttt{accuseAFK} & 71,166 & 71,452 & 71,205 & 21 \\ \hline
+\texttt{createGame} & 456,187 & 481,675 & 470,527 & 30 \\ \hline
+\texttt{createGameWithJoiner} & 516,180 & 538,918 & 524,672 & 40 \\ \hline
+\texttt{disputeFeedback} & 198,431 & 198,629 & 198,530 & 40 \\ \hline
+\texttt{joinGame} & 175,268 & 199,287 & 183,004 & 20 \\ \hline
+\texttt{makeGuess} & 213,099 & 232,353 & 218,411 & 120 \\ \hline
+\texttt{provideFeedback} & 103,423 & 175,418 & 128,623 & 130 \\ \hline
+\texttt{publishCodeSecret} & 210,095 & 210,230 & 210,163 & 40 \\ \hline
+\texttt{startTurn} & 99,764 & 107,816 & 103,768 & 40 \\ \hline
+\texttt{submitCodeHash} & 57,380 & 59,631 & 58,578 & 30 \\ \hline
+\texttt{verifyAFKAccusation} & 80,412 & 80,646 & 80,506 & 20 \\ \hline
+\textbf{Deployments} & \multicolumn{4}{l|}{} \\ \hline
+Mastermind & - & - & 4,507,180 & 15\% \\ \hline
+\end{tabular}
+\caption{Looped.js executed with maker/breaker defined in a variable}
+\label{tab:looped-3-maker}
+\end{table}
+
+\label{fig:mastermind_schema}
+
+\afterpage{
+    \clearpage % Start a new page
+    \includepdf[pages={-}]{images/Mastermind_Schema.pdf}
+    \clearpage % End the current page
+}
+%{
+ %   \includepdf[pages={-}]{images/Mastermind_Schema.pdf}
+    % \caption{Mastermind interaction schema}
+  %  \label{fig:mastermind_schema}
+%}

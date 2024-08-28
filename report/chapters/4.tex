@@ -1,0 +1,97 @@
+\chapter{Considerations}
+
+\section{Gas Evaluation}
+\label{sec:gas_report}
+
+In Solidity, \lstinline{mapping} and arrays such as \lstinline{uint256} serve similar purpose.
+In general, \lstinline{mapping} is recommended for highly variable and \textit{sparse} data; 
+on the other hand arrays are recommended for fixed size structures.
+
+In Mastermind while some of the data structures {---}requiring for multiple values{---} have fixed-size, e.g. a single guess/feedback, others are not, but \ul{are not \textit{sparse}}.
+So we had to decide which one to use.
+
+% In this analysis the gas cost of the contract is not taken into account.
+
+\note{The implementation of the approaches described in this section concerning the gas consumption may be found in \href{https://github.com/frenzis01/mastermind/tree/gasreport}{gasreport branch of the GitHub repo}}
+
+\subsection{Mapping vs Triple Array for guesses and feedbacks }
+
+Table \ref{tab:parallel-1} and Table \ref{tab:looped-1} refer to the gas consumption by using a triple array \lstinline{uint256[][][]} as a structure for guesses and feedbacks of the whole game.
+Given a \texttt{game}, the $i^{th}$ guess of the $j^{th}$ turn is accessed as follows.
+\begin{lstlisting}
+    uint256[] guess = game.guesses[j][i]
+\end{lstlisting}
+The guess holds values ranging from \lstinline{0} to \lstinline{MAX_COLORS}, which represent a guess.
+
+Table \ref{tab:looped-2-mapping} and Table \ref{tab:parallel-2-mapping} refer instead to the gas report when using a \lstinline{mapping(uint256 => uint256[][]} instead of the triple array.
+The mapping seems to lead to considerably higher cost in \texttt{startTurn(...)}, probably due to the assignment performed in \texttt{resetGuessState()}.
+
+Overall, the solution that implements the map costs slightly more, since the total weighted consumption (based on average cost multiplied by number of calls) is lower for Table \ref{tab:parallel-1} and Table \ref{tab:looped-1} (50,434,149 / 105,992,755) compared to Table \ref{tab:parallel-2-mapping} and Table \ref{tab:looped-2-mapping} (51,909,235 / 106,627,870). In cases where the number of calls was uneven, the larger number of calls was taken into consideration. The weighted consumption was still in favour of the triple array solution even considering the smaller number of calls.
+
+\subsection{Explicit maker/breaker vs Inferred}
+
+A point unrelated to the topic of complex data structures, but which still may be instructive concerns the implementation of \texttt{isCurrentMaker()}.
+
+The approach kept until the last days before submitting was to set a flag (\texttt{isCreatorMakerSeed}) at the beginning of the game to establishing whether at a given current turn, a player is the maker or not.
+This clearly involves some computations and comparisons, which ---\href{https://github.com/frenzis01/mastermind/blob/7009a1c3edf85180f41b1e106b04d0352f268993/contracts/Mastermind.sol#L699}{as may be read here}--- appear rather verbose in \texttt{isCurrentMaker()} implementation.
+
+A different approach would be to have in the \texttt{Game} struct, two \lstinline{address} fields indicating  \textit{maker} and \textit{breaker} for the current turn, set at the beginning of each turn inside \lstinline{startTurn()}.
+The total weighted consumption (based on average cost multiplied by number of calls) is lower for Table \ref{tab:looped-3-maker} (107,927,815) compared to Table \ref{tab:looped-1} (109,592,755).
+So in late-development we decided to switch to the latter approach having two \lstinline{address} fields, providing a small improvement for the smart contract.
+
+%Observing the gas report for this approach in Table \ref{tab:looped-3-maker}, we see that it leads to much higher gas;
+%Probably it is due to the modifications in the state of the contract, which instead are not performed when inferring maker/breaker with the \lstinline{isCurrentMaker()} function you may find in the contract.
+
+
+%\subsection{Games as array or mapping}
+%Overall, the solution that implements the map costs slightly more (50.4kk vs 51.9kk for Parallel.js, 106kk vs 106.6kk for Looped.js)
+%Oddly, defining the list of existing games as a mapping from Game IDs to \lstinline{Game} structs\lstinline{mapping(uint256 => Game) games} or as an array of \lstinline{Game} structs \lstinline{Game[] games} did not yield any considerable difference in the gas consumption, neither overall or for each method.
+%\note{For this reason no tables are reported here} 
+
+\section{Vulnerabilities}
+
+\note{GitHub reported some potential vulnerabilities due to the \textit{Node.js} packages used by Hardhat and Vite, but they are beyond the purpose of this project. Here we discuss only vulnerabilities to topics mentioned during lectures.}
+
+\subsection{Secret Leak}
+One possible vulnerability that was detected during the development of the smart contract is the hash of the secret code, since it's of fixed length (6) and only contains number from 0 to 9 (representing the 10 colors available to play the game), it is susceptible to brute force attacks or the use of publicly known mappings ($code \rightarrow hash$). 
+
+To address this issue, we implemented a solution, as discussed in Section \ref{sec:secret_hash}, by appending a salt to the secret code. The salt adds randomness and enhances security, mitigating the risk of brute force attacks. The randomness of the salt is generated using \href{https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues}{\texttt{window.crypto.getRandomValues()}}, which is considered \textit{``suitable for cryptographic purposes"} according to its documentation.
+
+Appending a salt to the secret code, combined with a reliable source of randomness, significantly improves the security of the smart contract by reducing the likelihood of successful brute force attacks.
+
+We ensured that the original code secret never reaches the smart contract, not even as a function parameter.
+
+\subsection{Re-entrancy attacks}
+Re-entrancy attacks involve calling multiple times a function before the previous call completes in order to drain funds from the contract.
+The only function which yields funds to the user is \texttt{endGame()} which is marked with \texttt{internal}, meaning that it cannot be invoked directly by a user, but only by other functions in the contract.
+Hence, as other functions may be invoked only in safe states, also \texttt{endGame()} should not pose any problems.\\
+However, we added the following statement in the \texttt{endGame()} body ---because ``never say never"---, preventing multiple subsequent invocations to succeed.
+\begin{lstlisting}
+    endGame(...
+    require(!game.gameEnded, "Game has ended");
+    // Mark the game as ended
+    game.gameEnded = true;
+    ...
+\end{lstlisting}
+
+\note{There should be no chance that two executions proceed step-by-step \textit{exactly} in parallel, only sequential executions should be allowed. According to the sparse information we found, some parallelism may happen in the Ethereum Virtual Machine when a function invokes a function from another contract; but we could not link a reliable source on the topic.}
+
+\subsection{SafeMath}
+\ul{\texttt{SafeMath} was \textbf{not} used in the project}.
+The only mathematical operations involved are increment and decrements on counters on player points and on the number of existing games.
+Player points are bounded by the constants set in the contract, while reaching overflow in the number of games\footnote{no way of decrementing it ``below zero"} ($2^{256}$) would indicate a serious world-wide game addiction issue \smiley.
+Summing up, considering the extent of the project, we chose to avoid using \texttt{SafeMath}, obtaining way more readable code.
+
+The only exception is for a multiplication when transferring the Game Stake, which we guarded with an assert to prevent overflow from happening, just as it is done in the \href{https://github.com/ConsenSysMesh/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol}{SafeMath library}.
+\begin{lstlisting}
+    payable(winner).transfer(safeMul(game.gameStake,2));
+    ...
+    function safeMul(uint256 a, uint256 b) internal pure returns (uint256 c) {
+        if (a == 0) {
+            return 0;
+        }
+        c = a * b;
+        assert(c / a == b);
+        return c;
+    }
+\end{lstlisting}

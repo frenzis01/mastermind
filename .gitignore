@@ -8,4 +8,16 @@ artifacts
 test/Token.js
 test/Token*
 
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.mtc*
+*.ptc*
+*.maf
+*.Identifier
+
 coverage*

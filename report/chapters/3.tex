@@ -1,0 +1,162 @@
+\chapter{Solidity Smart Contract}
+\label{sec:solidity_contract}
+
+The solidity contract is in \href{https://github.com/frenzis01/mastermind/blob/400da112942becdf070796144fe0db0022c481b6/contracts/Mastermind.sol#L228}{\texttt{contracts/Mastermind.sol}}. 
+The variables which could be statically and arbitrarily defined are set as constants at the beginning of the contract, to allow ease of tuning of such parameters.
+
+Everything revolves around a \texttt{Game} struct which holds the state of a game.
+\ul{Alterations to such state are logged in the form of \textit{events}}, each one associated to a function.
+
+% "valid" o "sound"
+\lstinline{modifier}s are used to ensure that at the time of function's invocation \ul{its preconditions are satisfied, ensuring that the state of the contract is always valid}.
+Functions marked with \lstinline{view} \ul{do \textit{not} modify the state of the contract}, and there is \textbf{no fee} to execute them, unless they are executed inside a function which do alters the state: in such case, they contribute to the function invocation's fee.
+\lstinline{external view} functions are used only by the frontend or by Mocha tests (\texttt{.js} files under \texttt{tests} folder) to get information on the games, \lstinline{internal view} ones only by other functions in the contract, while \lstinline{public view} match both use cases.\\
+The only \lstinline{payable} functions are \texttt{createGame} and \texttt{joinGame}.
+
+
+\section{Core functions and Choices}
+\label{sec:core-functions}
+
+\subsection{Creating and Joining games}
+\label{sec:create-join-games}
+The ``agreement" on a stake to play on is handled in the frontend, and basically consists in choosing the game with the stake closest to desired one. 
+For what concerns the contract, \texttt{createGame()} specifies a stake, and a joiner simply invokes \texttt{joinGame()} sending such stake.
+The two functions (mostly the former) initialize most of the \texttt{Game} state, but not all: some informations are set by \texttt{startTurn()} ---discussed in \ref{sec:startTurn}--- , since they need to be initialized not only at the beginning of the game, but at each turn. 
+
+
+\subsection{Feedbacks and the end of a turn}
+{The logic behind \texttt{makeGuess()} and \texttt{provideFeedback()} is rather simple, but the latter must handle two special cases:\ns
+\begin{enumerate}
+    \item The feedback provided indicates that $CC$\footnote{Number of colors in the correct positions} is equal to the length of the code (6 in the screenshots provided earlier), indicating that the \ul{breaker has \textbf{guessed} the code}.\\
+    At this point the turn should end, having the \textgreen{breaker} guessed the secret code.
+    \item The \ul{breaker has \textbf{exhausted} their available guesses}, so the turn should end, with the \textmauve{maker} being awarded of extra points, since the \textgreen{breaker} could not guess its code.
+\end{enumerate}}
+
+\begin{lstlisting}
+function provideFeedback(
+    uint256 _gameId,
+    uint256 numCorrectPositions,
+    uint256 numCorrectColors    // correct colors but in wrong positions!
+) external checkGameValidity(_gameId) turnNotEnded(_gameId) {
+    Game storage game = games[_gameId];
+    // Ensure feedback is valid
+    require(
+            numCorrectColors + numCorrectPositions <= game.codeLength,
+        "Invalid feedback"
+    );
+    // Ensure player has not already provided feedback in the current turn
+    require(
+        isMakerTurn(_gameId),
+        "Code maker has already provided feedback");
+    game.feedbacks[game.currentTurn].push([numCorrectPositions, numCorrectColors]);
+    game.accusedAFK[msg.sender] = 0; // Reset the AFK accusation if present
+    emit Feedback(_gameId, numCorrectPositions, numCorrectColors);
+    if (numCorrectPositions == game.codeLength) {
+        endTurn(_gameId,true);
+        return;
+    }
+    if (game.guesses[game.currentTurn].length == game.maxGuesses) {
+        endTurn(_gameId, false);
+    }
+}
+\end{lstlisting}
+
+Note that the \ul{smart contract is \textbf{not} able to check that the feedback is consistent with the secret code} chosen by the \textmauve{Maker}. The secret code is unknown to the smart contract until the end of a turn when it gets published using \texttt{publishCodeSecret()}, but even then, the contract does not check that all received feedbacks are consistent with the given Secret Code: doing so would invalidate the requested \textit{Dispute} feature.
+
+\subsection{Secret - Commit and reveal}
+\label{sec:secret_hash}
+About \texttt{publishCodeSecret()} and \texttt{submitCodeHash()}, to avoid involving the contract in any way in the hash computation, the contract simply receives a \lstinline{bytes32 hash} value right after the turn has started, without ever knowing the values which produced it, but actually expecting it had been computing using a precise algorithm and data structure; we'll cover this aspect in a moment.  
+
+To inhibit the risk of a brute force attack (or lists of publicly known mappings $value\rightarrow hash$), we chose to prepend a \textit{salt}\footnote{This is called \lstinline{seed} in the code} to the secret code before hashing. 
+In the solidity contract, \texttt{publishCodeSecret(gameId, secret, seed)} computes the hash by invoking the following function, and checks that the result is equal to the hash submitted at the start of the turn.
+\begin{lstlisting}
+function hashArrayOfIntegers(uint256[] memory intArray, bytes memory seed) public pure returns (bytes32) {
+    // Encode the array using abi.encodePacked
+    bytes memory encodedArray = abi.encodePacked(intArray);
+    // Combine the seed and the encoded array
+    bytes memory combined = abi.encodePacked(seed, encodedArray);
+    // Hash the encoded array using keccak256
+    bytes32 h = keccak256(combined);
+    return h;
+}
+\end{lstlisting}
+
+The key point is that \ul{on the frontend side the hashing function must perfectly mimick the behavior of this one}, in order to produce the same hash (given the same inputs) and for the comparison in \texttt{publishSecretCode()} to succeed.
+
+Below is listed the frontend code to compute such hash, which required some tuning and even though it looks more complicated than solidity one, it does the exact same thing.
+The randomness of the salt relies on\\ \href{https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues}{\texttt{window.crypto.getRandomValues()}}, which is reported as \textit{``suitable for cryptographic purposes"}
+\begin{lstlisting}
+// Generate a random 64-character string salt
+generateRandomSeed() {
+  const array = new Uint8Array(32);
+  window.crypto.getRandomValues(array);
+  return array; // 32 bytes * 2 hex chars per byte = 64 hex chars
+}
+// Hash the salt prepended to the serialized array
+computeHash(intArray, seed) {
+  // Serialize the array as it would be in Solidity
+  const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+  const types = new Array(intArray.length).fill('uint256');
+  const serializedArray = abiCoder.encode(types, intArray);
+  // Concatenate the seed and the serialized array
+  const combined = ethers.concat([seed, serializedArray]);
+  // Compute the hash
+  return ethers.keccak256(combined);
+}
+\end{lstlisting}
+
+\subsection{AFK - Away from Keyboard accusation}
+
+The contract allows to accuse the opponent of being AFK, and they do not perform actions on the game for \ul{$B$ blocks}, the accuser may win the entire stake.\\
+In solidity there is no setting of timers or triggers, so the act of accusing and claiming the stake is split in two functions:
+\begin{enumerate}
+    \item \texttt{accuseAFK()}: Which notes in \texttt{game.accused[accused]} the current block number.\\
+    Such accusation note (if present) is automatically reset every time the accused player invokes a function associated to an in-game action; \texttt{createGame()}, \texttt{joinGame()} and \texttt{accuseAFK()} itself are not considered in this set).
+    It was chosen for \texttt{accuseAFK()} not to reset the \textit{accuser} accusation note, since this may lead to the two players to indefinitely accuse theirselves without actually playing the game.\\
+    In order for the function to be invoked \ul{it must be the turn of the accused};
+    this is crucial for the correct functioning of the AFK accusation.
+    \item \texttt{verifyAFKAccusation()}: Which checks whether the accused had been AFK for enough time, and if so, ends the game, transferring the game stake to the accuser.
+\end{enumerate}
+
+\subsection{Disputing}
+When the \textgreen{breaker} invokes the \lstinline{disputeFeedback()} they must attach the \textit{set} of feedback IDs they are disputing.\\
+Such function can be invoked only after the turn has ended, and after the code secret has been published.
+
+The contract, having now the secret code in clear text, may compute the correct feedbacks for the given guesses\footnote{The ones corresponding to the feedbacks indicated by the \textgreen{Breaker}} and compare them with the ones stored in the game state (\texttt{game.feedbacks[currentTurn]}).
+
+It is important to note that \textit{\ul{all}} the feedbacks indicated by the \textgreen{breaker} must result invalid for the \textgreen{Breaker} to win, if any of them is correct the \textmauve{Maker} wins instead;
+in any case, the game ends.
+
+\subsection{Starting Turns}
+\label{sec:startTurn}
+
+There are the two main design choices concerning \lstinline{startTurn()}, which however affect how the whole game proceeds.
+\nl
+
+Even if it seems counterintuitive ---since it's the \textmauve{maker} who has to first publish the secret hash--- , \ul{it's the}\textgreen{breaker} \ul{who has to start a turn}, the \textmauve{maker} is not allowed to do so.
+We chose this way mostly due to the logic of the end turn phase and of the dispute.\\
+Consider this scenario: the turn has ended, and the \textmauve{maker} has revealed the secret code, but the next turn has \textit{not} started yet.
+At this point the \textgreen{breaker} has a fixed period of time to review the feedbacks provided by the \textmauve{Maker} and decide whether it's the case to \textbf{dispute} some of them. 
+It makes sense that is the \textgreen{Breaker} to say at some point ``Okay, nothing to dispute, we can move onto the next turn", rather than the \textmauve{Maker} to ask the contract whether the time for disputing has elapsed or the \textgreen{Breaker} is ready to start the new turn;
+the latter option would imply also an additional transaction performed by the \textgreen{Breaker} to state ``Okay, nothing to dispute".
+
+\lstinline{startTurn()} also handles the ``standard" way of ending a game: when the current turn reaches the maximum, an invocation to \lstinline{startTurn()} results in the normal end of the game, comparison of points, and stake transfer to the winner. A detailed \textbf{interaction schema} is provided in Appendix \ref{fig:mastermind_schema}.
+{\ns\note{In case of a tie, the stake goes to the game \textit{creator}}}
+
+\section{Testing}
+
+Since the contract's first core functions were implemented, further developments were accompanied by Mocha test suites.
+Such test suites are in \href{https://github.com/frenzis01/mastermind/tree/6b5accf8a56b1935e354d0887ca133f5b1482c09/test}{test} folder.
+The absence of a GUI and user inputs allowed to quickly write and run (unit) tests.
+Tests may be ran by executing:
+\begin{lstlisting}[language=bash]
+npx hardhat test
+\end{lstlisting}
+
+{There are three \texttt{.js} test files:
+\begin{enumerate}
+    \item \texttt{Mastermind.js} tests all core functions of the contract, and handle some scenarios. 
+    Even if Mocha is fully exploited with independent unit tests, in this case units depend on the previous state, resulting in a more linear testing. 
+    \item \texttt{Looped.js} simply executes the same \texttt{Mastermind.js} code but multiple times, it was used in late development to obtain more precise gas reports (described in the following section \ref{sec:gas_report}).
+    \item \texttt{Parallel.js} runs multiple games in a row.
+\end{enumerate}}
