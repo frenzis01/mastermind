@@ -150,10 +150,12 @@ class Game extends React.Component {
           const makerEvents = ["Guess", "ResolveDispute", "TurnStarted"];
           const breakerEvents = ["Feedback", "HashPublished", "CodeSecretPublished"];
           const playerEvents = ["TurnEnded", "GameEnded", "AFKAccusation"];
+          const gameJoinedEvents = ["GameJoined"];
 
           if ((makerEvents.includes(filter) && this.isCurrentMaker()) ||
               (breakerEvents.includes(filter) && !this.isCurrentMaker()) ||
-              playerEvents.includes(filter)){
+              playerEvents.includes(filter) ||
+              gameJoinedEvents.includes(filter)) {
           
               handler(...args); // Pass all arguments including the event object to the handler
             }
