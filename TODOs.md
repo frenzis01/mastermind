@@ -27,3 +27,6 @@
    - [ ] Add points counter in the game boards
    - [ ] Add ETH won/lost in dispute/afk messages
    - [ ] Remodel with new Event for Tampered code in PublishCodeSecret
+   - [ ] Correctly handle when metamask refuses a transaction 
+   - [ ] Dispute button text update upon click/transaction
+   - [ ] Background of create game button and home button in `NonClosableModal` do no transition color smoothly
