@@ -30,3 +30,7 @@
    - [ ] Correctly handle when metamask refuses a transaction 
    - [ ] Dispute button text update upon click/transaction
    - [ ] Background of create game button and home button in `NonClosableModal` do no transition color smoothly
+   - [ ] Contract
+     - [ ] startTurn() - remove require(breaker || address(this))
+     - [ ] isBreakerTurn() - ensure whether all the && in the if are necessary. probab the check on feedback/guess.length is redundant
+     - [ ]   
